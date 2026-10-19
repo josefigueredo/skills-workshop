@@ -1,0 +1,100 @@
+<style>
+.cw{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Helvetica,Arial,sans-serif;border-radius:10px;overflow:hidden;border:1px solid #d9d9de;box-shadow:0 10px 30px rgba(0,0,0,.12);background:#fff;color:#1f1f23;font-size:11px}
+.cw .tb{height:26px;background:#f3f3f5;border-bottom:1px solid #e3e3e7;display:flex;align-items:center;padding:0 10px;gap:6px}
+.cw .tb i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.cw .tb .t{flex:1;text-align:center;color:#6b6b75;font-size:10.5px}
+.cw .body{display:flex;height:300px}
+.cw .act{width:30px;background:#f3f3f5;border-right:1px solid #e3e3e7}
+.cw .tree{width:120px;background:#f8f8fa;border-right:1px solid #e3e3e7;padding:8px;color:#55555f;line-height:1.7}
+.cw .ed{flex:1;display:flex;flex-direction:column;min-width:0}
+.cw .code{flex:1;padding:8px 12px;font:10.5px/1.6 Menlo,monospace;color:#7a7a85}
+.cw .term{height:110px;border-top:1px solid #e3e3e7;background:#fbfbfc;font:10.5px/1.55 Menlo,monospace;padding:6px 10px;color:#2b2b30}
+.cw .term .tt{font:600 9.5px -apple-system,sans-serif;color:#6b6b75;letter-spacing:.04em;margin-bottom:4px}
+.cw .term .p{color:#1a7f37}.cw .term .k{color:#0b57d0}
+.cw .ag{width:250px;border-left:1px solid #e3e3e7;background:#fafafb;display:flex;flex-direction:column}
+.cw .ag .h{padding:7px 10px;border-bottom:1px solid #e3e3e7;font-weight:600;color:#3a3a42}
+.cw .ag .m{flex:1;padding:8px 10px;display:flex;flex-direction:column;gap:7px}
+.cw .ub{align-self:flex-end;background:#fff;border:1px solid #e3e3e7;border-radius:9px;padding:6px 8px;max-width:85%}
+.cw .tool{font:9.5px Menlo,monospace;background:#efeff3;border-radius:5px;padding:3px 6px;color:#55555f}
+.cw .in{margin:8px;border:1px solid #d9d9de;border-radius:9px;background:#fff;padding:6px 8px;color:#9a9aa5}
+.cw .in .mdl{display:inline-block;margin-top:5px;font-size:9.5px;background:#f1f1f4;border-radius:5px;padding:1px 6px;color:#3a3a42}
+.cap{position:absolute;left:14px;bottom:12px;background:rgba(20,20,28,.86);color:#fff;border-radius:8px;padding:7px 11px;font-size:12px;max-width:70%}
+.chap{display:flex;gap:6px;margin-bottom:8px}
+.chap span{font-size:10.5px;padding:3px 9px;border-radius:99px;background:#ececf1;color:#6b6b75}
+.chap span.on{background:#2d6cdf;color:#fff}
+.rail{width:190px;background:#14141a;color:#e9e9ef;padding:14px;border-radius:10px;display:flex;flex-direction:column;gap:10px;font-size:12px}
+.rail .ep{font-size:10px;color:#9a9aa8;letter-spacing:.08em;text-transform:uppercase}
+.rail .s{padding:6px 8px;border-radius:7px;color:#9a9aa8}
+.rail .s.on{background:#2d6cdf;color:#fff}
+.rail .s.ok{color:#7ee787}
+.card{border-radius:10px;background:linear-gradient(135deg,#2d6cdf,#7a4fe0);color:#fff;height:300px;display:flex;flex-direction:column;justify-content:center;padding:30px}
+.card .k{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.8}
+.card h1{margin:6px 0 10px;font-size:28px}
+.card p{margin:0;opacity:.9;font-size:14px}
+</style>
+
+<h2>¿Cómo se ubica el espectador dentro del episodio?</h2>
+<p class="subtitle">Las pantallas de adentro ya están validadas (las de tu Cursor real); acá solo se decide el marco alrededor. Las ventanas de estas maquetas son esquemáticas. Elegí la que más te cierre (o combiná).</p>
+
+<div class="options">
+
+<div class="option" data-choice="a" onclick="toggleSelect(this)">
+<div class="letter">A</div>
+<div class="content">
+<h3>Cursor a pantalla completa, con subtítulos</h3>
+<p>Solo la ventana de Cursor, como si grabaras tu pantalla. Una barra de capítulos arriba y un subtítulo abajo que dice qué está pasando. Es lo más parecido a lo que el equipo ve todos los días.</p>
+<div style="position:relative;margin-top:10px">
+<div class="chap"><span>1 · Instalar</span><span class="on">2 · Caso principal</span><span>3 · Otros casos</span><span>4 · Si algo falla</span></div>
+<div class="cw">
+<div class="tb"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><div class="t">mi-servicio — Cursor</div></div>
+<div class="body">
+<div class="act"></div>
+<div class="tree">▾ mi-servicio<br>&nbsp;&nbsp;▸ src<br>&nbsp;&nbsp;▸ tests<br>&nbsp;&nbsp;README.md</div>
+<div class="ed"><div class="code">// src/orders/service.ts<br>export async function pay(order) {<br>&nbsp;&nbsp;…</div>
+<div class="term"><div class="tt">TERMINAL</div><span class="p">$</span> <span class="k">./install.sh</span><br>skill: ~/.cursor/skills/inherited-audit → ok</div></div>
+<div class="ag"><div class="h">Agent</div><div class="m">
+<div class="ub">Auditá este repo heredado con inherited-audit</div>
+<div class="tool">▸ Read skill: inherited-audit</div>
+<div class="tool">▸ Run: python3 ia.py init …</div>
+<div>Fijé la base en <b>a1b2c3d</b>. Ahora mido la suite…</div>
+</div><div class="in">Plan, @ for context…<br><span class="mdl">Sonnet 5.5 ▾</span></div></div>
+</div></div>
+<div class="cap">El agente lee la skill sola: vos solo le pedís lo que querés.</div>
+</div>
+</div>
+</div>
+
+<div class="option" data-choice="b" onclick="toggleSelect(this)">
+<div class="letter">B</div>
+<div class="content">
+<h3>Riel de pasos a la izquierda y Cursor a la derecha</h3>
+<p>Una columna oscura fija con el nombre de la skill y los pasos del episodio: tilde en los que ya pasaron y resaltado el actual. Cursor ocupa el resto. Quien entra a la mitad del video sabe dónde está, y sirve como índice si después lo cortás en clips.</p>
+<div style="display:flex;gap:10px;margin-top:10px">
+<div class="rail"><div class="ep">Episodio 6</div><div style="font-weight:700;font-size:15px">inherited-audit</div>
+<div class="s ok">✓ Qué resuelve</div><div class="s ok">✓ Instalar</div><div class="s on">▶ Caso principal</div><div class="s">Retomar una corrida</div><div class="s">Filtrar el reporte</div><div class="s">Si algo falla</div></div>
+<div class="cw" style="flex:1">
+<div class="tb"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><div class="t">mi-servicio — Cursor</div></div>
+<div class="body"><div class="ed"><div class="code">// src/orders/service.ts<br>…</div>
+<div class="term"><div class="tt">TERMINAL</div><span class="p">$</span> <span class="k">python3 ia.py status --run …</span><br>baseline: done · correctness: pending</div></div>
+<div class="ag"><div class="h">Agent</div><div class="m">
+<div class="ub">Auditá este repo heredado</div>
+<div class="tool">▸ Run: ia.py baseline</div>
+<div>La suite pasa 212 de 214…</div>
+</div><div class="in">Plan, @ for context…<br><span class="mdl">Sonnet 5.5 ▾</span></div></div></div></div>
+</div>
+</div>
+</div>
+
+<div class="option" data-choice="c" onclick="toggleSelect(this)">
+<div class="letter">C</div>
+<div class="content">
+<h3>Placas de capítulo entre escenas de Cursor</h3>
+<p>Antes de cada parte, una placa de 3 segundos con el título y una frase («Caso principal: auditar un repo heredado»). Después, Cursor a pantalla completa sin subtítulos. Es más «presentación» y menos «captura»: se graba fácil y la narración va por la voz.</p>
+<div style="display:flex;gap:10px;margin-top:10px;align-items:stretch">
+<div class="card" style="flex:1"><div class="k">inherited-audit · 2 de 4</div><h1>Caso principal</h1><p>Le pedís una auditoría y te devuelve dos reportes con un test rojo por hallazgo.</p></div>
+<div style="flex:1;display:flex;align-items:center;justify-content:center;color:#9a9aa5;border:1px dashed #cfcfd6;border-radius:10px">→ después, la ventana de Cursor (como A, sin subtítulo)</div>
+</div>
+</div>
+</div>
+
+</div>

@@ -1,0 +1,137 @@
+<style>
+.cx{--bg:#fff;--side:#f2f2f2;--ln:#e4e4e4;--mut:#7a7a7a;--tx:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Helvetica,Arial,sans-serif;font-size:11.5px;color:var(--tx);border-radius:11px;overflow:hidden;border:1px solid #d6d6d6;box-shadow:0 12px 34px rgba(0,0,0,.14);background:var(--bg);display:flex;height:430px}
+.cx .sb{width:190px;background:var(--side);border-right:1px solid var(--ln);display:flex;flex-direction:column;padding:8px 0}
+.cx .dots{padding:2px 12px 12px;display:flex;gap:6px}
+.cx .dots i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.cx .nav{padding:3px 12px;color:#333}
+.cx .sec{padding:12px 12px 4px;color:var(--mut);font-size:10.5px}
+.cx .repo{padding:3px 12px;color:#333}
+.cx .ch{padding:3px 12px 3px 22px;color:#333;display:flex;justify-content:space-between}
+.cx .ch b{font-weight:400;color:var(--mut)}
+.cx .ch.on{background:#e3e3e3;border-radius:6px;margin:0 6px;padding-left:16px}
+.cx .me{margin-top:auto;padding:8px 12px;display:flex;align-items:center;gap:8px;font-size:11px}
+.cx .av{width:20px;height:20px;border-radius:50%;background:#8a7b6b}
+.cx .main{flex:1;display:flex;flex-direction:column;min-width:0}
+.cx .top{height:26px;display:flex;align-items:center;padding:0 12px;color:#555;font-size:11px;border-bottom:1px solid transparent}
+.cx .top span{margin-left:auto;color:var(--mut);font-size:10px}
+.cx .conv{flex:1;padding:6px 16px;overflow:hidden;display:flex;flex-direction:column;gap:9px}
+.cx .ask{border:1px solid var(--ln);border-radius:12px;padding:9px 11px;box-shadow:0 1px 3px rgba(0,0,0,.05);line-height:1.5}
+.cx .ask .row{display:flex;align-items:center;gap:8px;margin-top:7px;color:#555;font-size:10.5px}
+.cx .ask .row .send{margin-left:auto;width:18px;height:18px;border-radius:50%;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px}
+.cx .worked{color:var(--mut)}
+.cx .tool{font:10.5px Menlo,monospace;color:#555;background:#f3f3f3;border-radius:6px;padding:4px 8px;align-self:flex-start}
+.cx h4{margin:2px 0 0;font-size:14px}
+.cx code{font:10.5px Menlo,monospace;background:#f0f0f0;border-radius:4px;padding:1px 4px}
+.cx .fu{margin:6px 16px 4px;border:1px solid var(--ln);border-radius:12px;padding:8px 11px;display:flex;color:#9a9a9a;font-size:11px}
+.cx .fu span{margin-left:auto;color:#555}
+.cx .foot{display:flex;gap:14px;padding:4px 18px 8px;color:#555;font-size:10.5px}
+.cx .rp{width:330px;border-left:1px solid var(--ln);display:flex;flex-direction:column}
+.cx .tabs{height:26px;display:flex;align-items:center;gap:12px;padding:0 10px;color:#666;font-size:10.5px;border-bottom:1px solid var(--ln)}
+.cx .tabs .on{background:#efefef;border-radius:5px;padding:2px 6px;font-style:italic;color:#222}
+.cx .files{flex:1;display:flex}
+.cx .prev{flex:1;padding:12px;font-size:17px;font-weight:700}
+.cx .ft{width:120px;border-left:1px solid var(--ln);padding:8px;color:#444;line-height:1.9;font-size:10.5px}
+.cx .zsh{height:150px;border-top:1px solid var(--ln);background:#fff}
+.cx .zsh .zt{padding:4px 8px;font-size:10.5px;color:#444}
+.cx .zsh .zt b{background:#efefef;border-radius:5px;padding:1px 6px;font-weight:500}
+.cx .open{width:150px;padding:10px;color:#555;font-size:10.5px;line-height:2}
+.cx .open .t{color:var(--mut);font-size:10px}
+.pl{font:10.5px/1.6 Menlo,monospace;padding:4px 8px;white-space:nowrap;overflow:hidden}
+.pl .seg{display:inline-block;padding:0 6px;color:#fff}
+.pl .ap{background:#d0d4db;color:#111}
+.pl .pa{background:#7d9cc6}
+.pl .gi{background:#2f8f8a}
+.pl .sy{background:#b07ab8}
+.pl .ti{background:#d6d9df;color:#111}
+.pl .fill{color:#9aa0aa}
+.pl .ok{color:#3fb950;font-weight:700}
+.it{border-radius:10px;overflow:hidden;border:1px solid #111;box-shadow:0 12px 34px rgba(0,0,0,.25);background:#262a31;height:250px;font-family:-apple-system,sans-serif}
+.it .bar{height:24px;background:#2d3139;display:flex;align-items:center;gap:6px;padding:0 10px;color:#c9ced8;font-size:10.5px}
+.it .bar i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.it .pl{color:#d7dae0;font-size:11.5px}
+.it .pl .seg{color:#fff}
+.it .o{color:#d7dae0}
+.it .k{color:#79c0ff}
+</style>
+
+<h2>Las tres pantallas, copiadas de tu Cursor</h2>
+<p class="subtitle">Con los datos de un episodio de ejemplo (inherited-audit). El modelo dice <b>Sonnet 5.5</b> donde vos tenés «Auto Cost». ¿Qué falta o sobra para que se lea como tu pantalla real?</p>
+
+<div class="section">
+<h3>1 · Cursor completo: chat, panel de archivos y terminal integrada</h3>
+<p class="subtitle">Para el caso principal, cuando importa ver qué archivos aparecen y qué corre en la terminal.</p>
+<div class="cx">
+ <div class="sb">
+  <div class="dots"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+  <div class="nav">✎ New Chat</div><div class="nav">⌕ Search</div><div class="nav">◷ Automations</div><div class="nav">⚙ Customize</div>
+  <div class="sec">Repositories</div>
+  <div class="repo">▭ mi-servicio</div>
+  <div class="ch on">Auditar el sistema heredado <b>now</b></div>
+  <div class="ch">Agregar endpoint de pagos <b>2d</b></div>
+  <div class="me"><div class="av"></div><div>Persona del equipo<br><span style="color:#7a7a7a">Equipo</span></div></div>
+ </div>
+ <div class="main">
+  <div class="top">Auditar el sistema heredado<span>IDE ↗ &nbsp;···</span></div>
+  <div class="conv">
+   <div class="ask">Auditá este sistema heredado con la skill inherited-audit. Backend en api/, frontend en web/.
+    <div class="row">＋ &nbsp;Sonnet 5.5 ⌄<div class="send">↑</div></div></div>
+   <div class="worked">Worked for 42s</div>
+   <div class="tool">▸ Read skill · inherited-audit/SKILL.md</div>
+   <div class="tool">▸ Ran · python3 ia.py init --system mi-servicio …</div>
+   <div>Fijé la base en <code>a1b2c3d</code>. La suite del backend pasa <b>212 de 214</b>; la del frontend no tiene tests.</div>
+   <h4>Antes de seguir, una sola pregunta</h4>
+   <div>¿Puedo instalar dependencias con <code>npm ci --ignore-scripts</code> y levantar Postgres descartable con Docker?</div>
+  </div>
+  <div class="fu">＋ &nbsp;Send follow-up<span>Sonnet 5.5 ⌄</span></div>
+  <div class="foot"><span>⑂ main ⌄</span><span>▭ This Mac ⌄</span></div>
+ </div>
+ <div class="rp">
+  <div class="tabs"><span class="on">README.md</span><span>± Changes</span><span>⊕ Browser</span><span>✎ Canvas</span></div>
+  <div class="files"><div class="prev">mi-servicio</div><div class="ft">mi-servicio<br>▭ api<br>▭ web<br>▭ docs<br>README.md</div></div>
+  <div class="zsh"><div class="zt"><b>▣ zsh</b> &nbsp;＋</div>
+   <div class="pl"><span class="seg ap"></span><span class="seg pa">▭ ~/mi-servicio</span><span class="seg gi">on ⑂ main</span><span class="fill"> ·········</span><span class="seg sy">system</span><span class="seg ti">at 11:30</span></div>
+   <div class="pl" style="color:#111"><span class="ok">❯</span> python3 ia.py status --run …</div>
+   <div class="pl" style="color:#111">baseline: done · correctness: pending</div>
+  </div>
+ </div>
+</div>
+</div>
+
+<div class="section">
+<h3>2 · Solo el agente</h3>
+<p class="subtitle">Para los otros casos, cuando lo único que importa es la conversación. Se ve más grande en el video.</p>
+<div class="cx" style="height:340px">
+ <div class="sb">
+  <div class="dots"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+  <div class="nav">✎ New Chat</div><div class="nav">⌕ Search</div>
+  <div class="sec">Repositories</div><div class="repo">▭ mi-servicio</div>
+  <div class="ch on">Retomar la auditoría <b>now</b></div>
+ </div>
+ <div class="main">
+  <div class="top">Retomar la auditoría<span>IDE ↗ &nbsp;···</span></div>
+  <div class="conv">
+   <div class="ask">Retomá la auditoría que quedó a medias ayer.<div class="row">＋ &nbsp;Sonnet 5.5 ⌄<div class="send">↑</div></div></div>
+   <div class="worked">Worked for 6s</div>
+   <div class="tool">▸ Ran · python3 ia.py status --run …</div>
+   <div>Quedaron hechos la base y la correctitud. Sigo con la prueba: hay <b>7 hallazgos candidatos</b> esperando su test rojo.</div>
+  </div>
+  <div class="fu">＋ &nbsp;Send follow-up<span>Sonnet 5.5 ⌄</span></div>
+ </div>
+ <div class="open"><div class="t">Open Tabs</div>▭ README.md<br>⊕ Browser<br>▣ zsh<div class="t" style="margin-top:6px">On mi-servicio</div>± Changes <span style="color:#1a7f37">+0</span><br>▣ 1 Terminal<br>▭ Files</div>
+</div>
+</div>
+
+<div class="section">
+<h3>3 · Tu terminal, sin pestañas</h3>
+<p class="subtitle">Para la instalación y los comandos que corre una persona, fuera de Cursor.</p>
+<div class="it">
+ <div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i>&nbsp;▭ …/mi-servicio</div>
+ <div class="pl"><span class="seg ap"></span><span class="seg pa">▭ ~/mi-servicio</span><span class="fill"> ··································</span><span class="seg sy">system ⌂</span><span class="seg ti">at 11:37:15 ◷</span></div>
+ <div class="pl"><span class="ok">❯</span> <span class="k">git clone git@github.com:…/inherited-audit.git ~/skills/inherited-audit</span></div>
+ <div class="pl o">Cloning into '~/skills/inherited-audit'... done.</div>
+ <div class="pl"><span class="ok">❯</span> <span class="k">~/skills/inherited-audit/install.sh --agents</span></div>
+ <div class="pl o">skill: ~/.claude/skills/inherited-audit -&gt; ~/skills/inherited-audit/skill</div>
+ <div class="pl o">agents: ia-auditor linked for Claude Code and Cursor</div>
+ <div class="pl"><span class="ok">❯</span> <span style="background:#d7dae0;color:#262a31">&nbsp;</span></div>
+</div>
+</div>

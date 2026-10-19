@@ -1,0 +1,83 @@
+<style>
+.ctl{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Helvetica,Arial,sans-serif;background:#16171c;color:#e8e8ee;border-radius:12px;padding:16px;display:grid;grid-template-columns:220px 1fr 260px;gap:14px;font-size:12px}
+.ctl .col{display:flex;flex-direction:column;gap:8px;min-width:0}
+.ctl .lbl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#8b8b98}
+.ctl .ch{padding:6px 8px;border-radius:7px;color:#b9b9c6;display:flex;justify-content:space-between}
+.ctl .ch.done{color:#6f6f7c}
+.ctl .ch.on{background:#2d6cdf;color:#fff}
+.ctl .ch small{opacity:.7}
+.ctl .stp{padding:3px 8px 3px 22px;color:#8b8b98;font-size:11px}
+.ctl .stp.on{color:#fff}
+.ctl .stp.on:before{content:"▶ ";margin-left:-12px;color:#7ee787}
+.ctl .stage{border:1px solid #2c2d35;border-radius:9px;overflow:hidden}
+.ctl .stage .t{font-size:10px;color:#8b8b98;padding:5px 8px;background:#1d1e24;display:flex;justify-content:space-between}
+.ctl .stage .live{color:#ff6b6b}
+.ctl .mini{height:150px;background:#fff;display:flex}
+.ctl .mini .s{width:46px;background:#f2f2f2;border-right:1px solid #e4e4e4}
+.ctl .mini .c{flex:1;padding:8px;color:#1d1d1f;font-size:9.5px;display:flex;flex-direction:column;gap:5px}
+.ctl .mini .ask{border:1px solid #e4e4e4;border-radius:7px;padding:5px}
+.ctl .mini .tool{background:#f3f3f3;border-radius:4px;padding:2px 5px;font-family:Menlo,monospace;align-self:flex-start}
+.ctl .next{height:70px;border-radius:7px;background:linear-gradient(135deg,#2d6cdf,#7a4fe0);display:flex;align-items:center;padding:0 12px;font-weight:700;font-size:13px}
+.ctl .btns{display:flex;gap:8px;justify-content:center;margin-top:4px}
+.ctl .b{background:#23242c;border:1px solid #33343e;border-radius:9px;padding:9px 12px;text-align:center;min-width:64px}
+.ctl .b.big{background:#2d6cdf;border-color:#2d6cdf;min-width:90px;font-weight:700}
+.ctl .b kbd{display:block;font:10px Menlo,monospace;color:#8b8b98;margin-top:3px}
+.ctl .b.big kbd{color:#cfe0ff}
+.ctl .notes{background:#1d1e24;border-radius:9px;padding:10px;line-height:1.55;color:#d9d9e2}
+.ctl .notes b{color:#fff}
+.ctl .meta{display:flex;justify-content:space-between;color:#8b8b98;font-size:11px}
+.ctl .q{background:#1d1e24;border-radius:9px;padding:10px;color:#b9b9c6}
+.ctl .pill{display:inline-block;background:#23242c;border:1px solid #33343e;border-radius:99px;padding:2px 8px;margin:2px 3px 0 0;font-size:10.5px}
+</style>
+
+<h2>El control del presentador</h2>
+<p class="subtitle">Una ventana aparte que no se comparte ni se graba. El escenario (lo que ve la gente) se maneja desde acá con botones o con el teclado. Mirá qué sobra o qué falta.</p>
+
+<div class="ctl">
+ <div class="col">
+  <div class="lbl">Episodio 6 · inherited-audit</div>
+  <div class="ch done">1 · Qué resuelve <small>0:40</small></div>
+  <div class="ch done">2 · Instalar <small>2:10</small></div>
+  <div class="ch on">3 · Caso principal <small>en curso</small></div>
+  <div class="stp">Pedirle la auditoría</div>
+  <div class="stp">Fija la base y mide la suite</div>
+  <div class="stp on">Pregunta única del paso 0</div>
+  <div class="stp">Hallazgos con test rojo</div>
+  <div class="stp">Los dos reportes</div>
+  <div class="ch">4 · Retomar una corrida</div>
+  <div class="ch">5 · Filtrar el reporte</div>
+  <div class="ch">6 · Si algo falla</div>
+  <div class="ch">7 · Cierre</div>
+  <div class="lbl" style="margin-top:6px">Saltar a</div>
+  <div><span class="pill">episodio ▾</span><span class="pill">capítulo ▾</span></div>
+ </div>
+
+ <div class="col">
+  <div class="stage">
+   <div class="t"><span>Escenario · lo que ve la gente</span><span class="live">● en vivo · paso 7 de 23</span></div>
+   <div class="mini"><div class="s"></div><div class="c">
+    <div class="ask">Auditá este sistema heredado con inherited-audit…</div>
+    <div class="tool">▸ Ran · ia.py baseline</div>
+    <div>La suite del backend pasa 212 de 214.</div>
+    <div><b>Antes de seguir, una sola pregunta</b> ▍</div>
+   </div></div>
+  </div>
+  <div class="lbl">Lo que viene</div>
+  <div class="next">Placa · «Hallazgos con test rojo»</div>
+  <div class="btns">
+   <div class="b">⏮<kbd>⇧ ←</kbd>capítulo</div>
+   <div class="b">◀<kbd>←</kbd>atrás 1</div>
+   <div class="b big">⏯<kbd>espacio</kbd>play / pausa</div>
+   <div class="b">▶<kbd>→</kbd>adelante 1</div>
+   <div class="b">⏭<kbd>⇧ →</kbd>capítulo</div>
+  </div>
+  <div class="meta"><span>Velocidad del tipeo: <b>1×</b> ⌄</span><span>⏱ 6:12 en el episodio</span><span>B: pantalla en negro</span></div>
+ </div>
+
+ <div class="col">
+  <div class="lbl">Notas para decir (no se ven)</div>
+  <div class="notes"><b>Qué remarcar:</b> la skill pregunta <b>una sola vez</b> al principio. Nunca instala nada global ni sin preguntar.<br><br><b>Por qué importa:</b> en un repo que nadie auditó, correr scripts de instalación es un riesgo; por eso usa <code>--ignore-scripts</code>.</div>
+  <div class="lbl">Preguntas que suelen salir</div>
+  <div class="q">«¿Y si no tengo Docker?» → la skill lo dice y sigue sin e2e.<br>«¿Lo puedo correr en Claude Code?» → sí, mismo prompt.</div>
+ </div>
+</div>
