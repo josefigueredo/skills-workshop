@@ -62,6 +62,18 @@ class TestGenericRules(Tmp):
             self.assertTrue(any(r.search(s) for r in rules.values()), s)
         self.assertFalse(any(r.search("AKIA short") for r in rules.values()))
 
+    def test_github_ssh_remote_is_not_an_email(self):
+        # Every skill episode clones over SSH; `git@github.com` is GitHub's transport
+        # user, not a person. Only that exact address passes.
+        with _env():
+            rules = privacy.rules()
+        ok = "git clone git@github.com:org/repo.git x"
+        self.assertFalse(any(r.search(ok) for r in rules.values()), ok)
+        for bad in ("jane@github.com", "git@github.com.evil.io", "agit@github.com",
+                    "git@github.community", "git@gitlab.com"):
+            with self.subTest(bad=bad):
+                self.assertTrue(any(r.search(bad) for r in rules.values()), bad)
+
     def test_scan_format_and_binary_skipped(self):
         with _env():
             p = self.put("episodes/a.json", 'x\n{"m": "jane@corp.io"}\n')

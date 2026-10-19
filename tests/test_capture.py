@@ -222,6 +222,30 @@ class DemoTests(unittest.TestCase):
         self.assertEqual(r.returncode, 1)
         self.assertIn("already exists", r.stdout)
 
+    def test_setup_seeds_the_inherited_audit_worker_output(self):
+        # The pilot's real steps consume what the audit's workers would leave: candidate
+        # files outside the repo and one local branch with a test-only red commit.
+        self.assertEqual(self.build().returncode, 0)
+        repo = self.target / "mi-servicio"
+        cands = self.target / "auditorias" / "candidatos"
+        names = sorted(p.name for p in cands.iterdir())
+        self.assertEqual(names, ["c-01.json", "c-02.json", "q-01.json"])
+        for p in cands.iterdir():
+            self.assertIn(json.loads(p.read_text(encoding="utf-8"))["report"],
+                          ("correctness", "quality"))
+        branch = "fix/c-01-descuento-sin-tope"
+        self.assertEqual(git(repo, "rev-parse", "--abbrev-ref", "HEAD"), "main")
+        self.assertEqual(git(repo, "rev-parse", branch + "~1"), git(repo, "rev-parse", "main"))
+        self.assertEqual(git(repo, "diff", "--name-only", "main", branch),
+                         "api/tests/test_discount_cap.py")
+        self.assertEqual(git(repo, "status", "--porcelain"), "")
+        git(repo, "switch", "-q", branch)
+        t = subprocess.run(["python3", "-m", "unittest", "tests.test_discount_cap"],
+                           cwd=str(repo / "api"), stdout=subprocess.PIPE,
+                           stderr=subprocess.STDOUT, universal_newlines=True)
+        self.assertNotEqual(t.returncode, 0)
+        self.assertIn("AssertionError: -50.0 not greater than or equal to 0", t.stdout)
+
     def test_demo_carries_no_nested_git_in_the_workshop_repo(self):
         self.assertFalse((ROOT / "demo" / "mi-servicio").exists())
 

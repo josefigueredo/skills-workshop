@@ -9,7 +9,11 @@ from typing import Dict, List
 GENERIC = {
     "user-path-mac": r"/Users/[^/\s]+",
     "user-path-linux": r"/home/[^/\s]+",
-    "email": r"[A-Za-z0-9._%+-]+@(?!example\.com(?![A-Za-z0-9-]|\.[A-Za-z0-9]))"
+    # Any address except @example.com and GitHub's SSH transport user (git@github.com,
+    # which every clone line carries). The match starts at the whole local part, so
+    # the git@github.com exception cannot be dodged by matching from inside a longer name.
+    "email": r"(?<![A-Za-z0-9._%+-])(?!git@github\.com(?![A-Za-z0-9-]|\.[A-Za-z0-9]))"
+             r"[A-Za-z0-9._%+-]+@(?!example\.com(?![A-Za-z0-9-]|\.[A-Za-z0-9]))"
              r"[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}",
     "secret": r"ghp_|github_pat_|xox[bp]-|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY",
 }
