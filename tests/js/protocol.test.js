@@ -152,28 +152,29 @@ test("space starts playing and advances one animated step", function () {
   assertEqual(stageMsgs(r.outbox), [show(1, true)]);
 });
 
-test("while playing, done-animating schedules the next show", function () {
+test("while playing, done-animating asks the stage to wait, then advance shows the next", function () {
   var ep = protoEpisodes()[0];
-  var r = feed(live(), [key(" "), {kind: "message", msg: {type: "done-animating", index: 1}}]);
-  var eff = effects(r.outbox);
-  assertEqual(eff.length, 1);
-  assertEqual(eff[0].effect, "schedule-next");
-  assertEqual(eff[0].delay, Animate.autoplay(ep, 1, 1).delay);
-  r = feed(r.state, [{kind: "advance", seq: eff[0].seq}]);
+  var r = feed(feed(live(), [key(" ")]).state, [{kind: "message", msg: {type: "done-animating", index: 1}}]);
+  assertEqual(stageMsgs(r.outbox), [{type: "wait", delay: Animate.autoplay(ep, 1, 1).delay, seq: r.state.seq}]);
+  assertEqual(effects(r.outbox), []);
+  r = feed(r.state, [{kind: "message", msg: {type: "advance", seq: r.state.seq}}]);
   assertEqual(stageMsgs(r.outbox), [show(2, true)]);
 });
 
 test("autoplay stop (pause step) turns playing off", function () {
-  var r = feed(live(), [key("ArrowRight"), key(" "), {kind: "message", msg: {type: "done-animating", index: 2}}]);
+  var r = feed(feed(live(), [key("ArrowRight"), key(" ")]).state,
+               [{kind: "message", msg: {type: "done-animating", index: 2}}]);
   assertEqual(r.state.index, 2);
   assertEqual(r.state.playing, false);
-  assertEqual(effects(r.outbox), []);
+  assertEqual(stageMsgs(r.outbox), []);
 });
 
-test("space pauses; a later advance is ignored", function () {
+test("space pauses (wait-cancel); a later advance is ignored", function () {
   var r = feed(live(), [key(" "), {kind: "message", msg: {type: "done-animating", index: 1}}]);
-  var seq = effects(r.outbox)[0].seq;
-  r = feed(r.state, [key(" "), {kind: "advance", seq: seq}]);
+  var seq = stageMsgs(r.outbox)[0].seq;
+  r = feed(r.state, [key(" ")]);
+  assertEqual(stageMsgs(r.outbox), [{type: "wait-cancel"}]);
+  r = feed(r.state, [{kind: "message", msg: {type: "advance", seq: seq}}]);
   assertEqual(r.state.playing, false);
   assertEqual(r.state.index, 1);
   assertEqual(stageMsgs(r.outbox), []);
@@ -181,15 +182,15 @@ test("space pauses; a later advance is ignored", function () {
 
 test("a manual → during autoplay invalidates the pending advance", function () {
   var r = feed(live(), [key(" "), {kind: "message", msg: {type: "done-animating", index: 1}}]);
-  var seq = effects(r.outbox)[0].seq;
-  r = feed(r.state, [key("ArrowRight"), {kind: "advance", seq: seq}]);
+  var seq = stageMsgs(r.outbox)[0].seq;
+  r = feed(r.state, [key("ArrowRight"), {kind: "message", msg: {type: "advance", seq: seq}}]);
   assertEqual(r.state.index, 2);
   assertEqual(stageMsgs(r.outbox), [show(2, true)]);
 });
 
 test("done-animating for another index is ignored", function () {
-  var r = feed(live(), [key(" "), {kind: "message", msg: {type: "done-animating", index: 0}}]);
-  assertEqual(effects(r.outbox), []);
+  var r = feed(feed(live(), [key(" ")]).state, [{kind: "message", msg: {type: "done-animating", index: 0}}]);
+  assertEqual(stageMsgs(r.outbox), []);
   assertEqual(r.state.playing, true);
 });
 
@@ -235,6 +236,14 @@ test("switching episode across series changes the stage file and asks to open it
   assertEqual(stageMsgs(r.outbox), [show(0, false, 1, "tres")]);
 });
 
+test("re-selecting the current episode is a no-op", function () {
+  var s = feed(live(), [key("ArrowRight"), {kind: "tick", now: 500}, {kind: "tick", now: 900}]).state;
+  var r = Control.reduce(s, {kind: "select-episode", id: "uno"});
+  assertEqual(r.outbox, []);
+  assertEqual(r.state.index, 1);
+  assertEqual(r.state.elapsed, 400);
+});
+
 test("select-episode with an unknown id does nothing", function () {
   var s = live();
   var r = Control.reduce(s, {kind: "select-episode", id: "nope"});
@@ -256,29 +265,79 @@ test("pings every 2 s while the stage is live", function () {
   assertEqual(stageMsgs(r.outbox), [{type: "ping"}]);
 });
 
-test("no pong for 5 s sets stageLost and stops playing", function () {
+test("an unanswered ping for 5 s sets stageLost and stops playing", function () {
   var s = feed(live(), [key(" ")]).state;
-  var r = feed(s, [{kind: "tick", now: 4999}]);
+  var r = feed(s, [{kind: "tick", now: 2000}, {kind: "tick", now: 4000}, {kind: "tick", now: 6000},
+                   {kind: "tick", now: 6999}]);
   assertEqual(r.state.stageLost, false);
-  r = feed(r.state, [{kind: "tick", now: 5000}]);
+  r = feed(r.state, [{kind: "tick", now: 7000}]);
   assertEqual(r.state.stageLost, true);
   assertEqual(r.state.playing, false);
-  r = feed(r.state, [{kind: "tick", now: 6000}, key("ArrowRight")]);
-  assertEqual(stageMsgs(r.outbox), []);
+  r = feed(r.state, [{kind: "tick", now: 8000}]);
+  assertEqual(stageMsgs(r.outbox), [{type: "ping"}], "keeps pinging while lost");
+  r = feed(r.state, [key("b")]);
+  assertEqual(stageMsgs(r.outbox), [], "no content while lost");
 });
 
-test("a pong keeps the stage alive", function () {
-  var r = feed(live(), [{kind: "tick", now: 3000}, {kind: "message", msg: {type: "pong"}},
-                        {kind: "tick", now: 7999}]);
+test("a pong answers the pending ping", function () {
+  var r = feed(live(), [{kind: "tick", now: 2000}, {kind: "message", msg: {type: "pong"}, now: 3000},
+                        {kind: "tick", now: 4000}, {kind: "tick", now: 6000}, {kind: "tick", now: 8999}]);
   assertEqual(r.state.stageLost, false);
-  r = feed(r.state, [{kind: "tick", now: 8000}]);
+  r = feed(r.state, [{kind: "tick", now: 9000}]);
   assertEqual(r.state.stageLost, true);
+});
+
+test("a late tick (+60 s, throttled control) with a live stage stays not lost", function () {
+  var s = live(), r;
+  for (var t = 250; t <= 10000; t += 250) {
+    r = feed(s, [{kind: "tick", now: t}]);
+    s = r.state;
+    if (stageMsgs(r.outbox).length) s = feed(s, [{kind: "message", msg: {type: "pong"}, now: t + 5}]).state;
+  }
+  r = feed(s, [{kind: "tick", now: 70000}]);
+  assertEqual(r.state.stageLost, false);
+  assertEqual(stageMsgs(r.outbox), [{type: "ping"}], "pings first after a gap");
+  r = feed(r.state, [{kind: "tick", now: 70250}]);
+  assertEqual(r.state.stageLost, false);
+});
+
+test("a late tick after a gap does not judge a ping sent before it", function () {
+  var r = feed(live(), [{kind: "tick", now: 2000}, {kind: "tick", now: 60000}]);
+  assertEqual(r.state.stageLost, false);
+  r = feed(r.state, [{kind: "message", msg: {type: "pong"}, now: 60010}, {kind: "tick", now: 64000}]);
+  assertEqual(r.state.stageLost, false);
+});
+
+function lostAt(index) {
+  var s = live();
+  for (var i = 0; i < index; i++) s = feed(s, [key("ArrowRight")]).state;
+  s = feed(s, [{kind: "tick", now: 2000}, {kind: "tick", now: 4000}, {kind: "tick", now: 7000}]).state;
+  assertEqual(s.stageLost, true);
+  return s;
+}
+
+test("a pong while lost recovers and resends the current show", function () {
+  var r = feed(lostAt(2), [{kind: "message", msg: {type: "pong"}, now: 7100}]);
+  assertEqual(r.state.stageLost, false);
+  assertEqual(stageMsgs(r.outbox), [show(2, false)]);
+});
+
+test("a forwarded key counts as liveness", function () {
+  var r = feed(lostAt(0), [{kind: "message", msg: {type: "key", key: "ArrowRight", shift: false}, now: 7100}]);
+  assertEqual(r.state.stageLost, false);
+  assertEqual(r.state.index, 1);
+  assertEqual(stageMsgs(r.outbox), [show(0, false), show(1, true)]);
+});
+
+test("the stage window closed sets stageLost and stops playing", function () {
+  var r = feed(live(), [key(" "), {kind: "stage-closed"}]);
+  assertEqual(r.state.stageLost, true);
+  assertEqual(r.state.playing, false);
 });
 
 test("reopen after lost resends the current show", function () {
-  var s = feed(live(), [key("ArrowRight"), key("ArrowRight"), {kind: "tick", now: 5000}]).state;
-  assertEqual(s.stageLost, true);
-  var r = feed(s, [{kind: "stage-opened", now: 6000}]);
+  var s = lostAt(2);
+  var r = feed(s, [{kind: "stage-opened", now: 8000}]);
   assertEqual(r.state.stageLost, false);
   r = feed(r.state, [{kind: "message", msg: {type: "ready"}}]);
   assertEqual(stageMsgs(r.outbox), [show(2, false)]);
@@ -325,11 +384,12 @@ test("Lo que viene: next card title or next step label", function () {
 // ---------------- stage ----------------
 
 function fakeClock() {
-  var q = [];
+  var q = [], next = 0;
   return {
-    schedule: function (fn) { q.push(fn); return q.length; },
-    unschedule: function () {},
-    drain: function () { var n = 0; while (q.length && n < 10000) { q.shift()(); n++; } }
+    schedule: function (fn, ms) { next++; q.push({id: next, fn: fn, ms: ms}); return next; },
+    unschedule: function (id) { q = q.filter(function (t) { return t.id !== id; }); },
+    pending: function () { return q.map(function (t) { return t.ms; }); },
+    drain: function () { var n = 0; while (q.length && n < 10000) { q.shift().fn(); n++; } }
   };
 }
 function makeStage() {
@@ -440,6 +500,38 @@ test("stage: a show for an episode it does not have is ignored", function () {
     assertEqual(t.posted, []);
     assertEqual(t.canvas.childNodes.length, 0);
   });
+});
+
+test("stage: wait times the delay, then sends advance with its seq", function () {
+  var t = makeStage();
+  return t.stage.handle({type: "wait", delay: 900, seq: 7}).then(function () {
+    assertEqual(t.clock.pending(), [900]);
+    assertEqual(t.posted, []);
+    t.clock.drain();
+    assertEqual(t.posted, [{type: "advance", seq: 7}]);
+  });
+});
+
+test("stage: a show or wait-cancel drops the pending wait", function () {
+  var t = makeStage();
+  return t.stage.handle({type: "wait", delay: 900, seq: 7}).then(function () {
+    return t.stage.handle(show(3, false));
+  }).then(function () {
+    assertEqual(t.clock.pending(), []);
+    return t.stage.handle({type: "wait", delay: 900, seq: 8});
+  }).then(function () {
+    return t.stage.handle({type: "wait-cancel"});
+  }).then(function () {
+    t.clock.drain();
+    assert(!t.posted.some(function (m) { return m.type === "advance"; }), "no advance after cancel");
+  });
+});
+
+test("stage: key repeats and modified keys are not forwarded", function () {
+  assertEqual(Stage.keyMessage({key: "ArrowRight", repeat: true}), null);
+  assertEqual(Stage.keyMessage({key: "ArrowRight", metaKey: true}), null);
+  assertEqual(Stage.keyMessage({key: "b", ctrlKey: true}), null);
+  assertEqual(Stage.keyMessage({key: " ", altKey: true}), null);
 });
 
 test("stage: control keys are forwarded as key messages", function () {

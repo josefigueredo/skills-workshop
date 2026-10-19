@@ -3,17 +3,25 @@
 // Control.init(episodes) -> state
 // Control.reduce(state, input) -> {state, outbox}   (never mutates `state`)
 //   inputs: {kind:"key", key, shift}         key = KeyboardEvent.key (←, →, space, b)
-//           {kind:"message", msg}            a message from the stage window
-//           {kind:"tick", now}               clock (ms); drives ping, lost and timers
-//           {kind:"advance", seq}            the timer of a "schedule-next" effect fired
+//           {kind:"message", msg, now}       a message from the stage window; `now` is the
+//                                            arrival time (Date.now()), not the last tick
+//           {kind:"tick", now}               clock (ms); drives pings, lost and timers
 //           {kind:"select-episode", id}  {kind:"select-chapter", i}  {kind:"speed", value}
 //           {kind:"stage-opened", now}       the «Abrir escenario» / «Reabrir» click opened it
-//   outbox: {to:"stage", msg}                sent only while the stage is live (opened,
-//                                            ready and not lost); `ready` resends state
-//           {effect:"schedule-next", delay, seq}  call back with {kind:"advance", seq}
-// Playback: space toggles `playing`; while playing, each done-animating for the current
-// index asks Animate.autoplay and schedules the next step, until it says stop.
-// The stage is lost when no pong arrives for LOST_MS; pings go every PING_MS.
+//           {kind:"stage-closed"}            the DOM layer saw the stage window closed
+//   outbox: {to:"stage", msg}                content messages go only while the stage is
+//                                            live (opened, ready, not lost); pings go while
+//                                            it is opened, lost or not
+// Playback: space toggles `playing`. While playing, each done-animating for the current
+// index asks Animate.autoplay; if it does not stop, the control sends the stage
+// {type:"wait", delay, seq} and the STAGE times the delay (its window is visible, so its
+// timers are not throttled), then answers {type:"advance", seq}. The control advances
+// only if still playing and `seq` is unchanged (every show and every pause bumps it).
+// Liveness: every stage message counts. A ping goes every PING_MS; the stage is lost when
+// the oldest unanswered ping is LOST_MS old. A tick after a gap of LOST_MS or more (the
+// control's timers were throttled) only sends a fresh ping and judges on later ticks.
+// While lost the control keeps pinging; any stage message clears lost and resends the
+// current show.
 // Clock: it starts with the first move of the episode (→, space, ⇧ jumps, chapter pick)
 // and runs until another episode is picked, paused or not (narration counts): see
 // clockRuns. Each tick adds its time to the current chapter.
@@ -40,7 +48,7 @@ var Control = (function () {
       episodes: eps, episodeId: ep.id, index: 0, speed: 1, playing: false, blackout: false,
       seq: 0, stageFile: stageFile(ep.series), stageSeries: null,
       needsOpen: true, stageLost: false, ready: false, stageIndex: null,
-      now: 0, lastPing: 0, lastPong: 0, lastTick: null,
+      now: 0, lastPing: 0, lastHeard: 0, pingPendingSince: null, lastTick: null,
       started: false, elapsed: 0, chapterMs: zeros(ep)
     };
   }
@@ -55,6 +63,8 @@ var Control = (function () {
   function resend(s) {
     return (s.blackout ? toStage(s, {type: "blackout", on: true}) : []).concat(toStage(s, showMsg(s, false)));
   }
+  // Stop playback; bumping seq voids any wait the stage still has pending.
+  function pause(s) { return s.playing ? assign(s, {playing: false, seq: s.seq + 1}) : s; }
 
   function go(s, index, animate, patch) {
     var n = assign(s, assign({index: index, seq: s.seq + 1, started: true}, patch || {}));
@@ -84,7 +94,10 @@ var Control = (function () {
     if (k === "right") return s.index >= last ? none(s) : go(s, s.index + 1, true);
     if (k === "left") return s.index <= 0 ? none(s) : go(s, s.index - 1, false, {playing: false});
     if (k === "space") {
-      if (s.playing) return none(assign(s, {playing: false}));
+      if (s.playing) {
+        var p = pause(s);
+        return {state: p, outbox: toStage(p, {type: "wait-cancel"})};
+      }
       return s.index >= last ? none(s) : go(s, s.index + 1, true, {playing: true});
     }
     if (k === "b") {
@@ -94,48 +107,59 @@ var Control = (function () {
     return none(s);
   }
 
-  function onMessage(s, msg) {
-    if (!msg || typeof msg !== "object") return none(s);
-    var n;
-    if (msg.type === "ready") {
-      if (s.needsOpen) return none(s);
-      n = assign(s, {ready: true, stageLost: false, lastPong: s.now});
-      return {state: n, outbox: resend(n)};
-    }
-    if (msg.type === "pong") {
-      n = assign(s, {lastPong: s.now});
-      if (!s.stageLost || s.needsOpen || !s.ready) return none(n);
-      n = assign(n, {stageLost: false});
-      return {state: n, outbox: resend(n)};
-    }
+  // Any message proves the stage is there: it clears lost and, if the stage was down
+  // (lost, or not ready yet), the current state is resent before the message is handled.
+  function onMessage(s, msg, now) {
+    if (!msg || typeof msg !== "object" || s.needsOpen) return none(s);
+    if (now === undefined) now = s.now;
+    var wasDown = s.stageLost || !s.ready;
+    var n = assign(s, {ready: true, stageLost: false, lastHeard: now, pingPendingSince: null});
+    var out = (wasDown || msg.type === "ready") ? resend(n) : [];
+    var r = handleMessage(n, msg);
+    return {state: r.state, outbox: out.concat(r.outbox)};
+  }
+
+  function handleMessage(s, msg) {
     if (msg.type === "shown") return none(assign(s, {stageIndex: msg.index}));
     if (msg.type === "key") return onKey(s, msg.key, msg.shift);
     if (msg.type === "done-animating") {
       if (!s.playing || msg.index !== s.index) return none(s);
       var a = Animate.autoplay(episodeOf(s), s.index, s.speed);
-      if (a.stop) return none(assign(s, {playing: false}));
-      return {state: s, outbox: [{effect: "schedule-next", delay: a.delay, seq: s.seq}]};
+      if (a.stop) return none(pause(s));
+      return {state: s, outbox: toStage(s, {type: "wait", delay: a.delay, seq: s.seq})};
     }
-    return none(s);
+    if (msg.type === "advance") {
+      var ep = episodeOf(s);
+      if (!s.playing || msg.seq !== s.seq || !ep) return none(s);
+      if (s.index >= lastIndex(ep)) return none(pause(s));
+      return go(s, s.index + 1, true);
+    }
+    return none(s);  // ready, pong: liveness only
+  }
+
+  function ping(s, now) {
+    var n = assign(s, {lastPing: now, pingPendingSince: s.pingPendingSince === null ? now : s.pingPendingSince});
+    return {state: n, outbox: [{to: "stage", msg: {type: "ping"}}]};
   }
 
   function onTick(s, now) {
     var patch = {now: now, lastTick: now};
-    var dt = s.lastTick === null ? 0 : now - s.lastTick;
-    if (clockRuns(s) && dt > 0) {
+    var gap = s.lastTick === null ? 0 : now - s.lastTick;
+    if (clockRuns(s) && gap > 0) {
       var ch = Nav.position(episodeOf(s), s.index).chapter;
       var ms = s.chapterMs.slice();
-      ms[ch] = (ms[ch] || 0) + dt;
-      patch.elapsed = s.elapsed + dt;
+      ms[ch] = (ms[ch] || 0) + gap;
+      patch.elapsed = s.elapsed + gap;
       patch.chapterMs = ms;
     }
     var n = assign(s, patch);
-    if (n.needsOpen || n.stageLost) return none(n);
-    if (now - n.lastPong >= LOST_MS) return none(assign(n, {stageLost: true, playing: false}));
-    if (n.ready && now - n.lastPing >= PING_MS) {
-      n = assign(n, {lastPing: now});
-      return {state: n, outbox: toStage(n, {type: "ping"})};
+    if (n.needsOpen) return none(n);
+    // Our own timers were asleep: whatever is pending cannot be judged; ask again.
+    if (gap >= LOST_MS) return ping(assign(n, {pingPendingSince: null}), now);
+    if (!n.stageLost && n.pingPendingSince !== null && now - n.pingPendingSince >= LOST_MS) {
+      n = pause(assign(n, {stageLost: true}));
     }
+    if (now - n.lastPing >= PING_MS) return ping(n, now);
     return none(n);
   }
 
@@ -144,12 +168,8 @@ var Control = (function () {
     var ep = episodeOf(s), n, target;
     switch (input.kind) {
       case "key": return onKey(s, input.key, input.shift);
-      case "message": return onMessage(s, input.msg);
+      case "message": return onMessage(s, input.msg, input.now);
       case "tick": return onTick(s, input.now);
-      case "advance":
-        if (!s.playing || input.seq !== s.seq || !ep) return none(s);
-        if (s.index >= lastIndex(ep)) return none(assign(s, {playing: false}));
-        return go(s, s.index + 1, true);
       case "speed":
         if (SPEEDS.indexOf(input.value) < 0) return none(s);
         return none(assign(s, {speed: input.value}));
@@ -161,7 +181,7 @@ var Control = (function () {
         return go(s, target, false, {playing: false});
       case "select-episode":
         var next = findEpisode(s.episodes, input.id);
-        if (!next) return none(s);
+        if (!next || next.id === s.episodeId) return none(s);
         var needsOpen = s.needsOpen || next.series !== s.stageSeries;
         n = assign(s, {episodeId: next.id, stageFile: stageFile(next.series), needsOpen: needsOpen,
                        ready: needsOpen ? false : s.ready, chapterMs: zeros(next), elapsed: 0});
@@ -169,8 +189,11 @@ var Control = (function () {
       case "stage-opened":
         var now = input.now === undefined ? s.now : input.now;
         return none(assign(s, {needsOpen: false, stageLost: false, ready: false,
-                               stageSeries: ep ? ep.series : null,
-                               now: now, lastPing: now, lastPong: now}));
+                               stageSeries: ep ? ep.series : null, now: now,
+                               lastPing: now, lastHeard: now, pingPendingSince: null}));
+      case "stage-closed":
+        if (s.needsOpen || s.stageLost) return none(s);
+        return none(pause(assign(s, {stageLost: true})));
     }
     return none(s);
   }
@@ -239,21 +262,27 @@ var Control = (function () {
   function boot() {
     if (!$("ws-control")) return;
     var state = init(readEpisodes());
-    var stageWin = null, timer = null, durations = {}, previewKey = null;
+    var stageWin = null, durations = {}, previewKey = null, viewKey = null, chapterTimes = [];
 
     function dispatch(input) {
       var r = reduce(state, input);
       state = r.state;
       r.outbox.forEach(perform);
-      render();
+      update();
     }
     function perform(o) {
-      if (o.to === "stage") {
-        if (stageWin && !stageWin.closed) stageWin.postMessage(o.msg, "*");
-      } else if (o.effect === "schedule-next") {
-        if (timer !== null) clearTimeout(timer);
-        timer = setTimeout(function () { timer = null; dispatch({kind: "advance", seq: o.seq}); }, o.delay);
-      }
+      if (o.to === "stage" && stageWin && !stageWin.closed) stageWin.postMessage(o.msg, "*");
+    }
+    // `closed` is the exact signal that the presenter closed the stage window.
+    function checkClosed() {
+      if (stageWin && stageWin.closed) dispatch({kind: "stage-closed"});
+    }
+    // Rebuild the panels only when what they show changes; ticks just refresh the times,
+    // so clicks and text selection in the panels survive.
+    function update() {
+      var k = [state.episodeId, state.index, state.playing, state.blackout, state.stageLost,
+               state.needsOpen, state.ready, state.speed].join("|");
+      if (k !== viewKey) { viewKey = k; render(); } else renderTimes();
     }
 
     // The only place that opens the stage window (also serves «Reabrir»).
@@ -302,18 +331,30 @@ var Control = (function () {
       csel.value = String(Nav.position(ep, state.index).chapter);
     }
 
+    function chapterTime(ep, i) {
+      var spent = state.chapterMs[i] || 0;
+      var when = "~" + clock(duration(ep).chapters[i].ms);
+      if (i === Nav.position(ep, state.index).chapter && state.started) return "en curso " + clock(spent) + " / " + when;
+      return spent > 0 ? clock(spent) + " / " + when : when;
+    }
+    function renderTimes() {
+      var ep = episodeOf(state);
+      if (!ep) return;
+      chapterTimes.forEach(function (small, i) { small.textContent = chapterTime(ep, i); });
+      $("clock").textContent = "⏱ " + clock(state.elapsed) + " en el episodio";
+    }
+
     function renderChapters(ep, pos) {
       var list = clear($("chapters"));
       var est = duration(ep);
+      chapterTimes = [];
       $("episode-label").textContent = "Episodio " + ep.order + " · " + ep.title;
       ep.chapters.forEach(function (ch, i) {
         var cls = "ch" + (i === pos.chapter ? " on" : i < pos.chapter ? " done" : "");
         var row = el("div", cls, (i + 1) + " · " + ch.title);
-        var spent = state.chapterMs[i] || 0;
-        var when = "~" + clock(est.chapters[i].ms);
-        if (i === pos.chapter && state.started) when = "en curso " + clock(spent) + " / " + when;
-        else if (spent > 0) when = clock(spent) + " / " + when;
-        row.appendChild(el("small", null, when));
+        var small = el("small", null, chapterTime(ep, i));
+        chapterTimes.push(small);
+        row.appendChild(small);
         row.addEventListener("click", function () { dispatch({kind: "select-chapter", i: i}); });
         list.appendChild(row);
         if (i !== pos.chapter) return;
@@ -374,7 +415,7 @@ var Control = (function () {
       renderBanner();
       $("play").classList.toggle("on", state.playing);
       $("blackout").classList.toggle("on", state.blackout);
-      $("clock").textContent = "⏱ " + clock(state.elapsed) + " en el episodio";
+      renderTimes();
       $("speed-select").value = String(state.speed);
     }
 
@@ -401,16 +442,17 @@ var Control = (function () {
     document.addEventListener("keydown", function (ev) {
       var tag = ev.target && ev.target.tagName;
       if (tag === "SELECT" || tag === "INPUT" || tag === "TEXTAREA") return;
-      if (!normalizeKey(ev.key) || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+      if (!normalizeKey(ev.key) || ev.repeat || ev.metaKey || ev.ctrlKey || ev.altKey) return;
       ev.preventDefault();
       dispatch({kind: "key", key: ev.key, shift: ev.shiftKey});
     });
     window.addEventListener("message", function (ev) {
       if (!stageWin || ev.source !== stageWin) return;
-      dispatch({kind: "message", msg: ev.data});
+      dispatch({kind: "message", msg: ev.data, now: Date.now()});
     });
     window.addEventListener("resize", render);
-    setInterval(function () { dispatch({kind: "tick", now: Date.now()}); }, 250);
+    document.addEventListener("visibilitychange", checkClosed);
+    setInterval(function () { checkClosed(); dispatch({kind: "tick", now: Date.now()}); }, 250);
     dispatch({kind: "tick", now: Date.now()});
   }
 

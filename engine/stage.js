@@ -1,9 +1,14 @@
 // Stage page: what the audience sees. It holds (episode, index), renders or animates on
 // `show` and answers the control. Messages (see the episode format):
 //   in : {type:"show", episode, index, animate, speed} | {type:"blackout", on} | {type:"ping"}
+//        {type:"wait", delay, seq} | {type:"wait-cancel"}
 //   out: {type:"ready"} on load, {type:"shown", episode, index}, then
 //        {type:"done-animating", index} (only for the latest show), {type:"pong"},
+//        {type:"advance", seq} when a wait ends,
 //        {type:"key", key, shift} for the presenter's keys pressed while the stage has focus.
+// The stage times the autoplay delay (`wait`) because its window is the visible one:
+// the control's timers may be throttled while the stage has focus. A new show, a new wait
+// or wait-cancel drops the pending wait.
 // A `show` animates only when animate is true and index == current + 1 in the same
 // episode; anything else cancels the running animation and renders the finished state.
 // The stage never shows notes, sources or the skill commit: it only calls Render.step.
@@ -23,6 +28,20 @@ var Stage = (function () {
     (opts.episodes || []).forEach(function (ep) { if (ep && ep.id) byId[ep.id] = ep; });
     var cur = null;   // {episode, index} of the latest show
     var seq = 0;      // id of the latest show; older runs stay silent
+    var schedule = opts.schedule || function (fn, ms) { return setTimeout(fn, ms); };
+    var unschedule = opts.unschedule || function (id) { clearTimeout(id); };
+    var waiting = null;  // timer id of the pending wait
+    function cancelWait() {
+      if (waiting !== null) { unschedule(waiting); waiting = null; }
+    }
+    function onWait(msg) {
+      cancelWait();
+      var delay = Math.max(Number(msg.delay) || 0, 0);
+      waiting = schedule(function () {
+        waiting = null;
+        post({type: "advance", seq: msg.seq});
+      }, delay);
+    }
     if (blackout) blackout.hidden = true;
 
     function fades(ep, index) {
@@ -35,6 +54,7 @@ var Stage = (function () {
       if (!ep) return Promise.resolve();
       var index = Nav.clamp(ep, msg.index);
       var id = ++seq;
+      cancelWait();
       var animate = msg.animate === true && cur !== null && cur.episode === ep.id && index === cur.index + 1;
       cur = {episode: ep.id, index: index};
       canvas.classList.remove(FADE);
@@ -50,7 +70,7 @@ var Stage = (function () {
         canvas.style.setProperty("--ws-fade-ms", Math.round(Animate.FADE_MS / speed) + "ms");
         canvas.classList.add(FADE);
       }
-      var run = Animate.run(canvas, ep, index, {speed: speed, schedule: opts.schedule, unschedule: opts.unschedule});
+      var run = Animate.run(canvas, ep, index, {speed: speed, schedule: schedule, unschedule: unschedule});
       post({type: "shown", episode: ep.id, index: index});
       return run.done.then(function () {
         if (id !== seq) return;
@@ -65,6 +85,8 @@ var Stage = (function () {
       if (msg.type === "show") return onShow(msg);
       if (msg.type === "blackout") { if (blackout) blackout.hidden = !msg.on; }
       else if (msg.type === "ping") post({type: "pong"});
+      else if (msg.type === "wait") onWait(msg);
+      else if (msg.type === "wait-cancel") cancelWait();
       return Promise.resolve();
     }
 
@@ -73,7 +95,7 @@ var Stage = (function () {
 
   // The keydown the stage forwards to the control, or null.
   function keyMessage(ev) {
-    if (!ev || KEYS.indexOf(ev.key) < 0) return null;
+    if (!ev || KEYS.indexOf(ev.key) < 0 || ev.repeat || ev.metaKey || ev.ctrlKey || ev.altKey) return null;
     return {type: "key", key: ev.key, shift: !!ev.shiftKey};
   }
 
