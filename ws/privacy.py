@@ -27,18 +27,20 @@ def rules() -> Dict[str, "re.Pattern"]:
         text = Path(path).read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as exc:
         raise ValueError("%s: cannot read leak terms file (%s)" % (path, exc))
-    parts = []
+    count = 0
     for n, line in enumerate(text.splitlines(), 1):
         line = line.strip()
         if not line or line.startswith("#"):
             continue
         try:
-            re.compile(line, re.IGNORECASE)
+            rx = re.compile(line, re.IGNORECASE)
         except re.error as exc:
             raise ValueError("%s:%d: invalid regex (%s)" % (path, n, exc))
-        parts.append("(?:%s)" % line)
-    if parts:
-        out["leak-term"] = re.compile("|".join(parts), re.IGNORECASE)
+        # One pattern per line (never joined: inline flags, named groups and
+        # backreferences must keep their per-line meaning). Keys after the first
+        # carry a `#n` suffix; the reported label is the part before it.
+        out["leak-term" if count == 0 else "leak-term#%d" % (count + 1)] = rx
+        count += 1
     return out
 
 
@@ -81,5 +83,5 @@ def scan(paths: List[Path]) -> List[str]:
         for n, line in enumerate(text.splitlines(), 1):
             for label, rx in rs.items():
                 for m in rx.finditer(line):
-                    hits.append("%s:%d: %s: %s" % (f, n, label, _excerpt(line, m)))
+                    hits.append("%s:%d: %s: %s" % (f, n, label.split("#")[0], _excerpt(line, m)))
     return hits

@@ -95,6 +95,16 @@ class TestLeakTerms(Tmp):
                 privacy.rules()
         self.assertIn("terms.txt:2", str(cm.exception))
 
+    def test_inline_flag_and_repeated_named_group_lines(self):
+        import warnings
+        terms = self.put("terms.txt", "(?i)alpha\\d\n(?P<g>beta)\n(?P<g>gamma)\n(delta)\\1\n")
+        f = self.put("demo/x.txt", "ALPHA1\nbeta\ngamma\ndeltadelta\ndeltax\n")
+        with _env(WS_LEAK_TERMS=str(terms)), warnings.catch_warnings():
+            warnings.simplefilter("error")
+            out = privacy.scan([f])
+        self.assertEqual([o.split(":")[1] for o in out], ["1", "2", "3", "4"])
+        self.assertTrue(all(": leak-term: " in o for o in out))
+
     def test_missing_terms_file_is_error(self):
         with _env(WS_LEAK_TERMS=str(self.root / "nope.txt")):
             with self.assertRaises(ValueError):
