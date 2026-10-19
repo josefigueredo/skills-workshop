@@ -82,6 +82,39 @@ class SchemaTests(unittest.TestCase):
         step_of(ep, 2)["notes"] = 5
         self.assertEqual(len(schema.validate(ep, "x.json")), 2)
 
+    def test_in_zsh_only_on_term(self):
+        ep = minimal_episode()
+        step_of(ep, 0)["in"] = "zsh"
+        self.assertEqual(schema.validate(ep, "x.json"), [])
+        step_of(ep, 0)["in"] = "chat"
+        step_of(ep, 1)["in"] = "zsh"
+        msgs = schema.validate(ep, "x.json")
+        self.assertEqual(len(msgs), 2, msgs)
+        self.assertIn("step 0: 'in' must be \"zsh\"", msgs[0])
+        self.assertIn("step 1: 'in' is only valid on a term step", msgs[1])
+
+    def test_capture_only_only_on_real_term(self):
+        ep = minimal_episode()
+        step_of(ep, 0)["capture_only"] = True
+        self.assertEqual(schema.validate(ep, "x.json"), [])
+        cases = [
+            (lambda s: s.update(capture_only="yes"), 0, "'capture_only' must be true"),
+            (lambda s: s.update(capture_only=False), 0, "'capture_only' must be true"),
+            (lambda s: s.update(capture_only=True), 1, "'capture_only' is only valid on a real term step"),
+        ]
+        for mutate, i, text in cases:
+            with self.subTest(text=text, step=i):
+                e = minimal_episode()
+                mutate(step_of(e, i))
+                msgs = schema.validate(e, "x.json")
+                self.assertEqual(len(msgs), 1, msgs)
+                self.assertIn("step %d: %s" % (i, text), msgs[0])
+        e = minimal_episode()
+        step_of(e, 0).update(source="inferido", capture_only=True)
+        msgs = schema.validate(e, "x.json")
+        self.assertEqual(len(msgs), 1, msgs)
+        self.assertIn("only valid on a real term step", msgs[0])
+
     def test_top_level_and_chapter_requirements(self):
         for field in ("id", "series", "order", "title", "pitch", "skill", "workspace", "chapters"):
             with self.subTest(field=field):

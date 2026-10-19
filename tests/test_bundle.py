@@ -113,6 +113,22 @@ class BundleContent(unittest.TestCase):
                 self.assertEqual(html.lower().count("</script"), 5, name)
                 self.assertEqual(episodes_in(html), [ep])
 
+    def test_capture_only_steps_are_stripped_from_every_bundle(self):
+        ep = minimal_episode(id="co")
+        steps = ep["chapters"][0]["steps"]
+        steps.insert(1, {"type": "term", "cmd": "ia step done", "out": ["done"], "source": "real",
+                         "cwd": "~", "capture_only": True})
+        with with_engine(TempTree()) as tree:
+            src = tree.write("cursor", "01-co.json", ep)
+            before = src.read_text(encoding="utf-8")
+            bundle.build(tree.root)
+            for name in ("serie-cursor.html", "control.html"):
+                got = episodes_in((tree.root / "dist" / name).read_text(encoding="utf-8"))[0]
+                cmds = [s.get("cmd") for s in got["chapters"][0]["steps"]]
+                self.assertNotIn("ia step done", cmds, name)
+                self.assertEqual(len(got["chapters"][0]["steps"]), len(steps) - 1, name)
+            self.assertEqual(src.read_text(encoding="utf-8"), before, "the JSON keeps the step")
+
     def test_episode_key_order_is_kept(self):
         ep = minimal_episode(id="zz")
         with with_engine(TempTree()) as tree:

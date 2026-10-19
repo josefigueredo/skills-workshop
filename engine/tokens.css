@@ -145,4 +145,14 @@
   --ws-k-title-mb: .3em;
   --ws-k-lh-title: 1.05;
   --ws-k-lh-sub: 1.35;
+  --ws-k-pitch-mt: 56px;
+  --ws-k-pitch-w: 1180px;
+  --ws-k-pitch-pad: 28px 36px;
+  --ws-k-pitch-bg: rgba(255, 255, 255, .12);
+  --ws-k-pitch-radius: 14px;
+  --ws-k-fs-pitch-k: 18px;
+  --ws-k-fs-pitch: 30px;
+  --ws-k-lh-pitch: 1.3;
+  --ws-k-pitch-gap: 8px;
+  --ws-k-pitch-row-gap: 22px;
 }

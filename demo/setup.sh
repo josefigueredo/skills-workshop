@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds the demo system: a small git repo "mi-servicio" (api + web + docs) with seeded bugs.
 # Usage: demo/setup.sh <target-dir>      -> creates <target-dir>/mi-servicio (must not exist)
-# and <target-dir>/auditorias/candidatos (seeded worker output for the inherited-audit episode).
+# Episode-specific state goes in demo/prep/<episode-id>.sh, which capture runs afterwards.
 set -euo pipefail
 [ $# -eq 1 ] || { echo "usage: setup.sh <target-dir>" >&2; exit 2; }
 mkdir -p "$1"
@@ -193,52 +193,3 @@ cat > docs/arquitectura.md <<'P'
 - El contador de pedidos (`counter.py`) es global del proceso.
 P
 commit 2026-10-16T09:15:00+00:00 "feat: order handler, static web and docs"
-
-# --- worker output for the inherited-audit episode ---
-# What the audit's workers would leave behind, so the episode's `real` CLI steps have
-# something to load: one local branch with a test-only red commit (the proof pass) and
-# the candidate findings, outside the repo (the agent saves them before `ia.py finding add`).
-# `main` stays checked out, clean and at the same HEAD.
-git checkout -q -b fix/c-01-descuento-sin-tope
-cat > api/tests/test_discount_cap.py <<'P'
-import unittest
-
-from mi_servicio import orders
-
-
-class DiscountCapTest(unittest.TestCase):
-    def setUp(self):
-        orders.ORDERS.clear()
-
-    def test_a_discount_over_100_never_makes_the_total_negative(self):
-        orders.create_order("C1", [(100, 1)])
-        self.assertGreaterEqual(orders.order_total("C1", discount_pct=150), 0)
-P
-commit 2026-10-17T11:00:00+00:00 "test: un descuento de más del 100% deja el total negativo"
-git checkout -q main
-
-C="$T/auditorias/candidatos"
-mkdir -p "$C"
-cat > "$C/c-01.json" <<'P'
-{"report": "correctness", "category": "pedidos", "dimension": "bug",
- "title": "Un descuento de más del 100% deja el total negativo",
- "verdict": "candidate", "severity": "medium", "confidence": "execution", "source": "/review-bugbot",
- "what_happens": "order_total() resta el porcentaje sin tope: con un descuento de 150% un pedido de 100 da -50.",
- "evidence": [{"cite": "API/mi_servicio/orders.py", "from": 12, "to": 16, "note": "no hay tope en discount_pct"}]}
-P
-cat > "$C/c-02.json" <<'P'
-{"report": "correctness", "category": "contador", "dimension": "race",
- "title": "Dos pedidos a la vez pueden contarse como uno",
- "verdict": "candidate", "severity": "low", "confidence": "unverified", "source": "races-distributed",
- "what_happens": "Inferencia: hit() lee el contador y lo escribe en dos pasos; dos hilos pueden pisarse. No se reprodujo con un test.",
- "evidence": [{"cite": "API/mi_servicio/counter.py", "from": 7, "to": 13, "note": "lectura y escritura separadas"}]}
-P
-cat > "$C/q-01.json" <<'P'
-{"report": "quality", "category": "estadisticas", "dimension": "docs",
- "title": "La paginación dice empezar en 1 pero empieza en 0",
- "verdict": "confirmed", "severity": "low", "confidence": "docs", "source": "quality-lenses",
- "what_happens": "El docstring de paginate() habla de páginas desde 1, pero el cálculo toma la página 0 como la primera.",
- "evidence": [{"cite": "API/mi_servicio/stats.py", "from": 9, "to": 12, "note": "page * size: la primera página es la 0"}],
- "suggestion": "Decidir si la primera página es la 0 o la 1, corregir el docstring o el cálculo y sumar un test de la página 1.",
- "effort": "S"}
-P

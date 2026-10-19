@@ -3,6 +3,7 @@
 function fixtureEpisode() {
   return {
     id: "demo", series: "cursor", order: 1, title: "demo-skill",
+    pitch: {ask: "Auditá este sistema antes de empezar", does: "Fija la base y entrega dos reportes."},
     skill: {repo: "demo-skill", commit: "abc1234", date: "2026-10-19"},
     workspace: {repo: "mi-servicio", files: ["api", "web", "README.md"],
                 chats: [{title: "Agregar endpoint de pagos", age: "2d"}]},
@@ -17,7 +18,7 @@ function fixtureEpisode() {
          {type: "ask", text: "Auditá este sistema", source: "inferido"},
          {type: "worked", seconds: 42, source: "inferido"},
          {type: "tool", label: "Ran · ia.py init", source: "inferido"},
-         {type: "term", cmd: "python3 ia.py status", out: ["baseline: done"], source: "inferido"},
+         {type: "term", cmd: "python3 ia.py status", out: ["baseline: done"], source: "inferido", in: "zsh"},
          {type: "say", md: "#### Hecho\nLa base es **a1b2c3d** con `npm ci`.\n- uno\n- dos", source: "inferido"},
          {type: "approve", title: "Crear 2 tickets", lines: ["PROJ-1", "PROJ-2"], button: "Apruebo 2",
           source: "inferido"},
@@ -51,6 +52,37 @@ test("a card shows the chapter title, subtitle and n de total", function () {
   assert(card.textContent.indexOf("Una auditoría") >= 0, "subtitle missing");
   assert(card.textContent.indexOf("demo-skill · 2 de 3") >= 0, "kicker missing: " + card.textContent);
   assertEqual(stepIds(c), []);
+});
+
+test("the first card shows the pitch; other cards and pitchless episodes do not", function () {
+  var c = render(0);
+  var p = c.querySelector(".ws-card-pitch");
+  assert(p, "no pitch on the first card");
+  var t = p.textContent;
+  assert(t.indexOf("Le decís al agente…") >= 0 && t.indexOf("Y la skill…") >= 0, "labels: " + t);
+  assert(t.indexOf("Auditá este sistema antes de empezar") >= 0, "ask missing");
+  assert(t.indexOf("Fija la base y entrega dos reportes.") >= 0, "does missing");
+  assert(c.querySelector(".ws-card-title").textContent === "Instalar", "title still there");
+  assertEqual(stepIds(c), []);
+  assert(!render(3).querySelector(".ws-card-pitch"), "pitch on a later card");
+  var ep = fixtureEpisode();
+  delete ep.pitch;
+  assert(!render(0, ep).querySelector(".ws-card-pitch"), "pitch without data");
+});
+
+test("term on cursor-full without 'in' is the agent's: a Ran chip in the conversation", function () {
+  var ep = fixtureEpisode();
+  delete ep.chapters[1].steps[3].in;
+  var c = render(7, ep);
+  var zsh = c.querySelector(".ws-zsh"), conv = c.querySelector(".ws-conv");
+  assert(zsh, "cursor-full keeps its zsh panel");
+  assert(zsh.textContent.indexOf("python3 ia.py status") < 0, "agent cmd leaked into zsh");
+  var st = conv.querySelector('[data-step="3"]');
+  assert(st, "step not in the conversation");
+  assert(st.textContent.indexOf("▸ Ran · python3 ia.py status") >= 0, "chip: " + st.textContent);
+  assert(st.querySelector('[data-anim="node"]').textContent.indexOf("python3 ia.py status") >= 0, "chip hook");
+  assert(st.querySelector('[data-anim="line"]').textContent.indexOf("baseline: done") >= 0, "output hook");
+  assertEqual(c.querySelectorAll('[data-anim="idle"]').length, 1, "zsh idle prompt stays");
 });
 
 test("cursor-full at its 3rd step shows exactly 3 step nodes in order", function () {

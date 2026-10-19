@@ -9,9 +9,9 @@
 // Animation hooks (for animate.js, which renders the finished state, hides, reveals):
 //   data-step="<j>"      on the root node of every applied step (j = index of the step
 //                        inside its chapter). Nothing else carries data-step. Steps may
-//                        live in different areas (term on cursor-full sits in the zsh
-//                        panel, approve is an overlay at the end of the screen root), so
-//                        document order is not step order: select by value.
+//                        live in different areas (a cursor-full term with `in: "zsh"`
+//                        sits in the zsh panel, approve is an overlay at the end of the
+//                        screen root), so document order is not step order: select by value.
 //   data-anim="type"     the element holding exactly the text that gets typed
 //                        (ask text, term command).
 //   data-anim="line"     an output line, a say paragraph / heading / list item; revealed
@@ -25,6 +25,13 @@
 //                        a step: hide it while a term step animates, show it at the end.
 // Unmarked descendants of a step root appear with the root; hooks inside one root are
 // revealed in document order. Chapter cards carry no hooks and appear whole.
+//
+// Term placement on cursor-full: by default a term step is the agent's command and
+// renders in the conversation exactly as on cursor-agent ("▸ Ran · cmd" chip + output
+// block). With `in: "zsh"` it is a command the person types and renders in the
+// integrated zsh (prompt, typed command, output lines).
+// The first chapter card also shows the episode pitch («Le decís al agente…» /
+// «Y la skill…») under its title; it is part of the card, not a separate index.
 var Render = (function () {
   var USER = "Persona del equipo";
   var TEAM = "Equipo";
@@ -157,9 +164,18 @@ var Render = (function () {
     var inner = el("div", "ws-card-inner");
     add(inner, el("div", "ws-card-kicker", cardSkill(ep) + " · " + (ci + 1) + " de " + ep.chapters.length),
         el("h1", "ws-card-title", ch.title),
-        ch.subtitle ? el("p", "ws-card-sub", ch.subtitle) : null);
+        ch.subtitle ? el("p", "ws-card-sub", ch.subtitle) : null,
+        ci === 0 ? pitch(ep) : null);
     root.appendChild(inner);
     return root;
+  }
+  function pitch(ep) {
+    var p = ep.pitch;
+    if (!p || (!p.ask && !p.does)) return null;
+    var box = el("div", "ws-card-pitch");
+    if (p.ask) add(box, el("div", "ws-card-pitch-k", "Le decís al agente…"), el("div", "ws-card-pitch-ask", p.ask));
+    if (p.does) add(box, el("div", "ws-card-pitch-k", "Y la skill…"), el("div", "ws-card-pitch-does", p.does));
+    return box;
   }
   // Kicker name: the episode title (equals skill.repo for skill episodes; episode 0 has
   // its own title).
@@ -247,7 +263,7 @@ var Render = (function () {
         m.flow.appendChild(add(stepNode("div", "ws-tool", j, "node"), document.createTextNode("▸ " + st.label)));
       } else if (st.type === "say") {
         m.flow.appendChild(add(stepNode("div", "ws-say", j), markdown(st.md)));
-      } else if (st.type === "term" && full) {
+      } else if (st.type === "term" && full && st["in"] === "zsh") {
         if (st.cwd) cwd = st.cwd;
         right.flow.appendChild(shellStep(st, j, cwd, repo));
       } else if (st.type === "term") {

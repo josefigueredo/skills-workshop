@@ -53,11 +53,23 @@ def _fill(template: str, slots: Dict[str, str], name: str) -> str:
     return SLOT_RE.sub(lambda m: slots[m.group(1)], template)
 
 
+def for_stage(episode: dict) -> dict:
+    """The episode as the stage and the control see it: `capture_only` steps removed
+    (they only advance the demo state during capture). The source JSON keeps them."""
+    out = dict(episode)
+    out["chapters"] = []
+    for ch in episode.get("chapters", []):
+        ch = dict(ch)
+        ch["steps"] = [s for s in ch.get("steps", []) if not s.get("capture_only")]
+        out["chapters"].append(ch)
+    return out
+
+
 def render(root) -> Dict[str, str]:
     """Build every dist file in memory: {file name: html}. Writes nothing."""
     root = Path(root)
     engine = root / "engine"
-    episodes = schema.load_all(root)
+    episodes = [for_stage(e) for e in schema.load_all(root)]
     css = "<style>\n" + "\n".join(_inline(engine / f, "</style") for f in CSS_FILES) + "\n</style>"
     out: Dict[str, str] = {}
     for name, template, last, series in TARGETS:

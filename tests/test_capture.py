@@ -222,11 +222,20 @@ class DemoTests(unittest.TestCase):
         self.assertEqual(r.returncode, 1)
         self.assertIn("already exists", r.stdout)
 
-    def test_setup_seeds_the_inherited_audit_worker_output(self):
+    def test_setup_builds_only_the_generic_demo(self):
+        self.assertEqual(self.build().returncode, 0)
+        self.assertEqual(sorted(p.name for p in self.target.iterdir()), ["mi-servicio"])
+        self.assertEqual(git(self.target / "mi-servicio", "branch", "--format=%(refname:short)"), "main")
+
+    def test_inherited_audit_prep_seeds_the_worker_output(self):
         # The pilot's real steps consume what the audit's workers would leave: candidate
         # files outside the repo and one local branch with a test-only red commit.
         self.assertEqual(self.build().returncode, 0)
+        r = subprocess.run(["bash", str(ROOT / "demo" / "prep" / "inherited-audit.sh"), str(self.target)],
+                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+        self.assertEqual(r.returncode, 0, r.stdout)
         repo = self.target / "mi-servicio"
+        main_before = git(repo, "rev-parse", "main")
         cands = self.target / "auditorias" / "candidatos"
         names = sorted(p.name for p in cands.iterdir())
         self.assertEqual(names, ["c-01.json", "c-02.json", "q-01.json"])
@@ -235,10 +244,12 @@ class DemoTests(unittest.TestCase):
                           ("correctness", "quality"))
         branch = "fix/c-01-descuento-sin-tope"
         self.assertEqual(git(repo, "rev-parse", "--abbrev-ref", "HEAD"), "main")
-        self.assertEqual(git(repo, "rev-parse", branch + "~1"), git(repo, "rev-parse", "main"))
+        self.assertEqual(git(repo, "rev-parse", branch + "~1"), main_before)
         self.assertEqual(git(repo, "diff", "--name-only", "main", branch),
                          "api/tests/test_discount_cap.py")
         self.assertEqual(git(repo, "status", "--porcelain"), "")
+        log = git(repo, "log", "-1", "--format=%an <%ae>|%aI", branch)
+        self.assertTrue(log.startswith("Demo <demo@example.com>|2026-10-17T11:00:00"), log)
         git(repo, "switch", "-q", branch)
         t = subprocess.run(["python3", "-m", "unittest", "tests.test_discount_cap"],
                            cwd=str(repo / "api"), stdout=subprocess.PIPE,
@@ -302,6 +313,36 @@ class PrepareHomeTests(unittest.TestCase):
         with mock.patch.dict(os.environ, {"GIT_DIR": "/planted/nowhere", "GIT_WORK_TREE": "/planted"}):
             self.prepare(minimal_episode(skill={"repo": "demo-skill", "commit": first, "date": "x"}))
         self.assertEqual(git(self.home / "skills" / "demo-skill", "rev-parse", "HEAD"), first)
+
+    def _tree_with_prep(self, script):
+        tree = TempTree()
+        self.addCleanup(tree.__exit__, None, None, None)
+        (tree.root / "demo" / "prep").mkdir(parents=True)
+        shutil.copy(str(ROOT / "demo" / "setup.sh"), str(tree.root / "demo" / "setup.sh"))
+        if script is not None:
+            (tree.root / "demo" / "prep" / "demo.sh").write_text(script, encoding="utf-8")
+        return tree.root
+
+    def test_episode_prep_script_runs_after_demo_and_skill(self):
+        first, _ = make_skill_repo(self.skills, "demo-skill")
+        root = self._tree_with_prep(
+            'set -e\n[ -d "$1/mi-servicio/.git" ] && [ -d "$1/skills/demo-skill" ]\n'
+            'echo "$HOME" > "$1/prep-ran"\n')
+        with mock.patch.dict(os.environ, {"WS_SKILLS_ROOT": str(self.skills)}):
+            capture.prepare_home(root, minimal_episode(
+                skill={"repo": "demo-skill", "commit": first, "date": "x"}), self.home)
+        self.assertEqual((self.home / "prep-ran").read_text().strip(), str(self.home))
+
+    def test_no_prep_script_is_fine_and_failing_one_is_reported(self):
+        first, _ = make_skill_repo(self.skills, "demo-skill")
+        ep = minimal_episode(skill={"repo": "demo-skill", "commit": first, "date": "x"})
+        with mock.patch.dict(os.environ, {"WS_SKILLS_ROOT": str(self.skills)}):
+            capture.prepare_home(self._tree_with_prep(None), ep, self.home)
+            other = self.tmp / "home2"
+            other.mkdir()
+            with self.assertRaises(capture.CaptureError) as cm:
+                capture.prepare_home(self._tree_with_prep("echo nope; exit 3\n"), ep, other)
+        self.assertIn("demo/prep/demo.sh", str(cm.exception))
 
     def test_default_skills_root_is_workshop_parent(self):
         env = {k: v for k, v in os.environ.items() if k != "WS_SKILLS_ROOT"}

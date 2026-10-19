@@ -146,7 +146,7 @@
           ],
           "source": "real",
           "cwd": "~",
-          "notes": "En el panel de la derecha ves los comandos que corre el agente, con su salida real. init fija el commit: todo lo que se diga después se cita contra ese commit. La corrida queda en ~/auditorias, fuera del repo."
+          "notes": "En el chat ves cada comando que corre el agente, con su salida real. init fija el commit: todo lo que se diga después se cita contra ese commit. La corrida queda en ~/auditorias, fuera del repo."
         },
         {
           "type": "term",
@@ -203,7 +203,7 @@
           ],
           "source": "real",
           "cwd": "~/auditorias",
-          "notes": "El agente carga lo que devolvieron: C-01 y C-02. Todavía son candidatos, no hallazgos. (En la demo, esos archivos los arma demo/setup.sh; el comando y la salida son reales.)"
+          "notes": "El agente carga lo que devolvieron: C-01 y C-02. Todavía son candidatos, no hallazgos. (En la demo, esos archivos los arma demo/prep/inherited-audit.sh; el comando y la salida son reales.)"
         },
         {
           "type": "term",
@@ -217,17 +217,27 @@
           ],
           "source": "real",
           "cwd": "~/auditorias",
-          "notes": "No hace falta leerlo: anota qué pasada miró qué módulo, aunque no haya encontrado nada. Con un módulo sin mirar, no deja cerrar el paso."
+          "notes": "Solo captura: anota qué pasada miró qué módulo y cierra correctness.",
+          "capture_only": true
         },
         {
           "type": "tool",
           "label": "Ran · subagente de prueba en su propio worktree · C-01",
           "source": "inferido",
-          "notes": "Lo que más distingue a la skill: cada candidato se prueba con un test, en una copia aparte del repo."
+          "notes": "Lo que más distingue a la skill: cada candidato se prueba con un test, en una copia aparte del repo (un worktree), así tu copia de trabajo no se toca."
         },
         {
           "type": "term",
-          "cmd": "git -C ~/mi-servicio worktree add -q ~/auditorias/wt-c-01 fix/c-01-descuento-sin-tope && (cd wt-c-01/api && python3 -m unittest tests.test_discount_cap 2>&1 | tee ../../mi-servicio/outputs/C-01-red.txt); git -C ~/mi-servicio worktree remove ~/auditorias/wt-c-01",
+          "cmd": "git -C ~/mi-servicio worktree add -q ~/auditorias/wt-c-01 fix/c-01-descuento-sin-tope",
+          "out": [],
+          "source": "real",
+          "cwd": "~/auditorias",
+          "notes": "Solo captura: el worktree del subagente, sobre la rama que arma demo/prep/inherited-audit.sh.",
+          "capture_only": true
+        },
+        {
+          "type": "term",
+          "cmd": "python3 -m unittest tests.test_discount_cap 2>&1 | tee ~/auditorias/mi-servicio/outputs/C-01-red.txt",
           "out": [
             "F",
             "======================================================================",
@@ -240,18 +250,18 @@
             "AssertionError: -50.0 not greater than or equal to 0",
             "",
             "----------------------------------------------------------------------",
-            "Ran 1 test in 0.001s",
+            "Ran 1 test in 0.000s",
             "",
             "FAILED (failures=1)"
           ],
           "source": "real",
-          "cwd": "~/auditorias",
-          "notes": "El test rojo. Señalá AssertionError: con 150% de descuento el total da -50. Falla por una aserción, no por un error de configuración: «rojo por la razón correcta». Un bug probado así no se discute. (La rama la arma demo/setup.sh, como la dejaría el subagente.)",
+          "cwd": "~/auditorias/wt-c-01/api",
+          "notes": "El test rojo, en la copia aparte. Señalá AssertionError: con 150% de descuento el total da -50. Falla por una aserción, no por un error de configuración: «rojo por la razón correcta». Un bug probado así no se discute. C-01 queda confirmado con la propuesta de arreglo escrita, sin aplicarla; C-02 no se pudo probar y queda afuera.",
           "pause": true
         },
         {
           "type": "term",
-          "cmd": "python3 ~/.claude/skills/inherited-audit/ia.py finding set --run mi-servicio C-01 verdict=confirmed confidence=execution branch=fix/c-01-descuento-sin-tope sha_test=$(git -C ~/mi-servicio rev-parse fix/c-01-descuento-sin-tope) 'tests=[{\"path\":\"api/tests/test_discount_cap.py\",\"red\":\"1 of 1 fail\",\"green\":\"\",\"note\":\"\"}]' 'red_reason=order_total() da -50.0 con 150% de descuento' 'fix_summary=Limitar el descuento entre 0 y 100.' outputs.red=outputs/C-01-red.txt && python3 ~/.claude/skills/inherited-audit/ia.py step --run mi-servicio proof done",
+          "cmd": "git -C ~/mi-servicio worktree remove ~/auditorias/wt-c-01 && python3 ~/.claude/skills/inherited-audit/ia.py finding set --run mi-servicio C-01 verdict=confirmed confidence=execution branch=fix/c-01-descuento-sin-tope sha_test=$(git -C ~/mi-servicio rev-parse fix/c-01-descuento-sin-tope) 'tests=[{\"path\":\"api/tests/test_discount_cap.py\",\"red\":\"1 of 1 fail\",\"green\":\"\",\"note\":\"\"}]' 'red_reason=order_total() da -50.0 con 150% de descuento' 'fix_summary=Limitar el descuento entre 0 y 100.' outputs.red=outputs/C-01-red.txt && python3 ~/.claude/skills/inherited-audit/ia.py step --run mi-servicio proof done",
           "out": [
             "C-01",
             "warning: proof is done but 1 correctness findings are still candidates (not proven, not discarded); they stay out of the reports unless confirmed:",
@@ -260,13 +270,14 @@
           ],
           "source": "real",
           "cwd": "~/auditorias",
-          "notes": "C-01 confirmado, con su rama y la propuesta de arreglo escrita, sin aplicarla. El aviso es honesto: C-02 no se pudo probar y queda afuera."
+          "notes": "Solo captura: borra el worktree, confirma C-01 con su rama, test, motivo del rojo y propuesta, y cierra proof.",
+          "capture_only": true
         },
         {
           "type": "tool",
           "label": "Ran · subagente · quality-lenses · API/mi_servicio",
           "source": "inferido",
-          "notes": "Calidad y arquitectura: acá no hay tests, hay sugerencias concretas."
+          "notes": "Calidad y arquitectura: acá no hay tests, hay sugerencias concretas. Encontró Q-01: la documentación de la paginación dice una cosa y el código hace otra."
         },
         {
           "type": "term",
@@ -279,7 +290,8 @@
           ],
           "source": "real",
           "cwd": "~/auditorias",
-          "notes": "Q-01: la documentación dice una cosa y el código hace otra. No rompe hoy, confunde mañana."
+          "notes": "Solo captura: carga Q-01, anota la cobertura de calidad y cierra quality.",
+          "capture_only": true
         },
         {
           "type": "tool",
@@ -289,10 +301,20 @@
         },
         {
           "type": "term",
-          "cmd": "for s in contrast verify; do python3 ~/.claude/skills/inherited-audit/ia.py step --run mi-servicio $s done; done && python3 ~/.claude/skills/inherited-audit/ia.py filter --run mi-servicio",
+          "cmd": "for s in contrast verify; do python3 ~/.claude/skills/inherited-audit/ia.py step --run mi-servicio $s done; done",
           "out": [
             "contrast: done",
-            "verify: done",
+            "verify: done"
+          ],
+          "source": "real",
+          "cwd": "~/auditorias",
+          "notes": "Solo captura: cierra contrast y verify.",
+          "capture_only": true
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.claude/skills/inherited-audit/ia.py filter --run mi-servicio",
+          "out": [
             "correctness: showing 1 of 2",
             "quality: showing 1 of 1",
             "start here: Q-01"
@@ -309,11 +331,20 @@
         },
         {
           "type": "term",
-          "cmd": "python3 ~/.claude/skills/inherited-audit/ia.py step --run mi-servicio prose done && python3 ~/.claude/skills/inherited-audit/ia.py hygiene --run mi-servicio && python3 ~/.claude/skills/inherited-audit/ia.py step --run mi-servicio hygiene done",
+          "cmd": "python3 ~/.claude/skills/inherited-audit/ia.py step --run mi-servicio prose done",
           "out": [
-            "prose: done",
-            "hygiene: clean",
-            "hygiene: done"
+            "prose: done"
+          ],
+          "source": "real",
+          "cwd": "~/auditorias",
+          "notes": "Solo captura: cierra prose.",
+          "capture_only": true
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.claude/skills/inherited-audit/ia.py hygiene --run mi-servicio",
+          "out": [
+            "hygiene: clean"
           ],
           "source": "real",
           "cwd": "~/auditorias",
@@ -321,15 +352,35 @@
         },
         {
           "type": "term",
-          "cmd": "python3 ~/.claude/skills/inherited-audit/ia.py cite-check --run mi-servicio && python3 ~/.claude/skills/inherited-audit/ia.py render --run mi-servicio",
+          "cmd": "python3 ~/.claude/skills/inherited-audit/ia.py step --run mi-servicio hygiene done",
           "out": [
-            "all 3 citations resolve",
+            "hygiene: done"
+          ],
+          "source": "real",
+          "cwd": "~/auditorias",
+          "notes": "Solo captura: cierra hygiene.",
+          "capture_only": true
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.claude/skills/inherited-audit/ia.py cite-check --run mi-servicio",
+          "out": [
+            "all 3 citations resolve"
+          ],
+          "source": "real",
+          "cwd": "~/auditorias",
+          "notes": "Cada cita del reporte existe en el commit fijado."
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.claude/skills/inherited-audit/ia.py render --run mi-servicio",
+          "out": [
             "mi-servicio/mi-servicio-correctness.html",
             "mi-servicio/mi-servicio-quality.html"
           ],
           "source": "real",
           "cwd": "~/auditorias",
-          "notes": "Cada cita existe en el commit fijado, y salen los dos reportes HTML: el resultado que le mandás al equipo dueño.",
+          "notes": "Y salen los dos reportes HTML: el resultado que le mandás al equipo dueño.",
           "pause": true
         },
         {

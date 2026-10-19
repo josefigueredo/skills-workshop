@@ -18,7 +18,7 @@ function animEpisode() {
          {type: "ask", text: "Auditá", source: "inferido"},
          {type: "worked", seconds: 42, source: "inferido"},
          {type: "tool", label: "Ran · ia.py init", source: "inferido"},
-         {type: "term", cmd: "ia status", out: ["a", "b", "c"], source: "inferido"},
+         {type: "term", cmd: "ia status", out: ["a", "b", "c"], source: "inferido", in: "zsh"},
          {type: "say", md: "#### Hecho\nUno **dos**.\n- a\n- b", source: "inferido"},
          {type: "approve", title: "Crear", lines: ["X-1"], button: "Apruebo 1", source: "inferido"},
          {type: "say", md: "", source: "inferido"}
@@ -176,6 +176,17 @@ test("a card fades in with a single scheduled reveal and no typing", function ()
   assertEqual(p.clock.calls, 1);
   assertEqual(p.clock.total, 250);
   assert(q(p.c, ".ws-card").style.opacity !== "0", "card still transparent");
+});
+
+test("an agent term on cursor-full plays as a Ran chip plus its lines", function () {
+  var ep = animEpisode();
+  delete ep.chapters[1].steps[3].in;
+  var c = document.createElement("div"), clock = fakeClock();
+  Animate.run(c, ep, 8, clock.opts(1));
+  clock.flush();
+  assertEqual(clock.total, 250 + 3 * 120);
+  assertEqual(clock.calls, 4);
+  assertEqual(Animate.stepDuration(ep, 8, 1), 250 + 3 * 120);
 });
 
 test("exact durations and call counts per screen", function () {

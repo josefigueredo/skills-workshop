@@ -103,6 +103,10 @@ def prepare_home(root: Path, episode: dict, home: Path) -> None:
             _run_quiet(["git", "remote", "remove", "origin"], "origin removal", env, cwd=dest)
     except CaptureError as exc:
         raise CaptureError("skill %r at commit %s (source %s): %s" % (repo, commit, src, exc))
+    # Episode-specific demo state (e.g. seeded worker output): demo/prep/<id>.sh <home>.
+    prep = root / "demo" / "prep" / ("%s.sh" % episode["id"])
+    if prep.is_file():
+        _run_quiet(["bash", str(prep), str(home)], "demo/prep/%s.sh" % episode["id"], env)
 
 
 def _variants(path) -> List[str]:
