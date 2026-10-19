@@ -1,3 +1,5 @@
 .superpowers/
 .DS_Store
 docs/maquetas/referencias/
+__pycache__/
+*.pyc
