@@ -124,6 +124,22 @@ test("terminal term types the command char by char, then shows lines one by one"
   assert(shown(line), "output line not shown");
 });
 
+test("a chat-placed term on cursor-full leaves the zsh idle prompt visible throughout", function () {
+  var ep = animEpisode();
+  ep.chapters[1].steps.push({type: "term", cmd: "ia status", out: ["a", "b"], source: "inferido"});
+  // chapter card index 4, steps 5..11, the new chat-placed term is step 7 -> index 12 shifts later chapters
+  var idx = Nav.flatten(ep).findIndex(function (e) { return e.chapter === 1 && e.step === 7; });
+  var c = document.createElement("div"), clock = fakeClock();
+  Animate.run(c, ep, idx, clock.opts(1));
+  assert(q(c, '[data-anim="idle"]'), "no idle prompt rendered on cursor-full");
+  assert(shown(q(c, '[data-anim="idle"]')), "idle hidden at start");
+  while (clock.pending()) {
+    clock.tick();
+    assert(shown(q(c, '[data-anim="idle"]')), "idle hidden mid-run");
+  }
+  assert(shown(q(c, '[data-anim="idle"]')), "idle hidden at the end");
+});
+
 test("the idle prompt is hidden while a term step animates and back at the end", function () {
   var p = play(1);
   assert(!shown(q(p.c, '[data-anim="idle"]')), "idle visible during term");

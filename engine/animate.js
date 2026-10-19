@@ -57,7 +57,9 @@ var Animate = (function () {
     var root = container.querySelector('[data-step="' + e.step + '"]');
     if (!root) return plan;
     var step = ep.chapters[e.chapter].steps[e.step];
-    if (step.type === "term") {
+    // The idle prompt lives in the zsh panel (cursor-full) and on the terminal screen: hide
+    // it only when this step plays in that same flow, not for a chat-placed agent command.
+    if (step.type === "term" && (step["in"] === "zsh" || ep.chapters[e.chapter].screen === "terminal")) {
       var idle = container.querySelector('[data-anim="idle"]');
       if (idle) hide(idle);
     }
