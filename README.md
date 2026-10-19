@@ -7,16 +7,20 @@ Motor para armar los episodios del taller en video. Cada episodio es un guion en
 
 El diseño completo está en [docs/specs/2026-10-19-taller-skills-design.md](docs/specs/2026-10-19-taller-skills-design.md).
 
+## El sitio
+
+`dist/index.html` es la portada: un botón para presentar y la lista de episodios con su vista previa. Se publica como sitio de GitHub Pages: la dirección está en el repo, en Settings → Pages (el sitio de GitHub Pages del repo). Cada push a `main` lo vuelve a publicar solo (`.github/workflows/pages.yml`: valida los guiones, comprueba que `dist/` esté al día y sube esa carpeta). Si `dist/` quedó desactualizado, el publicado falla en vez de mostrar algo viejo. La primera vez hay que elegir «GitHub Actions» como fuente en Settings → Pages.
+
 ## Cómo se presenta
 
 Abrís `dist/control.html`, hacés clic en «Abrir escenario» y compartís solo esa ventana. Todo en [docs/presentar.md](docs/presentar.md).
 
 ## Cómo se agrega un episodio
 
-Se escribe un guion JSON, se captura lo que corre de verdad, se arma `dist/` y se revisa la privacidad. Todo en [docs/guion.md](docs/guion.md).
+Se arranca con `python3 build.py new <skill>` (un esqueleto con `COMPLETAR` que `build` no deja pasar), se completa el guion JSON, se captura lo que corre de verdad, se arma `dist/` y se revisa la privacidad. Todo en [docs/guion.md](docs/guion.md).
 
 ```
-python3 build.py validate | capture [--episode ID] | build | check
+python3 build.py new SKILL [--series S] [--order N] | validate | capture [--episode ID] | build | check
 ```
 
 ## Desarrollo

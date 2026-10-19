@@ -94,6 +94,7 @@ Dos cuidados:
 Se corren desde la raíz del repo del taller.
 
 ```
+python3 build.py new mi-skill [--series cursor|claude-code] [--order N]   # esqueleto de un episodio nuevo
 python3 build.py validate                       # revisa el formato de los guiones
 python3 build.py capture --episode mi-skill     # re-corre los pasos `real` y actualiza el JSON
 python3 build.py build                          # valida, arma dist/ y revisa privacidad
@@ -127,6 +128,15 @@ Corré `check` (o `build`, que lo incluye) con el archivo antes de cada commit. 
 5. **Cargá 2 a 4 preguntas frecuentes por capítulo** (`faq`): las que de verdad hace la gente, con respuestas cortas que se puedan decir en voz alta.
 6. **Contrastá con la skill:** lo que dice el agente en pantalla tiene que ser coherente con su `SKILL.md`. Una respuesta que contradice la skill es el error más caro de encontrar tarde.
 
+## Sumar una skill nueva
+
+1. **Armá el esqueleto:** `python3 build.py new <repo-de-la-skill>` (con `--series claude-code` si va en esa serie, y `--order N` si no querés el siguiente número libre). Escribe `episodes/<serie>/NN-<repo>.json` con la estructura fija: instalar, caso principal, otro caso, si algo falla y cierre. Toma `skill.commit` de `$WS_SKILLS_ROOT/<repo>` si lo encuentra, y la fecha de hoy. No pisa nada: si el episodio o el número ya existen, se niega.
+2. **Completá todo lo que dice `COMPLETAR`**, leyendo el README, el showcase y la instalación de la skill (ver «Cómo sacar un episodio de una skill»). Mientras quede un `COMPLETAR`, `validate` y `build` fallan y te dicen el archivo, el capítulo y el paso, así que un episodio a medias nunca llega a `dist/`.
+3. **Capturá** lo que corre sin red: `python3 build.py capture --episode <repo>`.
+4. **Armá:** `python3 build.py build` (regenera también la portada `dist/index.html`) y revisá la privacidad con `check`.
+5. **Mirá la vista previa:** abrí `dist/index.html`, entrá al episodio nuevo o andá directo a `dist/serie-<serie>.html#<id>/1`.
+6. **Pasalo a revisión de la persona** antes de sumarlo a la tabla de episodios del README y de publicarlo.
+
 ## Cuánto dura
 
 El control muestra el estimado: abrí `dist/control.html` y mirá «Estimado ~» (total, a la velocidad elegida) y el estimado por capítulo. Sale de `Animate.episodeDuration` (lo que tarda el tipeo y las animaciones). Eso es solo la pantalla: sumale la narración, a unas 150 palabras por minuto sobre el texto de las `notes`. La meta es de **6 a 12 minutos** por episodio. Si te pasás, partí el caso principal o sacá un caso del medio.
@@ -139,4 +149,4 @@ WS_LEAK_TERMS=<tu archivo> python3 build.py check
 python3 -m unittest discover -s tests
 ```
 
-Recién ahí `dist/` está al día. `dist/` se commitea: quien presenta solo necesita esos archivos.
+Recién ahí `dist/` está al día. `dist/` se commitea: quien presenta solo necesita esos archivos, y el sitio publicado sale de esa carpeta.
