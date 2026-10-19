@@ -4,12 +4,16 @@
 set -u
 
 APPS_DIR="${REQ_APPS_DIR:-/Applications}"
+# Where the Homebrew installer puts brew (Apple silicon, Intel), checked when brew is not on PATH.
+BREW_DIRS="${REQ_BREW_DIRS:-/opt/homebrew/bin /usr/local/bin}"
 OFFLINE=0
 REPO=""
 FAILS=0
 SKIPS=0
 GIT_OK=0
 SSH_OK=0
+BREW_STATE=missing   # ok | offpath | missing
+SSH_WHY="primero arreglá la clave SSH"
 
 usage() {
   cat <<'EOF'
@@ -37,8 +41,27 @@ skip() { printf '– %s (%s)\n' "$1" "$2"; SKIPS=$((SKIPS + 1)); }
 runs() { "$@" >/dev/null 2>&1; }
 
 check_brew() {
-  if runs brew --version; then ok "Homebrew (brew)"
-  else fail "Homebrew (brew)" "Instalalo con el comando de brew.sh (copiar, pegar en la terminal, Enter)"; fi
+  local label="Homebrew (brew)" dir
+  if runs brew --version; then ok "$label"; BREW_STATE=ok; return; fi
+  # Installed but the installer's «Next steps» were skipped: brew is not on PATH yet.
+  for dir in $BREW_DIRS; do
+    if [ -x "$dir/brew" ]; then
+      BREW_STATE=offpath
+      fail "$label" "Está instalado pero la terminal no lo encuentra. Corré: eval \"\$($dir/brew shellenv)\""
+      printf "  Para que quede siempre: echo 'eval \"\$(%s/brew shellenv)\"' >> ~/.zprofile\n" "$dir"
+      return
+    fi
+  done
+  fail "$label" "Instalalo con el comando de brew.sh (copiar, pegar en la terminal, Enter)"
+}
+
+# The fix for something Homebrew installs; it depends on whether brew itself works.
+brew_fix() {
+  case "$BREW_STATE" in
+    ok) printf 'Corré: brew install %s' "$1" ;;
+    offpath) printf 'primero arreglá Homebrew (arriba) y volvé a correr esto; si sigue, brew install %s' "$1" ;;
+    *) printf 'primero instalá Homebrew (arriba), después: brew install %s' "$1" ;;
+  esac
 }
 
 check_git() {
@@ -56,16 +79,16 @@ check_python() {
     if [ "$major" -gt 3 ] || { [ "$major" -eq 3 ] && [ "$minor" -ge 9 ]; }; then
       ok "$label"
     else
-      fail "$label" "Tenés Python $major.$minor; corré: brew install python"
+      fail "$label" "Tenés Python $major.$minor. $(brew_fix python)"
     fi
   else
-    fail "$label" "Corré: brew install python"
+    fail "$label" "$(brew_fix python)"
   fi
 }
 
 check_tool() {  # name, version flag
   if runs "$1" "$2"; then ok "$1"
-  else fail "$1" "Corré: brew install $1"; fi
+  else fail "$1" "$(brew_fix "$1")"; fi
 }
 
 check_cursor() {
@@ -83,6 +106,11 @@ check_ssh() {
     # BatchMode cannot answer the first-connection question: the key may be fine.
     *"Host key verification failed"*)
       fail "$label" "Corré una vez: ssh -T git@github.com y respondé yes" ;;
+    *"Could not resolve"*|*"timed out"*|*"Network is unreachable"*|*"Connection refused"*)
+      SSH_WHY="primero resolvé la conexión"
+      fail "$label" "No se pudo llegar a GitHub. Revisá tu conexión a internet y volvé a correr" ;;
+    *"Permission denied (publickey)"*)
+      fail "$label" "Cargá tu clave SSH en GitHub: docs.github.com/es/authentication/connecting-to-github-with-ssh; si no sabés cómo, pedí ayuda antes del curso" ;;
     *) fail "$label" "Cargá tu clave SSH en GitHub: docs.github.com/es/authentication/connecting-to-github-with-ssh" ;;
   esac
 }
@@ -93,7 +121,7 @@ check_repo() {
   fi
   if [ -z "$REPO" ]; then skip "Acceso al repo de la org" "no se pasó --repo"; return; fi
   if [ "$GIT_OK" -eq 0 ]; then skip "Acceso al repo $REPO" "primero instalá git"; return; fi
-  if [ "$SSH_OK" -eq 0 ]; then skip "Acceso al repo $REPO" "primero arreglá la clave SSH"; return; fi
+  if [ "$SSH_OK" -eq 0 ]; then skip "Acceso al repo $REPO" "$SSH_WHY"; return; fi
   if GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND='ssh -o BatchMode=yes -o ConnectTimeout=5' \
       git ls-remote --heads "git@github.com:$REPO.git" >/dev/null 2>&1 </dev/null; then
     ok "Acceso al repo $REPO"

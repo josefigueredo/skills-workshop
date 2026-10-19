@@ -41,7 +41,8 @@ class Sandbox:
         self.home = base / "home"
         self.apps = base / "Applications"
         self.calls = base / "calls.log"
-        for d in (self.bin, self.home, self.apps):
+        self.brew_dir = base / "homebrew-bin"  # where an off-PATH brew would live
+        for d in (self.bin, self.home, self.apps, self.brew_dir):
             d.mkdir()
         self.calls.write_text("", encoding="utf-8")
         if cursor:
@@ -56,7 +57,8 @@ class Sandbox:
 
     def run(self, *args):
         env = {"PATH": "%s:/usr/bin:/bin" % self.bin, "HOME": str(self.home),
-               "REQ_APPS_DIR": str(self.apps), "LANG": "en_US.UTF-8"}
+               "REQ_APPS_DIR": str(self.apps),
+               "REQ_BREW_DIRS": str(self.brew_dir), "LANG": "en_US.UTF-8"}
         r = subprocess.run([BASH, str(SCRIPT)] + list(args), env=env, stdin=subprocess.DEVNULL,
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         return r.returncode, r.stdout.decode("utf-8"), r.stderr.decode("utf-8")
@@ -177,6 +179,64 @@ class CheckerTest(unittest.TestCase):
         self.assertIn("– Acceso al repo mi-org/mi-repo (primero instalá git)", got)
         self.assertEqual(got[-1], "Falta 1 cosa.")
 
+    def test_missing_brew_cascades_into_each_brew_fix(self):
+        with Sandbox(without=("brew", "uv", "tmux")) as sb:
+            code, out, _ = sb.run("--offline")
+        got = lines(out)
+        self.assertEqual(code, 1)
+        self.assertIn("✗ Homebrew (brew) — Instalalo con el comando de brew.sh (copiar, pegar en la terminal, Enter)",
+                      got)
+        self.assertIn("✗ uv — primero instalá Homebrew (arriba), después: brew install uv", got)
+        self.assertIn("✗ tmux — primero instalá Homebrew (arriba), después: brew install tmux", got)
+        self.assertEqual(got[-1], "Faltan 3 cosas.")
+
+    def test_brew_installed_off_path_gets_shellenv_fix(self):
+        with Sandbox(without=("brew", "uv")) as sb:
+            p = sb.brew_dir / "brew"
+            p.write_text("#!/bin/sh\n", encoding="utf-8")
+            p.chmod(0o755)
+            code, out, _ = sb.run("--offline")
+            d = str(sb.brew_dir)
+        got = lines(out)
+        self.assertEqual(code, 1)
+        i = got.index("✗ Homebrew (brew) — Está instalado pero la terminal no lo encuentra. "
+                      'Corré: eval "$(%s/brew shellenv)"' % d)
+        self.assertEqual(got[i + 1], "  Para que quede siempre: echo 'eval \"$(%s/brew shellenv)\"' >> ~/.zprofile" % d)
+        self.assertIn("✗ uv — primero arreglá Homebrew (arriba) y volvé a correr esto; si sigue, brew install uv",
+                      got)
+        self.assertEqual(got[-1], "Faltan 2 cosas.")
+
+    def test_network_failure_asks_to_check_connection(self):
+        for msg in ("ssh: Could not resolve hostname github.com: nodename nor servname provided",
+                    "ssh: connect to host github.com port 22: Operation timed out",
+                    "ssh: connect to host github.com port 22: Network is unreachable",
+                    "ssh: connect to host github.com port 22: Connection refused"):
+            with Sandbox() as sb:
+                self._replace_stub(sb, "ssh", 'echo "%s" >&2; exit 255' % msg)
+                code, out, _ = sb.run("--repo", self.REPO)
+            got = lines(out)
+            self.assertEqual(code, 1, msg)
+            self.assertIn("✗ Clave SSH cargada en GitHub — No se pudo llegar a GitHub. "
+                          "Revisá tu conexión a internet y volvé a correr", got, msg)
+            self.assertIn("– Acceso al repo mi-org/mi-repo (primero resolvé la conexión)", got, msg)
+
+    def test_publickey_denied_points_to_key_guide_and_help(self):
+        with Sandbox() as sb:
+            self._replace_stub(sb, "ssh", 'echo "git@github.com: Permission denied (publickey)." >&2; exit 255')
+            code, out, _ = sb.run()
+        self.assertEqual(code, 1)
+        self.assertIn("✗ Clave SSH cargada en GitHub — Cargá tu clave SSH en GitHub: "
+                      "docs.github.com/es/authentication/connecting-to-github-with-ssh; "
+                      "si no sabés cómo, pedí ayuda antes del curso", lines(out))
+
+    def test_unrecognised_ssh_error_falls_back_to_key_guide(self):
+        with Sandbox() as sb:
+            self._replace_stub(sb, "ssh", 'echo "something odd" >&2; exit 255')
+            code, out, _ = sb.run()
+        self.assertEqual(code, 1)
+        self.assertIn("✗ Clave SSH cargada en GitHub — Cargá tu clave SSH en GitHub: "
+                      "docs.github.com/es/authentication/connecting-to-github-with-ssh", lines(out))
+
     def test_old_python_is_a_failure(self):
         with Sandbox(without=("python3",)) as sb:
             p = sb.bin / "python3"
@@ -184,7 +244,7 @@ class CheckerTest(unittest.TestCase):
             p.chmod(0o755)
             code, out, _ = sb.run("--offline")
         self.assertEqual(code, 1)
-        self.assertIn("✗ Python 3.9 o más (python3) — Tenés Python 3.8; corré: brew install python",
+        self.assertIn("✗ Python 3.9 o más (python3) — Tenés Python 3.8. Corré: brew install python",
                       lines(out))
 
     def test_cursor_on_path_counts_without_app(self):
