@@ -114,9 +114,9 @@
       "steps": [
         {
           "type": "ask",
-          "text": "Auditá mi-servicio antes de que empecemos. El back está en ~/mi-servicio/api.",
+          "text": "Auditá mi-servicio antes de que empecemos. El back está en ~/mi-servicio/api; dejá la corrida en ~/auditorias/mi-servicio.",
           "source": "inferido",
-          "notes": "El pedido entero es una frase, como se la dirías a alguien del equipo. Los comandos y el orden los trae la skill. Esto es lo que queremos que adopten: pedir la auditoría así antes de construir sobre algo heredado."
+          "notes": "El pedido entero es una frase, como se la dirías a alguien del equipo. Los comandos y el orden los trae la skill. Esto es lo que queremos que adopten: pedir la auditoría así antes de construir sobre algo heredado. La placa del principio muestra el ejemplo del README (back y front); acá usamos mi-servicio y solo la API, para que entre en pocos minutos."
         },
         {
           "type": "tool",
@@ -167,9 +167,9 @@
         },
         {
           "type": "say",
-          "md": "Te pregunto **una sola vez**. Faltan estos obreros:\n- `brew install semgrep`\n- `brew install gitleaks`\n- `brew install osv-scanner`\n- el CLI `agent` de Cursor, para el contraste\n\nLo que no instales lo cubre una pasada propia de la skill durante toda la corrida. ¿Instalo alguno?",
+          "md": "Te pregunto **una sola vez**. Faltan estos obreros:\n- `brew install semgrep`, `brew install gitleaks` y `brew install osv-scanner`: análisis estático\n- el CLI `agent` de Cursor: el contraste con un modelo de otra familia\n- `/add-plugin superpowers`: tests unitarios\n- `/add-plugin` de wshobson/agents (marketplace de Cursor 2.5+): calidad\n\nLos dos plugins no los puede revisar `detect`; los busqué en esta sesión y no están. Lo que no instales lo cubre una pasada propia de la skill durante toda la corrida. ¿Instalo alguno?",
           "source": "inferido",
-          "notes": "Es la única pregunta sobre herramientas en toda la corrida. Si decís que no, la skill no se traba: usa su propia pasada. Funciona con lo que ya tenés.",
+          "notes": "Es la única pregunta sobre herramientas en toda la corrida, con el comando exacto de cada una; los plugins de Cursor los revisa el agente, porque detect no puede. Si decís que no, la skill no se traba: usa su propia pasada. Funciona con lo que ya tenés.",
           "pause": true
         },
         {
@@ -250,7 +250,7 @@
             "AssertionError: -50.0 not greater than or equal to 0",
             "",
             "----------------------------------------------------------------------",
-            "Ran 1 test in 0.000s",
+            "Ran 1 test in 0.001s",
             "",
             "FAILED (failures=1)"
           ],
@@ -295,20 +295,24 @@
         },
         {
           "type": "tool",
-          "label": "Ran · contraste con otro modelo (solo lectura) y verificación de lo grave",
+          "label": "Ran · subagente nuevo · contraste con Opus 5.5 · solo lectura",
           "source": "inferido",
-          "notes": "Dos segundas miradas: otro modelo revisa cada hallazgo en solo lectura, y lo grave lo verifica alguien que no vio el razonamiento original."
+          "notes": "Segunda mirada: otro modelo revisa cada hallazgo sin poder tocar nada. Como no hay CLI agent ni otra familia disponible, la skill usa su pasada propia con un modelo más grande de la misma familia, y lo anota así en el reporte. La verificación extra es solo para lo de severidad alta, y acá no hay nada alto."
         },
         {
           "type": "term",
-          "cmd": "for s in contrast verify; do python3 ~/.claude/skills/inherited-audit/ia.py step --run mi-servicio $s done; done",
+          "cmd": "python3 ~/.claude/skills/inherited-audit/ia.py set --run mi-servicio 'author_model=Sonnet 5.5' && python3 ~/.claude/skills/inherited-audit/ia.py finding set --run mi-servicio C-01 'contrast.model=Opus 5.5' contrast.same_family=true contrast.verdict=agree 'contrast.note=El test rojo reproduce el total negativo.' && python3 ~/.claude/skills/inherited-audit/ia.py finding set --run mi-servicio C-02 'contrast.model=Opus 5.5' contrast.same_family=true contrast.verdict=unsure 'contrast.note=Plausible, pero sin un test que lo muestre.' && python3 ~/.claude/skills/inherited-audit/ia.py finding set --run mi-servicio Q-01 'contrast.model=Opus 5.5' contrast.same_family=true contrast.verdict=agree 'contrast.note=El docstring y el cálculo no coinciden.' && for s in contrast verify; do python3 ~/.claude/skills/inherited-audit/ia.py step --run mi-servicio $s done; done",
           "out": [
+            "set author_model",
+            "C-01",
+            "C-02",
+            "Q-01",
             "contrast: done",
             "verify: done"
           ],
           "source": "real",
           "cwd": "~/auditorias",
-          "notes": "Solo captura: cierra contrast y verify.",
+          "notes": "Solo captura: anota quién escribió (Sonnet 5.5) y el contraste de Opus 5.5, misma familia, en cada hallazgo; cierra contrast y verify (no hay hallazgos de severidad alta).",
           "capture_only": true
         },
         {
@@ -331,13 +335,15 @@
         },
         {
           "type": "term",
-          "cmd": "python3 ~/.claude/skills/inherited-audit/ia.py step --run mi-servicio prose done",
+          "cmd": "python3 ~/.claude/skills/inherited-audit/ia.py finding set --run mi-servicio C-01 'audience.title=Un descuento de más del 100% deja el total del pedido negativo' 'audience.what_happens=Si un pedido recibe un descuento mayor al 100%, el total queda por debajo de cero.' 'audience.fix_summary=Limitar el descuento entre 0 y 100 antes de calcular el total.' && python3 ~/.claude/skills/inherited-audit/ia.py finding set --run mi-servicio Q-01 'audience.title=La paginación dice empezar en 1 pero empieza en 0' 'audience.what_happens=La documentación de paginate() y su cálculo no coinciden en cuál es la primera página.' 'audience.fix_summary=Elegir 0 o 1 como primera página, alinear documentación y cálculo, y sumar un test.' && python3 ~/.claude/skills/inherited-audit/ia.py step --run mi-servicio prose done",
           "out": [
+            "C-01",
+            "Q-01",
             "prose: done"
           ],
           "source": "real",
           "cwd": "~/auditorias",
-          "notes": "Solo captura: cierra prose.",
+          "notes": "Solo captura: escribe el título, qué pasa y la propuesta para el equipo dueño de los dos hallazgos que se muestran, y cierra prose.",
           "capture_only": true
         },
         {
@@ -385,9 +391,9 @@
         },
         {
           "type": "say",
-          "md": "#### Listo\n- Corrida y reportes en `~/auditorias/mi-servicio`: `mi-servicio-correctness.html` y `mi-servicio-quality.html`.\n- Correctitud: **se muestra 1 de 2**. C-02 (la carrera en el contador) quedó sin verificar y afuera.\n- Calidad: **se muestra 1 de 1**.\n- Una rama local, `fix/c-01-descuento-sin-tope`, sin push.\n- Sin semgrep, gitleaks ni osv-scanner: usé las pasadas propias.\n- Contraste: otro modelo, de otra familia, en solo lectura.\n- Pendiente: los tests nuevos (paso 1.5), como pediste.",
+          "md": "#### Listo\n- Corrida y reportes en `~/auditorias/mi-servicio`: `mi-servicio-correctness.html` y `mi-servicio-quality.html`.\n- Correctitud: **se muestra 1 de 2**. C-02 (la carrera en el contador) quedó sin verificar y afuera.\n- Calidad: **se muestra 1 de 1**.\n- Una rama local, `fix/c-01-descuento-sin-tope`, sin push.\n- Pasadas propias en vez de obreros externos: estático (sin semgrep, gitleaks ni osv-scanner), calidad (sin wshobson/agents) y contraste (sin el CLI `agent`).\n- Contraste: **Opus 5.5** revisó lo que escribí yo (**Sonnet 5.5**). Es la **misma familia**: no había otra disponible, y el reporte lo dice.\n- Pendiente: los tests nuevos (paso 1.5), como pediste; sin superpowers, con la pasada propia.",
           "source": "inferido",
-          "notes": "Leé el cierre: dónde están los reportes, cuánto se muestra de cuánto, qué rama quedó (local) y qué falta. Nada se publicó.",
+          "notes": "Leé el cierre: dónde están los reportes, cuánto se muestra de cuánto, qué rama quedó (local), qué pasos usaron la pasada propia, quién contrastó a quién y qué falta. Nada se publicó.",
           "pause": true
         }
       ]
@@ -571,7 +577,7 @@
           "type": "say",
           "md": "#### Dos HTML, uno por tema\n- **Correctitud**: cada bug con el código citado en el commit fijado, la rama con el test rojo y la propuesta de arreglo escrita.\n- **Calidad y arquitectura**: cada hallazgo con una sugerencia y su esfuerzo.\n\nLos dos dicen cuánto se muestra de cuánto y cómo se hizo la auditoría.",
           "source": "inferido",
-          "notes": "Si podés, abrí el reporte de correctitud de la demo y mostralo diez segundos: el hallazgo, la evidencia y «cómo se hizo». Es lo que convence al equipo dueño.",
+          "notes": "Si podés, mostrá diez segundos la captura real de un reporte de correctitud que trae la skill: ~/skills/inherited-audit/docs/img/reporte-correctitud.png (el hallazgo, la evidencia y «cómo se hizo»). Es lo que convence al equipo dueño.",
           "pause": true
         }
       ]
@@ -591,14 +597,14 @@
           "a": "No. Las opciones (publish, los obreros que no quisiste) quedan en la corrida y se leen de ahí."
         },
         {
-          "q": "¿Y si actualicé la skill en el medio?",
+          "q": "¿Y si la corrida la escribió una versión más nueva de la skill?",
           "a": "Si la corrida la escribió una versión más nueva de ia.py, se niega a seguir con un mensaje claro, en vez de perder datos en silencio."
         }
       ],
       "steps": [
         {
           "type": "ask",
-          "text": "Retomá la auditoría de mi-servicio",
+          "text": "Retomá la auditoría en ~/auditorias/mi-servicio",
           "source": "inferido",
           "notes": "Un chat nuevo, otro día. Una auditoría real no entra en una sesión, así que esto es lo normal, no la excepción."
         },
@@ -630,7 +636,7 @@
         },
         {
           "type": "say",
-          "md": "Sigo donde quedó: falta **tests** (paso 1.5), los tests unitarios que no prueban un bug, en una rama aparte.\n\nHost: Cursor, el mismo. `publish` sigue apagado; no te lo vuelvo a preguntar.",
+          "md": "Sigo donde quedó: falta **tests** (paso 1.5), los tests unitarios que no prueban un bug, en una rama aparte.\n\nHost: Cursor, el mismo. Si la retomaras desde Claude Code, anoto el host nuevo y sigo con sus obreros. `publish` sigue apagado; no te lo vuelvo a preguntar.",
           "source": "inferido",
           "notes": "El agente no pregunta de nuevo lo que ya contestaste. Todo el estado vive en la carpeta de la corrida, fuera del repo.",
           "pause": true
@@ -722,7 +728,7 @@
           ],
           "source": "inferido",
           "cwd": "~/skills/inherited-audit",
-          "notes": "El arreglo es el que dice el mensaje: mover la carpeta vieja y volver a instalar. Paso inferido, con la salida real del instalador."
+          "notes": "El arreglo es el que dice el mensaje: mover la carpeta vieja y volver a instalar, a mano o pedíselo al agente. Paso inferido, con la salida real del instalador."
         },
         {
           "type": "term",
@@ -753,7 +759,7 @@
           ],
           "source": "real",
           "cwd": "~/mi-servicio",
-          "notes": "Lo guardamos aparte con git stash, sin perder nada, y el repo queda limpio para auditar."
+          "notes": "Lo guardamos aparte con git stash, sin perder nada, y el repo queda limpio para auditar. Lo podés correr vos o pedíselo al agente."
         },
         {
           "type": "term",

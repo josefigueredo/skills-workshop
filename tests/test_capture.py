@@ -90,6 +90,16 @@ class RunTests(unittest.TestCase):
         self.assertEqual(new["chapters"], ep["chapters"])
         self.assertFalse((self.home / "marker").exists())
 
+    def test_capture_only_steps_run_in_order_and_keep_their_flag(self):
+        # They advance the state the visible steps read; the bundle drops them, capture never does.
+        ep = ep_with([real("echo state > marker && echo set", capture_only=True),
+                      real("cat marker")])
+        new = capture.run(ep, self.home)
+        hidden, shown = new["chapters"][0]["steps"]
+        self.assertEqual(hidden["out"], ["set"])
+        self.assertIs(hidden["capture_only"], True)
+        self.assertEqual(shown["out"], ["state"])
+
     def test_input_episode_is_not_mutated(self):
         ep = ep_with([real("echo new")])
         before = copy.deepcopy(ep)
