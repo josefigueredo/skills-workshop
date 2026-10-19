@@ -6,8 +6,11 @@
 //   the injected scheduler, so it looks like the step at `index` playing on top of
 //   Render.step(index - 1). Both completion and cancel() end with a fresh
 //   Render.step(container, episode, index): the final DOM is identical by construction.
-//   `done` resolves in both cases (never rejects). A caller must cancel() the previous
-//   run before starting a new one on the same container.
+//   `done` resolves in both cases (never rejects). A new run on the same container
+//   cancels the previous one first, and a reveal that throws ends the run in the final
+//   state too.
+// Animate.stop(container): cancels the active run on `container` without rendering
+//   (call it before a static Render.step, e.g. on a back-step).
 //   opts: {speed = 1 (clamped to >= 0.1), schedule(fn, ms) -> id = setTimeout,
 //          unschedule(id) = clearTimeout, now() = Date.now (accepted, not used: every
 //          wait goes through schedule)}.
@@ -83,34 +86,60 @@ var Animate = (function () {
     return plan;
   }
 
+  // One active run per container: a new run (or stop) cancels the previous one first.
+  var active = typeof WeakMap === "function" ? new WeakMap() : null;
+  function getActive(c) { return active ? active.get(c) : c.__wsAnimRun; }
+  function setActive(c, r) { if (active) active.set(c, r); else c.__wsAnimRun = r; }
+  function clearActive(c, r) {
+    if (getActive(c) !== r) return;
+    if (active) active.delete(c); else delete c.__wsAnimRun;
+  }
+
+  // Cancel any active run on `container` without rendering (its `done` resolves).
+  function stop(container) {
+    var r = getActive(container);
+    if (r) r.abort();
+  }
+
   function run(container, ep, index, opts) {
     opts = opts || {};
+    stop(container);
     var speed = speedOf(opts.speed === undefined ? 1 : opts.speed);
     var schedule = opts.schedule || function (fn, ms) { return setTimeout(fn, ms); };
     var unschedule = opts.unschedule || function (id) { clearTimeout(id); };
-    var plan = prepare(container, ep, index, speed);
     var finished = false, timer = null, resolveDone;
     var done = new Promise(function (resolve) { resolveDone = resolve; });
+    var handle = {cancel: function () { end(true); }, done: done, abort: function () { end(false); }};
+    setActive(container, handle);
+    var plan = prepare(container, ep, index, speed);
 
-    function finish() {
+    function end(render) {
       if (finished) return;
       finished = true;
       if (timer !== null) { unschedule(timer); timer = null; }
-      Render.step(container, ep, index);
+      clearActive(container, handle);
+      if (render) Render.step(container, ep, index);
       resolveDone();
     }
     function next(k) {
       if (finished) return;
-      if (k >= plan.length) { finish(); return; }
+      if (k >= plan.length) { end(true); return; }
       timer = schedule(function () {
         timer = null;
         if (finished) return;
-        plan[k].fn();
+        try {
+          plan[k].fn();
+        } catch (err) {
+          // A broken reveal must not stall playback: jump to the final state.
+          if (typeof console !== "undefined") console.error("Animate: reveal failed", err);
+          end(true);
+          return;
+        }
         next(k + 1);
       }, plan[k].ms);
     }
     next(0);
-    return {cancel: finish, done: done};
+    return {cancel: handle.cancel, done: done};
   }
 
   // Sum of the ms the animation of `index` schedules (same plan, detached container).
@@ -145,6 +174,6 @@ var Animate = (function () {
     return {total: total, chapters: chapters};
   }
 
-  return {run: run, stepDuration: stepDuration, autoplay: autoplay, episodeDuration: episodeDuration,
+  return {run: run, stop: stop, stepDuration: stepDuration, autoplay: autoplay, episodeDuration: episodeDuration,
           CHAR_MS: CHAR_MS, LINE_MS: LINE_MS, NODE_MS: NODE_MS, FADE_MS: FADE_MS, AUTOPLAY_MS: AUTOPLAY_MS};
 })();

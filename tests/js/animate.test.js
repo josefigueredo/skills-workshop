@@ -284,3 +284,61 @@ test("episodeDuration sums step durations plus delays, none after a stop", funct
   assertEqual(d.chapters[2].ms, 250 + 900 + 490);
   assertEqual(Animate.episodeDuration(ep, 2).total, total / 2);
 });
+
+test("a second run on the same container cancels the first and ends in its own final state", function () {
+  var ep = animEpisode(), c = document.createElement("div");
+  var ca = fakeClock(), cb = fakeClock();
+  var a = Animate.run(c, ep, 1, ca.opts(1));
+  ca.ticks(2);
+  var b = Animate.run(c, ep, 16, cb.opts(1));
+  assertEqual(ca.pending(), 0, "first run's timer still pending");
+  ca.flush(); cb.flush();
+  assertEqual(c.innerHTML, finalHTML(ep, 16));
+  return Promise.all([a.done, b.done]);
+});
+
+test("the first run's leftover callbacks leave the second run's partial state untouched", function () {
+  var ep = animEpisode(), c = document.createElement("div");
+  var ca = fakeClock(), cb = fakeClock(), stale = [];
+  // Record every callback the first run hands its scheduler, unscheduled or not.
+  Animate.run(c, ep, 1, {speed: 1, unschedule: ca.unschedule,
+                         schedule: function (fn, ms) { stale.push(fn); return ca.schedule(fn, ms); }});
+  ca.ticks(2);
+  Animate.run(c, ep, 16, cb.opts(1));
+  cb.ticks(2);
+  var partial = c.innerHTML;
+  assert(partial !== finalHTML(ep, 16), "second run already final");
+  stale.forEach(function (fn) { fn(); });
+  ca.flush();
+  assertEqual(c.innerHTML, partial);
+  cb.flush();
+  assertEqual(c.innerHTML, finalHTML(ep, 16));
+});
+
+test("Animate.stop cancels without rendering and no callback mutates the container after it", function () {
+  var ep = animEpisode(), c = document.createElement("div"), clock = fakeClock(), fired = [];
+  var r = Animate.run(c, ep, 9, {speed: 1, unschedule: clock.unschedule,
+                                 schedule: function (fn, ms) { fired.push(fn); return clock.schedule(fn, ms); }});
+  clock.ticks(1);
+  Animate.stop(c);
+  var snap = c.innerHTML;
+  assert(snap !== finalHTML(ep, 9), "stop rendered the final state");
+  assertEqual(clock.pending(), 0);
+  fired.forEach(function (fn) { fn(); });
+  assertEqual(c.innerHTML, snap);
+  Animate.stop(c);  // idempotent, nothing active
+  return r.done;
+});
+
+test("a reveal that throws still ends in the final state and resolves done", function () {
+  var ep = animEpisode(), c = document.createElement("div"), clock = fakeClock();
+  var r = Animate.run(c, ep, 1, clock.opts(1));
+  var typed = q(c, '[data-anim="type"]');
+  Object.defineProperty(typed, "textContent", {set: function () { throw new Error("boom"); }, get: function () { return ""; }});
+  var origError = console.error;
+  console.error = function () {};
+  try { clock.tick(); } finally { console.error = origError; }
+  assertEqual(clock.pending(), 0);
+  assertEqual(c.innerHTML, finalHTML(ep, 1));
+  return r.done;
+});
