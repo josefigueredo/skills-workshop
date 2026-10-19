@@ -8,7 +8,10 @@
 // writes "JS PASS n FAIL m" plus failures into #result.
 var SUITES = {
   nav: ["nav.js"],
-  "fixture-fail": []
+  render: ["nav.js", "render.js"],
+  "fixture-fail": [],
+  "fixture-empty": [],
+  "fixture-missing": ["does-not-exist.js"]
 };
 var tests = [], loadErrors = [];
 
@@ -28,11 +31,15 @@ window.addEventListener("error", function (ev) {
   var suite = m ? m[1] : "";
   if (!suite) { loadErrors.push("missing or invalid ?suite="); return; }
   var engine = SUITES[suite] || [];
-  engine.forEach(function (f) {
-    document.write('<script src="../../engine/' + f + '"><\/script>');
-  });
-  document.write('<script src="' + suite + '.test.js"><\/script>');
+  // onerror catches files that fail to load (a 404 never reaches window "error").
+  function load(src) {
+    document.write('<script src="' + src + '" onerror="loadFailed(\'' + src + '\')"><\/script>');
+  }
+  engine.forEach(function (f) { load("../../engine/" + f); });
+  load(suite + ".test.js");
 })();
+
+function loadFailed(src) { loadErrors.push("failed to load " + src); }
 
 function finish(passed, failures) {
   var lines = ["JS PASS " + passed + " FAIL " + failures.length];
@@ -43,6 +50,7 @@ function finish(passed, failures) {
 window.addEventListener("load", function () {
   var passed = 0, failures = [];
   loadErrors.forEach(function (e) { failures.push({name: "(load)", msg: e}); });
+  if (!tests.length) failures.push({name: "(harness)", msg: "suite registered zero tests"});
   var chain = Promise.resolve();
   tests.forEach(function (t) {
     chain = chain.then(function () {

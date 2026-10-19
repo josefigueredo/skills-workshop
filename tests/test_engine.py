@@ -14,6 +14,7 @@ DEFAULT_CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 CHROME = os.environ.get("CHROME", DEFAULT_CHROME)
 HARNESS = ROOT / "tests" / "js" / "harness.html"
 HAVE_CHROME = Path(CHROME).exists()
+RENDER_TESTS = 15  # exact count: a test that silently fails to register must show up
 SKIP_MSG = "Chrome not found at %s (set CHROME to run the JS suites)" % CHROME
 
 
@@ -42,6 +43,29 @@ class EngineSuites(unittest.TestCase):
         result = run_suite("fixture-fail")
         self.assertIn("PASS 1 FAIL 1", result, result)
         self.assertIn("fails on purpose", result)
+
+    def assert_reports_failure(self, suite):
+        result = run_suite(suite)
+        n = int(re.search(r"FAIL (\d+)", result).group(1))
+        self.assertGreaterEqual(n, 1, result)
+        return result
+
+    def test_suite_without_tests_fails(self):
+        result = self.assert_reports_failure("fixture-empty")
+        self.assertIn("zero tests", result)
+
+    def test_missing_engine_script_fails(self):
+        result = self.assert_reports_failure("fixture-missing")
+        self.assertIn("does-not-exist.js", result)
+
+    def test_missing_test_file_fails(self):
+        result = self.assert_reports_failure("no-such-suite")
+        self.assertIn("no-such-suite.test.js", result)
+
+    def test_render_suite(self):
+        result = run_suite("render")
+        self.assertIn("FAIL 0", result, result)
+        self.assertIn("PASS %d " % RENDER_TESTS, result + " ", result)
 
 
 if __name__ == "__main__":

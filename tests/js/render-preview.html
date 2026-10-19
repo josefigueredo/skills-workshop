@@ -1,0 +1,105 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Render preview</title>
+<link rel="stylesheet" href="../../engine/tokens.css">
+<link rel="stylesheet" href="../../engine/screens.css">
+<style>
+  body { margin: 0; background: #d9d9de; font-family: -apple-system, sans-serif; }
+  .frame { margin: 0 0 40px; }
+  .frame h2 { margin: 0; padding: 10px 16px; font-size: 14px; color: #333; }
+  body.only .frame { margin: 0; }
+  body.only .frame h2 { display: none; }
+</style>
+</head>
+<body>
+<div id="frames"></div>
+<script src="../../engine/nav.js"></script>
+<script src="../../engine/render.js"></script>
+<script>
+// Visual check of every screen at its real 1600x900 size.
+// ?only=<key> renders just that frame with no margin (for 1600x900 headless captures).
+var EP = {
+  id: "preview", series: "cursor", order: 1, title: "inherited-audit",
+  skill: {repo: "inherited-audit", commit: "51311c7", date: "2026-10-19"},
+  workspace: {repo: "mi-servicio", files: ["api", "web", "docs", "README.md"],
+              chats: [{title: "Agregar endpoint de pagos", age: "2d"}]},
+  chapters: [
+    {id: "instalar", title: "Instalar", subtitle: "Una vez por máquina", screen: "terminal", steps: [
+      {type: "term", cmd: "git clone git@github.com:mi-org/inherited-audit.git ~/skills/inherited-audit",
+       out: ["Cloning into '~/skills/inherited-audit'... done."], source: "inferido", cwd: "~"},
+      {type: "term", cmd: "~/skills/inherited-audit/install.sh --agents", cwd: "~/mi-servicio",
+       out: ["skill: ~/.claude/skills/inherited-audit -> ~/skills/inherited-audit/skill",
+             "agents: ia-auditor linked for Claude Code and Cursor"], source: "real"},
+      {type: "say", md: "Listo: la skill queda **instalada** para `Cursor` y Claude Code.", source: "inferido"}
+    ]},
+    {id: "caso", title: "Caso principal", subtitle: "Le pedís una auditoría y te devuelve dos reportes con un test rojo por hallazgo.",
+     screen: "cursor-full", steps: [
+      {type: "ask", text: "Auditá este sistema heredado con la skill inherited-audit. Backend en api/, frontend en web/.", source: "inferido"},
+      {type: "worked", seconds: 42, source: "inferido"},
+      {type: "tool", label: "Read skill · inherited-audit/SKILL.md", source: "inferido"},
+      {type: "tool", label: "Ran · python3 ia.py init --system mi-servicio …", source: "inferido"},
+      {type: "term", cmd: "python3 ia.py status --run 2026-10-19", out: ["baseline: done · correctness: pending"], source: "inferido"},
+      {type: "say", md: "Fijé la base en `a1b2c3d`. La suite del backend pasa **212 de 214**; la del frontend no tiene tests.\n\n#### Antes de seguir, una sola pregunta\n¿Puedo instalar dependencias con `npm ci --ignore-scripts` y levantar Postgres descartable con Docker?\n- Si decís que sí, sigo con la correctitud.\n- Si no, mido solo lo estático.", source: "inferido"},
+      {type: "approve", title: "inherited-audit quiere crear 2 tickets", lines: ["PROJ-101 · Race en el cobro doble", "PROJ-102 · Timeout sin reintento en pagos"], button: "Apruebo 2", source: "inferido"}
+    ]},
+    {id: "retomar", title: "Retomar una corrida", subtitle: "Lo que quedó a medias sigue donde estaba.", screen: "cursor-agent", steps: [
+      {type: "ask", text: "Retomá la auditoría que quedó a medias ayer.", source: "inferido"},
+      {type: "worked", seconds: 6, source: "inferido"},
+      {type: "term", cmd: "python3 ia.py status --run 2026-10-19", out: ["baseline: done", "correctness: done", "proof: 0 of 7"], source: "inferido"},
+      {type: "say", md: "Quedaron hechos la base y la correctitud. Sigo con la prueba: hay **7 hallazgos candidatos** esperando su test rojo.", source: "inferido"}
+    ]},
+    {id: "cc", title: "Desde Claude Code", subtitle: "La misma skill, en la terminal.", screen: "claude-code", steps: [
+      {type: "ask", text: "Auditá mi-servicio con inherited-audit", source: "inferido"},
+      {type: "tool", label: "Skill(inherited-audit)", source: "inferido"},
+      {type: "term", cmd: "python3 ia.py init --system mi-servicio", out: ["run: 2026-10-19", "baseline: pending"], source: "inferido"},
+      {type: "say", md: "Arranqué la corrida. Primero fijo la **base**:\n- suite del backend\n- `npm ci` del frontend", source: "inferido"},
+      {type: "worked", seconds: 12, source: "inferido"}
+    ]},
+    {id: "largo", title: "Un capítulo largo", screen: "cursor-agent", steps: []}
+  ]
+};
+(function addLongChapter() {
+  var steps = EP.chapters[4].steps;
+  for (var k = 1; k <= 14; k++) {
+    steps.push({type: "tool", label: "Ran · python3 ia.py prove --finding " + k, source: "inferido"});
+    steps.push({type: "say", md: "Hallazgo **" + k + "**: test rojo escrito en `api/tests/test_f" + k + ".py`.", source: "inferido"});
+  }
+})();
+
+function indexOf(chId, step) {
+  var flat = Nav.flatten(EP), ci = -1;
+  EP.chapters.forEach(function (c, i) { if (c.id === chId) ci = i; });
+  for (var i = 0; i < flat.length; i++) {
+    if (flat[i].chapter === ci && flat[i].step === step) return i;
+  }
+  return 0;
+}
+function last(chId) {
+  var ch = EP.chapters.filter(function (c) { return c.id === chId; })[0];
+  return indexOf(chId, ch.steps.length - 1);
+}
+var FRAMES = [
+  ["card", "Placa de capítulo", indexOf("caso", -1)],
+  ["terminal", "Terminal de la persona", last("instalar")],
+  ["cursor-full", "Cursor completo", indexOf("caso", 5)],
+  ["approve", "Ventana de aprobación sobre Cursor completo", last("caso")],
+  ["cursor-agent", "Solo el agente", last("retomar")],
+  ["claude-code", "Claude Code", last("cc")],
+  ["long", "Capítulo largo: se ve lo último", last("largo")]
+];
+var m = /[?&]only=([a-z-]+)/.exec(location.search);
+if (m) document.body.className = "only";
+var root = document.getElementById("frames");
+FRAMES.forEach(function (f) {
+  if (m && m[1] !== f[0]) return;
+  var frame = document.createElement("div");
+  frame.className = "frame";
+  var h = document.createElement("h2");
+  h.textContent = f[1] + " (índice " + f[2] + ")";
+  var box = document.createElement("div");
+  frame.appendChild(h);
+  frame.appendChild(box);
+  root.appendChild(frame);
+  Render.step(box, EP, f[2]);
+});
+</script>
+</body></html>
