@@ -29,11 +29,30 @@ def cmd_validate(args) -> int:
     return 0
 
 
+def cmd_check(args) -> int:
+    from ws import privacy
+
+    root = Path(args.root)
+    try:
+        hits = privacy.scan([root / d for d in ("episodes", "demo", "dist")])
+    except ValueError as exc:
+        sys.stderr.write("check: %s\n" % exc)
+        return 2
+    for h in hits:
+        print(h)
+    if hits:
+        print("%d privacy hit(s)" % len(hits))
+        return 1
+    print("ok: no privacy hits")
+    return 0
+
+
 def make_parser() -> argparse.ArgumentParser:
     parser = _Parser(prog="build.py", description="Workshop engine: validate, check, capture, build.")
     parser.add_argument("--root", default=str(HERE), help="repo root (default: this repo)")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("validate", help="validate episode scripts").set_defaults(func=cmd_validate)
+    sub.add_parser("check", help="privacy scan of episodes/, demo/, dist/").set_defaults(func=cmd_check)
     return parser
 
 
