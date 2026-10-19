@@ -168,7 +168,7 @@
           ],
           "source": "real",
           "cwd": "~/mi-servicio",
-          "notes": "Tres filas, sin red ni credenciales. «wow plan»: si el trabajo ya sale de un plan de WayOfWork, la épica la crea otra herramienta. «jira project»: no hay proyecto por defecto, así que hay que preguntarlo. «existing epic»: si ya existe una épica para esto, se pregunta antes de crear otra. Acá no hay ni plan ni épica. Falta el proyecto.",
+          "notes": "Tres filas, sin red ni credenciales. «wow plan»: si el trabajo ya sale de un plan de WayOfWork, la épica la crea otra herramienta. «jira project»: no hay proyecto por defecto, así que hay que preguntarlo. «existing epic»: si ya existe una épica para esto, se pregunta antes de crear otra. Acá no hay ni plan ni épica. Falta el proyecto. Y una aclaración: el comando sale con la ruta completa, ~/.local/bin/jtk, porque la captura corre sin tu PATH; en tu terminal alcanza con escribir jtk.",
           "pause": true
         },
         {
@@ -309,7 +309,7 @@
       "steps": [
         {
           "type": "ask",
-          "text": "Asigná a Ana Gómez los tickets sin dueño del view plataforma",
+          "text": "Asigná a una compañera del equipo los tickets sin dueño del view plataforma",
           "source": "inferido",
           "notes": "Otro pedido típico: no es crear, es cambiar muchas cosas ya existentes. Esta vez es jira-em-ops, la hermana de jira-team-kit para operaciones en lote. Necesita que antes hayas guardado el view y el perfil de tus boards, una sola vez."
         },
@@ -321,12 +321,12 @@
         },
         {
           "type": "term",
-          "cmd": "jtk plan assign plataforma --unassigned --person \"Ana Gómez\"",
+          "cmd": "jtk plan assign plataforma --unassigned --person \"Persona del equipo\"",
           "out": [
             "Plan 3f9a1c07b2de · assign · view plataforma · 3 issue(s)",
-            "  PLAT-131: unassigned -> Ana Gómez",
-            "  PLAT-134: unassigned -> Ana Gómez",
-            "  PLAT-140: unassigned -> Ana Gómez",
+            "  PLAT-131: unassigned -> Persona del equipo",
+            "  PLAT-134: unassigned -> Persona del equipo",
+            "  PLAT-140: unassigned -> Persona del equipo",
             "",
             "Plan 3f9a1c07b2de saved in ~/.local/state/jtk/plans/3f9a1c07b2de.json. Nothing was written to Jira.",
             "To apply it, run: jtk apply 3f9a1c07b2de",
@@ -338,7 +338,7 @@
         },
         {
           "type": "say",
-          "md": "Armé el plan **3f9a1c07b2de**: asignar a **Ana Gómez** los **3 tickets sin dueño** de plataforma (PLAT-131, PLAT-134 y PLAT-140). Hasta acá no escribí nada.\n\n¿Lo aplico?",
+          "md": "Armé el plan **3f9a1c07b2de**: asignar a **una compañera del equipo** los **3 tickets sin dueño** de plataforma (PLAT-131, PLAT-134 y PLAT-140). Hasta acá no escribí nada.\n\n¿Lo aplico?",
           "source": "inferido",
           "notes": "El agente muestra el plan tal cual salió y pregunta. Es el segundo punto de control: el primero es el plan, el segundo es tu sí, y el tercero, el clic."
         },
@@ -359,9 +359,9 @@
           "type": "approve",
           "title": "Aplicar el plan 3f9a1c07b2de",
           "lines": [
-            "PLAT-131 · Sin asignar → Ana Gómez",
-            "PLAT-134 · Sin asignar → Ana Gómez",
-            "PLAT-140 · Sin asignar → Ana Gómez",
+            "PLAT-131 · Sin asignar → Persona del equipo",
+            "PLAT-134 · Sin asignar → Persona del equipo",
+            "PLAT-140 · Sin asignar → Persona del equipo",
             "Aprobás con un clic en Apruebo 3. Escape o Cancelar no escriben nada."
           ],
           "button": "Apruebo 3",
@@ -382,7 +382,7 @@
         },
         {
           "type": "say",
-          "md": "Aplicado: los **3 tickets** son de Ana Gómez ahora. Si querés ver cómo quedó el equipo, corro `jtk team status plataforma`; y si querés volver atrás, `jtk plan revert 3f9a1c07b2de` (no garantiza deshacer todo).",
+          "md": "Aplicado: los **3 tickets** son de la compañera ahora. Si querés ver cómo quedó el equipo, corro `jtk team status plataforma`; y si querés volver atrás, `jtk plan revert 3f9a1c07b2de` (no garantiza deshacer todo).",
           "source": "inferido",
           "notes": "Dos salidas después de aplicar: ver el resultado o planificar la inversa. Siempre ofrecidas, nunca hechas sin que lo pidas.",
           "pause": true
@@ -485,7 +485,7 @@
         },
         {
           "type": "term",
-          "cmd": "~/.local/bin/jtk who \"Ana Gómez\" --jira-project PLAT",
+          "cmd": "~/.local/bin/jtk who \"Persona del equipo\" --jira-project PLAT",
           "out": [
             "jtk: Jira credentials not found (set JIRA_BASE_URL, JIRA_EMAIL and JIRA_API_TOKEN in the environment, ./.env.local or ./.spec-kit/.env)",
             "# exit 1"
