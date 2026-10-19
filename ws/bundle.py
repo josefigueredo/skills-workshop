@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import re
+from html import escape
 from pathlib import Path
 from typing import Dict, List
 
@@ -10,13 +11,14 @@ from ws import schema
 
 CSS_FILES = ("tokens.css", "screens.css")
 JS_COMMON = ("nav.js", "render.js", "animate.js")
-SLOT_RE = re.compile(r"<!--(CSS|JS|EPISODES)-->")
+SLOT_RE = re.compile(r"<!--(CSS|JS|EPISODES|LIST)-->")
 # output name -> (template, last script, series kept or None for all)
 TARGETS = (
     ("serie-cursor.html", "stage.html", "stage.js", "cursor"),
     ("serie-claude-code.html", "stage.html", "stage.js", "claude-code"),
     ("control.html", "control.html", "control.js", None),
 )
+SERIES_TITLES = (("cursor", "Serie Cursor"), ("claude-code", "Serie Claude Code"))
 
 
 class BundleError(Exception):
@@ -65,6 +67,29 @@ def for_stage(episode: dict) -> dict:
     return out
 
 
+def _chapters_label(n: int) -> str:
+    return "1 capítulo" if n == 1 else "%d capítulos" % n
+
+
+def episode_list(episodes: List[dict]) -> str:
+    """The landing page's per-series episode list. Every episode text is HTML-escaped."""
+    parts = []
+    for series, heading in SERIES_TITLES:
+        parts.append("<h2>%s</h2>" % escape(heading))
+        mine = [e for e in episodes if e.get("series") == series]
+        if not mine:
+            parts.append('<p class="empty">Todavía no hay episodios.</p>')
+            continue
+        parts.append('<ul class="eps">')
+        for e in mine:
+            href = "serie-%s.html#%s/1" % (series, e["id"])
+            parts.append('<li><a href="%s">%s</a><p>%s</p><small>%s</small></li>' % (
+                escape(href, quote=True), escape(e["title"]), escape(e["pitch"]["does"]),
+                _chapters_label(len(e["chapters"]))))
+        parts.append("</ul>")
+    return "\n  ".join(parts)
+
+
 def render(root) -> Dict[str, str]:
     """Build every dist file in memory: {file name: html}. Writes nothing."""
     root = Path(root)
@@ -79,6 +104,9 @@ def render(root) -> Dict[str, str]:
         data = '<script type="application/json" id="episodes">%s</script>' % episodes_json(chosen)
         html = _fill(_read(engine / template), {"CSS": css, "JS": scripts, "EPISODES": data}, template)
         out[name] = html
+    tokens = "<style>\n%s\n</style>" % _inline(engine / CSS_FILES[0], "</style")
+    out["index.html"] = _fill(_read(engine / "index.html"),
+                              {"CSS": tokens, "LIST": episode_list(episodes)}, "index.html")
     return out
 
 
@@ -86,7 +114,7 @@ def write(root, rendered: Dict[str, str]) -> List[Path]:
     dist = Path(root) / "dist"
     dist.mkdir(exist_ok=True)
     paths = []
-    for name, _, _, _ in TARGETS:
+    for name in rendered:
         p = dist / name
         p.write_bytes(rendered[name].encode("utf-8"))
         paths.append(p)
@@ -94,5 +122,5 @@ def write(root, rendered: Dict[str, str]) -> List[Path]:
 
 
 def build(root) -> List[Path]:
-    """Write dist/serie-cursor.html, dist/serie-claude-code.html and dist/control.html."""
+    """Write dist/serie-*.html, control.html and the landing page index.html."""
     return write(root, render(root))

@@ -15,7 +15,8 @@ from tests.helpers import ROOT, TempTree, minimal_episode
 from tests.test_engine import CHROME, HAVE_CHROME, SKIP_MSG
 from ws import bundle
 
-NAMES = ["serie-cursor.html", "serie-claude-code.html", "control.html"]
+NAMES = ["serie-cursor.html", "serie-claude-code.html", "control.html", "index.html"]
+STAGE_NAMES = NAMES[:3]
 
 
 def with_engine(tree):
@@ -51,7 +52,7 @@ def run_build(root, *extra):
 
 
 class BundleContent(unittest.TestCase):
-    def test_build_writes_the_three_files(self):
+    def test_build_writes_every_file(self):
         with two_series_tree() as tree:
             paths = bundle.build(tree.root)
             self.assertEqual([p.name for p in paths], NAMES)
@@ -62,6 +63,8 @@ class BundleContent(unittest.TestCase):
     def test_self_contained(self):
         with two_series_tree() as tree:
             for p in bundle.build(tree.root):
+                if p.name == "index.html":  # its own rules: tests/test_index.py
+                    continue
                 html = p.read_text(encoding="utf-8")
                 self.assertNotRegex(html, r"\bsrc=", p.name)
                 self.assertNotRegex(html, r"""\bhref=(?!["']?#)""", p.name)
