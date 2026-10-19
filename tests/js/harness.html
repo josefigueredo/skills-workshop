@@ -1,0 +1,58 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>JS harness</title></head>
+<body>
+<pre id="result">RUNNING</pre>
+<script>
+// Usage: harness.html?suite=<name>. Loads the engine scripts for the suite,
+// then <name>.test.js, runs every test() in order (awaiting promises) and
+// writes "JS PASS n FAIL m" plus failures into #result.
+var SUITES = {
+  nav: ["nav.js"],
+  "fixture-fail": []
+};
+var tests = [], loadErrors = [];
+
+function test(name, fn) { tests.push({name: name, fn: fn}); }
+function assert(cond, msg) { if (!cond) throw new Error(msg || "assertion failed"); }
+function assertEqual(actual, expected, msg) {
+  var a = JSON.stringify(actual), e = JSON.stringify(expected);
+  if (a !== e) throw new Error((msg ? msg + ": " : "") + "expected " + e + " got " + a);
+}
+
+window.addEventListener("error", function (ev) {
+  loadErrors.push((ev.filename ? ev.filename.split("/").pop() + ": " : "") + ev.message);
+});
+
+(function () {
+  var m = /[?&]suite=([A-Za-z0-9_-]+)/.exec(location.search);
+  var suite = m ? m[1] : "";
+  if (!suite) { loadErrors.push("missing or invalid ?suite="); return; }
+  var engine = SUITES[suite] || [];
+  engine.forEach(function (f) {
+    document.write('<script src="../../engine/' + f + '"><\/script>');
+  });
+  document.write('<script src="' + suite + '.test.js"><\/script>');
+})();
+
+function finish(passed, failures) {
+  var lines = ["JS PASS " + passed + " FAIL " + failures.length];
+  failures.forEach(function (f) { lines.push("FAILED " + f.name + ": " + f.msg); });
+  document.getElementById("result").textContent = lines.join("\n");
+}
+
+window.addEventListener("load", function () {
+  var passed = 0, failures = [];
+  loadErrors.forEach(function (e) { failures.push({name: "(load)", msg: e}); });
+  var chain = Promise.resolve();
+  tests.forEach(function (t) {
+    chain = chain.then(function () {
+      return Promise.resolve().then(t.fn).then(
+        function () { passed++; },
+        function (e) { failures.push({name: t.name, msg: String(e && e.message || e)}); });
+    });
+  });
+  chain.then(function () { finish(passed, failures); },
+             function (e) { failures.push({name: "(harness)", msg: String(e)}); finish(passed, failures); });
+});
+</script>
+</body></html>
