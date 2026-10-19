@@ -47,12 +47,28 @@ def cmd_check(args) -> int:
     return 0
 
 
+def cmd_capture(args) -> int:
+    from ws import capture, schema
+
+    root = Path(args.root)
+    problems = schema.check_tree(root)
+    if problems:
+        for p in problems:
+            print(p)
+        print("%d problem(s): fix them before capturing" % len(problems))
+        return 1
+    return capture.capture_tree(root, args.episode)
+
+
 def make_parser() -> argparse.ArgumentParser:
     parser = _Parser(prog="build.py", description="Workshop engine: validate, check, capture, build.")
     parser.add_argument("--root", default=str(HERE), help="repo root (default: this repo)")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("validate", help="validate episode scripts").set_defaults(func=cmd_validate)
     sub.add_parser("check", help="privacy scan of episodes/, demo/, dist/").set_defaults(func=cmd_check)
+    cap = sub.add_parser("capture", help="re-run `real` terminal steps in a fake HOME")
+    cap.add_argument("--episode", metavar="ID", help="capture only this episode id")
+    cap.set_defaults(func=cmd_capture)
     return parser
 
 

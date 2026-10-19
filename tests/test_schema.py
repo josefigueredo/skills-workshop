@@ -49,11 +49,25 @@ class SchemaTests(unittest.TestCase):
         self.assertIn("real term step needs 'cwd'", schema.validate(ep, "x.json")[0])
         ep = minimal_episode()
         step_of(ep, 0)["cwd"] = "demo/mi-servicio"
-        self.assertIn("must start with '~'", schema.validate(ep, "x.json")[0])
+        self.assertIn("'cwd'", schema.validate(ep, "x.json")[0])
         ep = minimal_episode()
         step_of(ep, 0)["source"] = "inferido"
         del step_of(ep, 0)["cwd"]
         self.assertEqual(schema.validate(ep, "x.json"), [])
+
+    def test_real_cwd_is_strictly_home_relative(self):
+        for good in ("~", "~/mi-servicio", "~/mi-servicio/api"):
+            with self.subTest(cwd=good):
+                ep = minimal_episode()
+                step_of(ep, 0)["cwd"] = good
+                self.assertEqual(schema.validate(ep, "x.json"), [])
+        for bad in ("~foo", "~root", "~/..", "~/a/../b", "~/mi-servicio/../..", "~\\x"):
+            with self.subTest(cwd=bad):
+                ep = minimal_episode()
+                step_of(ep, 0)["cwd"] = bad
+                msgs = schema.validate(ep, "x.json")
+                self.assertEqual(len(msgs), 1, msgs)
+                self.assertIn("'cwd'", msgs[0])
 
     def test_unknown_screen(self):
         ep = minimal_episode()

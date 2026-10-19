@@ -25,7 +25,7 @@ def load(path) -> dict:
         return json.load(fh)
 
 
-def _episode_files(root: Path):
+def episode_files(root: Path):
     base = Path(root) / "episodes"
     if not base.is_dir():
         return []
@@ -34,7 +34,7 @@ def _episode_files(root: Path):
 
 def load_all(root) -> list:
     """Load every episodes/<series>/*.json under root, sorted by (series, order)."""
-    eps = [load(p) for p in _episode_files(Path(root))]
+    eps = [load(p) for p in episode_files(Path(root))]
     return sorted(eps, key=lambda e: (str(e.get("series")), e.get("order", 0)))
 
 
@@ -67,6 +67,15 @@ def _require(obj, fields, prefix, out):
     return clean
 
 
+def _home_relative(cwd) -> bool:
+    """'~' or '~/<path>' with no '..' segment and no backslash."""
+    if not isinstance(cwd, str) or "\\" in cwd:
+        return False
+    if cwd != "~" and not cwd.startswith("~/"):
+        return False
+    return ".." not in cwd.split("/")
+
+
 def _validate_step(step, prefix, out):
     if not isinstance(step, dict):
         out.append("%s: step must be an object" % prefix)
@@ -89,8 +98,8 @@ def _validate_step(step, prefix, out):
         cwd = step.get("cwd")
         if cwd is None:
             out.append("%s: real term step needs 'cwd'" % prefix)
-        elif not isinstance(cwd, str) or not cwd.startswith("~"):
-            out.append("%s: 'cwd' must start with '~' (relative to the fake HOME)" % prefix)
+        elif not _home_relative(cwd):
+            out.append("%s: 'cwd' must be '~' or '~/<path>' without '..' (relative to the fake HOME)" % prefix)
 
 
 def _validate_chapter(chapter, i, out, where, seen_ids):
@@ -150,7 +159,7 @@ def check_tree(root) -> list:
     """Validate every episode under root/episodes plus cross-file rules."""
     out: list = []
     seen: dict = {}
-    for path in _episode_files(Path(root)):
+    for path in episode_files(Path(root)):
         where = "%s/%s" % (path.parent.name, path.name)
         try:
             ep = load(path)
