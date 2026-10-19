@@ -1,5 +1,8 @@
 // Pure navigation over an episode: the global index is the flattened list of
 // (chapter card + its steps). No DOM, no state.
+// keyAction(KeyboardEvent.key) -> "right" | "left" | "space" | "b" | null: the presenter
+// keys, shared by the control and the stage. PageDown/PageUp act as the arrows because
+// presentation clickers send them.
 var Nav = (function () {
   function flatten(ep) {
     var out = [];
@@ -38,6 +41,14 @@ var Nav = (function () {
     return 0;
   }
 
+  function keyAction(key) {
+    if (key === "ArrowRight" || key === "PageDown") return "right";
+    if (key === "ArrowLeft" || key === "PageUp") return "left";
+    if (key === " " || key === "Spacebar") return "space";
+    if (key === "b" || key === "B") return "b";
+    return null;
+  }
+
   function position(ep, i) {
     var flat = flatten(ep);
     i = clamp(ep, i);
@@ -47,5 +58,5 @@ var Nav = (function () {
   }
 
   return {flatten: flatten, clamp: clamp, nextChapter: nextChapter,
-          prevChapter: prevChapter, position: position};
+          prevChapter: prevChapter, position: position, keyAction: keyAction};
 })();

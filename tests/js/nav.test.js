@@ -69,3 +69,15 @@ test("position reports chapter, step, total and title", function () {
   assertEqual(Nav.position(ep, 0), {chapter: 0, step: -1, total: 8, chapterTitle: "Alpha"});
   assertEqual(Nav.position(ep, 6), {chapter: 2, step: 1, total: 8, chapterTitle: "Gamma"});
 });
+
+test("keyAction maps presenter keys, PageDown/PageUp like a clicker", function () {
+  assertEqual(Nav.keyAction("ArrowRight"), "right");
+  assertEqual(Nav.keyAction("PageDown"), "right");
+  assertEqual(Nav.keyAction("ArrowLeft"), "left");
+  assertEqual(Nav.keyAction("PageUp"), "left");
+  assertEqual(Nav.keyAction(" "), "space");
+  assertEqual(Nav.keyAction("Spacebar"), "space");
+  assertEqual(Nav.keyAction("b"), "b");
+  assertEqual(Nav.keyAction("B"), "b");
+  ["x", "Enter", "Home", "", undefined].forEach(function (k) { assertEqual(Nav.keyAction(k), null, String(k)); });
+});

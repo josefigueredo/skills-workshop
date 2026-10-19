@@ -19,10 +19,15 @@
 // Stage.tickClock(canvas) sets the idle prompt's time text (.ws-time inside
 //   [data-anim="idle"]) to Render.now(); it touches nothing else, so it never re-renders
 //   a step or disturbs a running animation. The page calls it every second.
-// The DOM bootstrap at the end runs only on the page with #ws-stage-root.
+// Stage.localMove(ep, index, key, shift) -> {index, animate} | null: where the presenter
+//   keys go when no control drives the page (opened from its link). → / PageDown / space
+//   step forward animated, ← / PageUp step back finished, shift jumps chapters; null at
+//   the ends or for any other key. Stage.hashFor(id, index) is the "#id/N" parseHash reads.
+// The DOM bootstrap at the end runs only on the page with #ws-stage-root. The page is
+// driven when the control opened it (window "ws-stage" with an opener); otherwise it
+// navigates by itself and keeps the step in the hash, so a reload stays put.
 var Stage = (function () {
   var FADE = "ws-fade-in";
-  var KEYS = ["ArrowLeft", "ArrowRight", " ", "Spacebar", "b", "B"];
 
   function create(opts) {
     var canvas = opts.canvas, blackout = opts.blackout;
@@ -108,7 +113,7 @@ var Stage = (function () {
 
   // The keydown the stage forwards to the control, or null.
   function keyMessage(ev) {
-    if (!ev || KEYS.indexOf(ev.key) < 0 || ev.repeat || ev.metaKey || ev.ctrlKey || ev.altKey) return null;
+    if (!ev || !Nav.keyAction(ev.key) || ev.repeat || ev.metaKey || ev.ctrlKey || ev.altKey) return null;
     return {type: "key", key: ev.key, shift: !!ev.shiftKey};
   }
 
@@ -119,6 +124,19 @@ var Stage = (function () {
     var n = m ? parseInt(m[2], 10) : 0;
     return n >= 1 ? {episode: m[1], index: n - 1} : null;
   }
+
+  function localMove(ep, index, key, shift) {
+    var k = Nav.keyAction(key), last = Nav.flatten(ep).length - 1, target;
+    if ((k === "right" || k === "left") && shift) {
+      target = k === "right" ? Nav.nextChapter(ep, index) : Nav.prevChapter(ep, index);
+      return target === index ? null : {index: target, animate: false};
+    }
+    if (k === "right" || k === "space") return index >= last ? null : {index: index + 1, animate: true};
+    if (k === "left") return index <= 0 ? null : {index: index - 1, animate: false};
+    return null;
+  }
+
+  function hashFor(id, index) { return "#" + id + "/" + (index + 1); }
 
   function readEpisodes() {
     var node = document.getElementById("episodes");
@@ -140,12 +158,12 @@ var Stage = (function () {
   function boot() {
     if (!document.getElementById("ws-stage-root")) return;
     var frame = document.getElementById("ws-frame");
-    var opener = window.opener;
+    var opener = window.name === "ws-stage" ? window.opener : null;
     function post(msg) { if (opener && !opener.closed) opener.postMessage(msg, "*"); }
     var canvas = document.getElementById("ws-canvas");
-    var stage = create({canvas: canvas,
-                        blackout: document.getElementById("ws-blackout"),
-                        episodes: readEpisodes(), post: post});
+    var blackout = document.getElementById("ws-blackout");
+    var episodes = readEpisodes();
+    var stage = create({canvas: canvas, blackout: blackout, episodes: episodes, post: post});
     window.addEventListener("message", function (ev) {
       if (!opener || ev.source !== opener) return;
       stage.handle(ev.data);
@@ -154,15 +172,26 @@ var Stage = (function () {
       var msg = keyMessage(ev);
       if (!msg) return;
       ev.preventDefault();
-      post(msg);
+      if (opener) post(msg);
+      else moveAlone(msg);
     });
+    function moveAlone(msg) {
+      if (Nav.keyAction(msg.key) === "b") { blackout.hidden = !blackout.hidden; return; }
+      var cur = stage.current(), ep = null;
+      episodes.forEach(function (e) { if (cur && e.id === cur.episode) ep = e; });
+      var to = ep && localMove(ep, cur.index, msg.key, msg.shift);
+      if (!to) return;
+      history.replaceState(null, "", hashFor(ep.id, to.index));
+      stage.handle({type: "show", episode: ep.id, index: to.index, animate: to.animate, speed: 1});
+    }
     setInterval(function () { tickClock(canvas); }, 1000);
     fit(frame);
     window.addEventListener("resize", function () { fit(frame); });
     if (!opener) {
-      // No control driving this page: the hash picks a finished step to render (static preview).
+      // No control driving this page: the hash picks the finished step to show (the first one
+      // without a hash) and the presenter keys move from there (moveAlone).
       var preview = function () {
-        var h = parseHash(location.hash);
+        var h = parseHash(location.hash) || (episodes[0] ? {episode: episodes[0].id, index: 0} : null);
         if (h) stage.handle({type: "show", episode: h.episode, index: h.index, animate: false});
       };
       window.addEventListener("hashchange", preview);
@@ -174,5 +203,6 @@ var Stage = (function () {
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
 
-  return {create: create, keyMessage: keyMessage, parseHash: parseHash, tickClock: tickClock};
+  return {create: create, keyMessage: keyMessage, parseHash: parseHash, tickClock: tickClock,
+          localMove: localMove, hashFor: hashFor};
 })();

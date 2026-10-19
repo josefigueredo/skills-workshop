@@ -2,7 +2,7 @@
 //
 // Control.init(episodes) -> state
 // Control.reduce(state, input) -> {state, outbox}   (never mutates `state`)
-//   inputs: {kind:"key", key, shift}         key = KeyboardEvent.key (←, →, space, b)
+//   inputs: {kind:"key", key, shift}         key = KeyboardEvent.key (←/PageUp, →/PageDown, space, b)
 //           {kind:"message", msg, now}       a message from the stage window; `now` is the
 //                                            arrival time (Date.now()), not the last tick
 //           {kind:"tick", now}               clock (ms); drives pings, lost and timers
@@ -71,13 +71,7 @@ var Control = (function () {
     return {state: n, outbox: toStage(n, showMsg(n, animate))};
   }
 
-  function normalizeKey(key) {
-    if (key === "ArrowRight") return "right";
-    if (key === "ArrowLeft") return "left";
-    if (key === " " || key === "Spacebar") return "space";
-    if (key === "b" || key === "B") return "b";
-    return null;
-  }
+  function normalizeKey(key) { return Nav.keyAction(key); }
 
   function onKey(s, key, shift) {
     var ep = episodeOf(s);

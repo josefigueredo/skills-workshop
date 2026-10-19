@@ -590,6 +590,43 @@ test("stage: control keys are forwarded as key messages", function () {
   assertEqual(Stage.keyMessage({key: "x", shiftKey: false}), null);
 });
 
+test("control: PageDown and PageUp move like the arrows (presenter clickers)", function () {
+  var r = feed(live(), [key("PageDown"), key("PageDown"), key("PageUp")]);
+  assertEqual(r.state.index, 1);
+  var shows = r.outbox.filter(function (o) { return o.msg.type === "show"; });
+  assertEqual(shows.map(function (o) { return [o.msg.index, o.msg.animate]; }), [[1, true], [2, true], [1, false]]);
+});
+
+test("stage: PageDown and PageUp are forwarded too", function () {
+  assertEqual(Stage.keyMessage({key: "PageDown"}), {type: "key", key: "PageDown", shift: false});
+  assertEqual(Stage.keyMessage({key: "PageUp", shiftKey: true}), {type: "key", key: "PageUp", shift: true});
+});
+
+test("stage alone: localMove steps forward animated and back finished", function () {
+  var ep = protoEpisodes()[0];  // 7 entries: card, 3 steps, card, 2 steps
+  assertEqual(Stage.localMove(ep, 0, "ArrowRight", false), {index: 1, animate: true});
+  assertEqual(Stage.localMove(ep, 0, "PageDown", false), {index: 1, animate: true});
+  assertEqual(Stage.localMove(ep, 0, " ", false), {index: 1, animate: true});
+  assertEqual(Stage.localMove(ep, 2, "ArrowLeft", false), {index: 1, animate: false});
+  assertEqual(Stage.localMove(ep, 2, "PageUp", false), {index: 1, animate: false});
+});
+
+test("stage alone: localMove jumps chapters with shift and stops at the ends", function () {
+  var ep = protoEpisodes()[0];
+  assertEqual(Stage.localMove(ep, 1, "ArrowRight", true), {index: 4, animate: false});
+  assertEqual(Stage.localMove(ep, 5, "ArrowLeft", true), {index: 4, animate: false});
+  assertEqual(Stage.localMove(ep, 6, "ArrowRight", false), null);
+  assertEqual(Stage.localMove(ep, 0, "ArrowLeft", false), null);
+  assertEqual(Stage.localMove(ep, 6, "ArrowRight", true), null);
+  assertEqual(Stage.localMove(ep, 0, "b", false), null);
+  assertEqual(Stage.localMove(ep, 0, "x", false), null);
+});
+
+test("stage alone: hashFor writes the 1-based step parseHash reads", function () {
+  assertEqual(Stage.hashFor("uno", 0), "#uno/1");
+  assertEqual(Stage.parseHash(Stage.hashFor("inherited-audit", 6)), {episode: "inherited-audit", index: 6});
+});
+
 test("stage never shows notes, source or the skill commit", function () {
   var t = makeStage();
   var ep = protoEpisodes()[0];

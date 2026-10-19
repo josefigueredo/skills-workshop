@@ -28,14 +28,18 @@ Funcionan en el control **y también cuando estás haciendo clic o escribiendo e
 
 | Tecla | Qué hace |
 |---|---|
-| `→` | Adelante un paso (se anima: tipeo, respuesta que va saliendo) |
-| `←` | Atrás un paso (muestra el paso anterior ya terminado, sin animar; frena el play) |
+| `→` o `AvPág` | Adelante un paso (se anima: tipeo, respuesta que va saliendo) |
+| `←` o `RePág` | Atrás un paso (muestra el paso anterior ya terminado, sin animar; frena el play) |
 | `espacio` | Play / pausa: avanza solo; frena en los pasos marcados con pausa |
 | `⇧ →` | Salta al principio del capítulo siguiente |
 | `⇧ ←` | Salta al principio del capítulo (o al anterior si ya estás ahí) |
 | `B` | Pantalla en negro; otra vez `B` la devuelve. Usala durante las preguntas |
 
-También podés usar los botones del control: es lo mismo.
+También podés usar los botones del control: es lo mismo. `AvPág` y `RePág` están porque los presentadores inalámbricos (los clickers) mandan esas teclas.
+
+### Un episodio abierto desde su link, sin el control
+
+Si abrís la serie desde la portada (o con un link como `serie-cursor.html#antes-de-empezar/1`), la página anda sola: `→`/`AvPág`/`espacio` avanzan animando, `←`/`RePág` retroceden, `⇧ →`/`⇧ ←` saltan de capítulo y `B` pone negro. La dirección se actualiza con el paso, así que si recargás seguís donde estabas. No hay notas, reloj ni play automático: para presentar en serio, usá el control.
 
 ## Durante la presentación
 
