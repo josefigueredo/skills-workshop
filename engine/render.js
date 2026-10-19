@@ -20,6 +20,11 @@
 //                        the "⏺ Bash(cmd)" line); revealed whole.
 //   hidden               an approve step that is not the current index keeps its node
 //                        (so the step count holds) but is hidden: the window closed.
+//   data-anim="idle"     the wrapper of the waiting prompt (prompt line + "❯ █") at the
+//                        end of the terminal and of the cursor-full zsh panel. It is not
+//                        a step: hide it while a term step animates, show it at the end.
+// Unmarked descendants of a step root appear with the root; hooks inside one root are
+// revealed in document order. Chapter cards carry no hooks and appear whole.
 var Render = (function () {
   var USER = "Persona del equipo";
   var TEAM = "Equipo";
@@ -121,7 +126,7 @@ var Render = (function () {
   function idlePrompt(flow, cwd, repo) {
     var l = el("div", "ws-cmdline");
     add(l, el("span", "ws-caret-prompt", "❯ "), el("span", "ws-caret", " "));
-    add(flow, promptLine(cwd, repo), l);
+    flow.appendChild(add(anim(el("div", "ws-idle"), "idle"), promptLine(cwd, repo), l));
   }
   // A shell term step: prompt, typed command, output lines.
   function shellStep(st, j, cwd, repo) {

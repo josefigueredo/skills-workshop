@@ -201,5 +201,15 @@ test("hooks hold on every screen", function () {
     assert(c.querySelectorAll('[data-step="4"] [data-anim="line"]').length >= 3, screen + " say lines");
     var ov = q(5, "");
     assert(ov.getAttribute("data-anim") === "node" && !ov.hasAttribute("hidden"), screen + " approve");
+    var idle = c.querySelectorAll('[data-anim="idle"]');
+    if (screen === "terminal" || screen === "cursor-full") {
+      assertEqual(idle.length, 1, screen + " idle prompt count");
+      assert(!idle[0].hasAttribute("data-step"), screen + " idle is not a step");
+      assert(idle[0].querySelector(".ws-prompt") && idle[0].textContent.indexOf("❯") >= 0, screen + " idle content");
+      var flow = idle[0].parentNode;
+      assert(flow.lastChild === idle[0], screen + " idle is last");
+    } else {
+      assertEqual(idle.length, 0, screen + " has no idle prompt");
+    }
   });
 });
