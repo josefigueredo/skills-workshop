@@ -80,7 +80,7 @@ Regla: si corre sin red y sin efectos externos, es `real`. Los pasos de red (`gi
 
 ### Preparar la demo para los pasos `real`
 
-`build.py capture` arma un HOME falso con la demo en `~/mi-servicio` (la construye `demo/setup.sh`) y la skill del episodio clonada en `~/skills/<skill.repo>` en `skill.commit`. La skill se lee de `$WS_SKILLS_ROOT/<skill.repo>`; si no definís la variable, de la carpeta de al lado del repo del taller.
+`build.py capture` arma un HOME falso con la demo en `~/mi-servicio` (la construye `demo/setup.sh`) y la skill del episodio clonada en `~/skills/<skill.repo>` en `skill.commit`. La skill se lee de `$WS_SKILLS_ROOT/<skill.repo>`; `WS_SKILLS_ROOT` puede tener varias carpetas separadas por `:` y se usa la primera que tenga el repo. Si no definís la variable, de la carpeta de al lado del repo del taller.
 
 Si tu episodio necesita estado extra (una rama, un reporte), ponelo en `demo/prep/<id-del-episodio>.sh`: capture lo corre después de armar el HOME y recibe la ruta del HOME como único argumento. Mirá `demo/prep/inherited-audit.sh`.
 
@@ -130,7 +130,7 @@ Corré `check` (o `build`, que lo incluye) con el archivo antes de cada commit. 
 
 ## Sumar una skill nueva
 
-1. **Armá el esqueleto:** `python3 build.py new <repo-de-la-skill>` (con `--series claude-code` si va en esa serie, y `--order N` si no querés el siguiente número libre). Escribe `episodes/<serie>/NN-<repo>.json` con la estructura fija: instalar, caso principal, otro caso, si algo falla y cierre. Toma `skill.commit` de `$WS_SKILLS_ROOT/<repo>` si lo encuentra, y la fecha de hoy. No pisa nada: si el episodio o el número ya existen, se niega.
+1. **Armá el esqueleto:** `python3 build.py new <repo-de-la-skill>` (con `--series claude-code` si va en esa serie, y `--order N` si no querés el siguiente número libre). Si varias skills viven en un mismo repo (un monorepo), usá `--id <skill>`: `python3 build.py new teamwayofwork --id auditing-repos` escribe `NN-auditing-repos.json` con `id` `auditing-repos` y `skill.repo` el monorepo. El id es lo que no se puede repetir, no el repo, así que de un mismo repo salen tantos episodios como ids distintos. Escribe `episodes/<serie>/NN-<repo>.json` con la estructura fija: instalar, caso principal, otro caso, si algo falla y cierre. Toma `skill.commit` de la primera carpeta de `$WS_SKILLS_ROOT` que tenga `<repo>` si lo encuentra, y la fecha de hoy. No pisa nada: si el episodio o el número ya existen, se niega.
 2. **Completá todo lo que dice `COMPLETAR`**, leyendo el README, el showcase y la instalación de la skill (ver «Cómo sacar un episodio de una skill»). Mientras quede un `COMPLETAR`, `validate` y `build` fallan y te dicen el archivo, el capítulo y el paso, así que un episodio a medias nunca llega a `dist/`.
 3. **Capturá** lo que corre sin red: `python3 build.py capture --episode <repo>`.
 4. **Armá:** `python3 build.py build` (regenera también la portada `dist/index.html`) y revisá la privacidad con `check`.
@@ -140,6 +140,8 @@ Corré `check` (o `build`, que lo incluye) con el archivo antes de cada commit. 
 ## Cuánto dura
 
 El control muestra el estimado: abrí `dist/control.html` y mirá «Estimado ~» (total, a la velocidad elegida) y el estimado por capítulo. Sale de `Animate.episodeDuration` (lo que tarda el tipeo y las animaciones). Eso es solo la pantalla: sumale la narración, a unas 150 palabras por minuto sobre el texto de las `notes`. La meta es de **6 a 12 minutos** por episodio. Si te pasás, partí el caso principal o sacá un caso del medio.
+
+Para no sumar a mano: `python3 build.py duration` (o `--episode <id>`) imprime una línea por episodio y por capítulo, `screen m:ss · narración m:ss · total m:ss`. La pantalla sale de `Animate.episodeDuration` corrido en Chrome sin ventana (no se reimplementa en Python), y la narración es la cuenta de palabras de las `notes` a 150 por minuto. Termina con código 1 y nombra al episodio si su total queda fuera de 6 a 12 minutos. El episodio de `order` 0 (`antes-de-empezar`, la intro de preparación, hoy 4:13) se lista pero no cuenta para el código de salida: no es un episodio de skill. Sin Chrome, avisa que se saltea y sale con 0 (`CHROME` apunta a otro binario).
 
 ## Antes de entregar
 

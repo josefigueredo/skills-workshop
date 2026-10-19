@@ -354,10 +354,36 @@ class PrepareHomeTests(unittest.TestCase):
                 capture.prepare_home(self._tree_with_prep("echo nope; exit 3\n"), ep, other)
         self.assertIn("demo/prep/demo.sh", str(cm.exception))
 
-    def test_default_skills_root_is_workshop_parent(self):
+    def test_default_skill_source_is_next_to_the_workshop(self):
         env = {k: v for k, v in os.environ.items() if k != "WS_SKILLS_ROOT"}
         with mock.patch.dict(os.environ, env, clear=True):
-            self.assertEqual(capture.skills_root(Path("/a/b/ws")), Path("/a/b"))
+            self.assertEqual(capture.skill_source(Path("/a/b/ws"), "x"), Path("/a/b/x"))
+
+    def test_skill_source_picks_the_first_root_holding_the_repo(self):
+        one, two = self.tmp / "one", self.tmp / "two"
+        make_skill_repo(two, "only-second")
+        make_skill_repo(one, "both")
+        make_skill_repo(two, "both")
+        roots = os.pathsep.join([str(one), str(two)])
+        with mock.patch.dict(os.environ, {"WS_SKILLS_ROOT": roots}):
+            self.assertEqual(capture.skill_source(Path("/a/b/ws"), "only-second"), two / "only-second")
+            self.assertEqual(capture.skill_source(Path("/a/b/ws"), "both"), one / "both")
+
+    def test_skill_source_without_a_hit_falls_back_to_the_default(self):
+        with mock.patch.dict(os.environ, {"WS_SKILLS_ROOT": str(self.tmp / "nope")}):
+            self.assertEqual(capture.skill_source(Path("/a/b/ws"), "x"), Path("/a/b/x"))
+
+    def test_prepare_home_error_lists_every_root_tried(self):
+        one, two = self.tmp / "one", self.tmp / "two"
+        one.mkdir()
+        two.mkdir()
+        root = self._tree_with_prep(None)
+        ep = minimal_episode(skill={"repo": "ghost", "commit": "abc1234", "date": "x"})
+        with mock.patch.dict(os.environ, {"WS_SKILLS_ROOT": os.pathsep.join([str(one), str(two)])}):
+            with self.assertRaises(capture.CaptureError) as cm:
+                capture.prepare_home(root, ep, self.home)
+        self.assertIn(str(one / "ghost"), str(cm.exception))
+        self.assertIn(str(two / "ghost"), str(cm.exception))
 
 
 class CaptureCommandTests(unittest.TestCase):

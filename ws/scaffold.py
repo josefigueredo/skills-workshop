@@ -38,10 +38,10 @@ def _chapter(cid: str, title: str, screen: str, steps: list) -> dict:
             "screen": screen, "faq": _faq(title.lower()), "steps": steps}
 
 
-def skeleton(repo: str, series: str, order: int, commit: str, date: str) -> dict:
+def skeleton(repo: str, series: str, order: int, commit: str, date: str, id: Optional[str] = None) -> dict:
     """The fixed episode structure of the design spec, every text a COMPLETAR placeholder."""
     return {
-        "id": repo, "series": series, "order": order, "title": repo,
+        "id": id or repo, "series": series, "order": order, "title": id or repo,
         "pitch": {"ask": "%s: lo que le decís al agente (README de la skill)" % MARK,
                   "does": "%s: lo que hace la skill (README de la skill)" % MARK},
         "skill": {"repo": repo, "commit": commit, "date": date},
@@ -104,8 +104,8 @@ def pending(episode, where: str) -> List[str]:
 
 
 def skill_commit(root, repo: str) -> str:
-    """Short HEAD of $WS_SKILLS_ROOT/<repo> (default: next to the workshop), else COMPLETAR."""
-    path = capture.skills_root(Path(root)) / repo
+    """Short HEAD of the skill repo (see capture.skill_source), else COMPLETAR."""
+    path = capture.skill_source(Path(root), repo)
     try:
         proc = subprocess.run(["git", "-C", str(path), "rev-parse", "--short", "HEAD"],
                               stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
@@ -117,13 +117,17 @@ def skill_commit(root, repo: str) -> str:
 
 
 def create(root, repo: str, series: str = "cursor", order: Optional[int] = None,
-           today: Optional[datetime.date] = None) -> Path:
-    """Write episodes/<series>/<NN>-<repo>.json. Never overwrites; raises ScaffoldError."""
+           today: Optional[datetime.date] = None, id: Optional[str] = None) -> Path:
+    """Write episodes/<series>/<NN>-<id>.json (id defaults to repo; a monorepo hosts several ids).
+    Never overwrites; raises ScaffoldError."""
+    id = id or repo
     root = Path(root)
     if series not in schema.SERIES:
         raise ScaffoldError("unknown series %r" % series)
     if not NAME_RE.match(repo):
         raise ScaffoldError("%r is not a valid skill repo name (lowercase letters, digits, . _ -)" % repo)
+    if not NAME_RE.match(id):
+        raise ScaffoldError("%r is not a valid episode id (lowercase letters, digits, . _ -)" % id)
     if order is not None and order < 0:
         raise ScaffoldError("--order must be 0 or more")
     existing = []
@@ -137,18 +141,18 @@ def create(root, repo: str, series: str = "cursor", order: Optional[int] = None,
         if isinstance(ep, dict):
             existing.append((p, ep))
     for p, ep in existing:
-        if ep.get("id") == repo:
-            raise ScaffoldError("episode %r already exists (%s)" % (repo, p.name))
+        if ep.get("id") == id:
+            raise ScaffoldError("episode %r already exists (%s)" % (id, p.name))
         if order is not None and ep.get("order") == order:
             raise ScaffoldError("order %d is taken by %s" % (order, p.name))
     if order is None:
         orders = [ep["order"] for _, ep in existing if isinstance(ep.get("order"), int)]
         order = max(orders) + 1 if orders else 1
-    target = root / "episodes" / series / ("%02d-%s.json" % (order, repo))
+    target = root / "episodes" / series / ("%02d-%s.json" % (order, id))
     if target.exists():
         raise ScaffoldError("%s already exists" % target.name)
     date = (today or datetime.date.today()).isoformat()
-    ep = skeleton(repo, series, order, skill_commit(root, repo), date)
+    ep = skeleton(repo, series, order, skill_commit(root, repo), date, id)
     target.parent.mkdir(parents=True, exist_ok=True)
     with open(str(target), "x", encoding="utf-8") as fh:  # "x": fails instead of overwriting
         fh.write(json.dumps(ep, ensure_ascii=False, indent=2) + "\n")

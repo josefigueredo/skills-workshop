@@ -186,6 +186,31 @@ class NewCommand(unittest.TestCase):
             self.assertEqual(run_cli(self.tree.root, "new", "otra", "--order", "2")[0], 1)
         self.assertEqual(len(list((self.tree.root / "episodes" / "cursor").glob("*.json"))), 1)
 
+    def test_id_names_the_episode_after_the_skill_in_a_monorepo(self):
+        repo = "teamwayofwork"
+        with env_without_skills_root(WS_SKILLS_ROOT=str(self.skills)):
+            code, out = run_cli(self.tree.root, "new", repo, "--id", "auditing-repos", "--order", "2")
+            self.assertEqual(code, 0, out)
+            p = self.path("cursor", "02-auditing-repos.json")
+            self.assertTrue(p.is_file(), out)
+            ep = json.loads(p.read_text(encoding="utf-8"))
+            self.assertEqual((ep["id"], ep["skill"]["repo"]), ("auditing-repos", repo))
+            code, out = run_cli(self.tree.root, "new", repo, "--id", "np-api")
+            self.assertEqual(code, 0, out)
+            self.assertTrue(self.path("cursor", "03-np-api.json").is_file(), out)
+            code, out = run_cli(self.tree.root, "new", repo, "--id", "np-api", "--order", "9")
+        self.assertEqual(code, 1, out)
+        self.assertIn("np-api", out)
+
+    def test_scaffold_create_takes_an_id(self):
+        with env_without_skills_root(WS_SKILLS_ROOT=str(self.skills)):
+            p = scaffold.create(self.tree.root, "mono", id="uno")
+            self.assertEqual(p.name, "01-uno.json")
+            with self.assertRaises(scaffold.ScaffoldError):
+                scaffold.create(self.tree.root, "mono", id="uno")
+            with self.assertRaises(scaffold.ScaffoldError):
+                scaffold.create(self.tree.root, "mono", id="../x")
+
     def test_rejects_unsafe_names_and_bad_series(self):
         for bad in ("../x", "a/b", "A B", "_x", ""):
             self.assertEqual(run_cli(self.tree.root, "new", bad)[0], 1, bad)

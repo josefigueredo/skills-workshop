@@ -95,7 +95,7 @@ def cmd_new(args) -> int:
     from ws import scaffold
 
     try:
-        path = scaffold.create(Path(args.root), args.skill_repo, args.series, args.order)
+        path = scaffold.create(Path(args.root), args.skill_repo, args.series, args.order, id=args.id)
     except scaffold.ScaffoldError as exc:
         print("new: %s" % exc)
         return 1
@@ -104,8 +104,14 @@ def cmd_new(args) -> int:
     return 0
 
 
+def cmd_duration(args) -> int:
+    from ws import duration
+
+    return duration.report(Path(args.root), args.episode)
+
+
 def make_parser() -> argparse.ArgumentParser:
-    parser = _Parser(prog="build.py", description="Workshop engine: validate, check, capture, build, new.")
+    parser = _Parser(prog="build.py", description="Workshop engine: validate, check, capture, build, new, duration.")
     parser.add_argument("--root", default=str(HERE), help="repo root (default: this repo)")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("validate", help="validate episode scripts").set_defaults(func=cmd_validate)
@@ -113,13 +119,17 @@ def make_parser() -> argparse.ArgumentParser:
     sub.add_parser("build", help="validate, bundle into dist/, privacy-check; writes only if all pass") \
         .set_defaults(func=cmd_build)
     new = sub.add_parser("new", help="write an episode skeleton for a skill (every text is COMPLETAR)")
-    new.add_argument("skill_repo", help="skill repo name; also the episode id")
+    new.add_argument("skill_repo", help="skill repo name; also the episode id unless --id is given")
+    new.add_argument("--id", metavar="ID", help="episode id (default: the repo name); for a monorepo with several skills")
     new.add_argument("--series", choices=("cursor", "claude-code"), default="cursor")
     new.add_argument("--order", type=int, metavar="N", help="position in the series (default: next free)")
     new.set_defaults(func=cmd_new)
     cap = sub.add_parser("capture", help="re-run `real` terminal steps in a fake HOME")
     cap.add_argument("--episode", metavar="ID", help="capture only this episode id")
     cap.set_defaults(func=cmd_capture)
+    dur = sub.add_parser("duration", help="screen + narration time per episode and chapter (needs Chrome)")
+    dur.add_argument("--episode", metavar="ID", help="only this episode id")
+    dur.set_defaults(func=cmd_duration)
     return parser
 
 

@@ -31,10 +31,27 @@ class CaptureError(Exception):
     """A capture could not run (bad prepare, missing cwd, ...). Others keep going."""
 
 
-def skills_root(root: Path) -> Path:
-    """Where skill repos live: $WS_SKILLS_ROOT, else the workshop repo's parent."""
+def skill_candidates(root: Path, repo: str) -> List[Path]:
+    """Every `<dir>/<repo>` to look in: each folder of $WS_SKILLS_ROOT (split on os.pathsep),
+    else the workshop repo's parent."""
     env = os.environ.get("WS_SKILLS_ROOT")
-    return Path(env) if env else Path(root).resolve().parent
+    dirs = [Path(d) for d in env.split(os.pathsep) if d] if env else []
+    if not dirs:
+        dirs = [Path(root).resolve().parent]
+    return [d / repo for d in dirs]
+
+
+def _is_git(path: Path) -> bool:
+    return (path / ".git").exists() or (path / "HEAD").exists()
+
+
+def skill_source(root: Path, repo: str) -> Path:
+    """The first candidate holding a git dir, else the default `root.parent/<repo>`."""
+    cands = skill_candidates(root, repo)
+    for c in cands:
+        if _is_git(c):
+            return c
+    return Path(root).resolve().parent / repo
 
 
 def _under(path: str, base: str) -> bool:
@@ -82,10 +99,11 @@ def prepare_home(root: Path, episode: dict, home: Path) -> None:
     _run_quiet(["bash", str(root / "demo" / "setup.sh"), str(home)], "demo/setup.sh", env)
     skill = episode["skill"]
     repo, commit = skill["repo"], skill["commit"]
-    src = skills_root(root) / repo
-    if not (src / ".git").exists() and not (src / "HEAD").exists():
-        raise CaptureError("skill repo %r not found at %s (commit %s); set WS_SKILLS_ROOT"
-                           % (repo, src, commit))
+    src = skill_source(root, repo)
+    if not _is_git(src):
+        tried = ", ".join(str(c) for c in skill_candidates(root, repo))
+        raise CaptureError("skill repo %r not found (commit %s); tried: %s; set WS_SKILLS_ROOT"
+                           % (repo, commit, tried))
     dest = home / "skills" / repo
     (home / "skills").mkdir(exist_ok=True)
     try:
