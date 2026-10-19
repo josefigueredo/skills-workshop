@@ -94,7 +94,7 @@ FRAMES.forEach(function (f) {
   var frame = document.createElement("div");
   frame.className = "frame";
   var h = document.createElement("h2");
-  h.textContent = f[1] + " (índice " + f[2] + ")";
+  h.textContent = f[1] + " (paso " + (f[2] + 1) + ")";
   var box = document.createElement("div");
   frame.appendChild(h);
   frame.appendChild(box);

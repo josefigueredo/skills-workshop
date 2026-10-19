@@ -52,13 +52,13 @@ El control avisa con ese cartel cuando la ventana del escenario se cerró (o dej
 
 ## Ensayar un solo paso (opcional, para quien arma episodios)
 
-Para mirar un paso suelto sin el control, abrí el escenario con la posición en la URL: `#<id-del-episodio>/<número de paso>`. Por ejemplo, el paso 5 del piloto:
+Para mirar un paso suelto sin el control, abrí el escenario con la posición en la URL: `#<id-del-episodio>/<número de paso>`. Por ejemplo, el paso 6 del piloto:
 
 ```
-dist/serie-cursor.html#inherited-audit/5
+dist/serie-cursor.html#inherited-audit/6
 ```
 
-El número es la posición del paso en todo el episodio, contando desde 0 (no dentro del capítulo): la placa de cada capítulo cuenta como un paso, antes de los pasos del capítulo. Muestra el paso ya terminado, sin animación y sin teclas. Sirve para revisar cómo se ve una pantalla; para ensayar el ritmo usá el control.
+El número es la posición del paso en todo el episodio, contando desde 1, igual que el «paso N de M» del control (no dentro del capítulo): la placa de cada capítulo cuenta como un paso, antes de los pasos del capítulo. Muestra el paso ya terminado, sin animación y sin teclas. Sirve para revisar cómo se ve una pantalla; para ensayar el ritmo usá el control.
 
 ## Checklist rápido
 

@@ -556,12 +556,12 @@ test("stage never shows notes, source or the skill commit", function () {
   return chain;
 });
 
-test("stage: parseHash reads #<episode>/<index>", function () {
-  assertEqual(Stage.parseHash("#inherited-audit/3"), {episode: "inherited-audit", index: 3});
-  assertEqual(Stage.parseHash("#antes.de-empezar_0/0"), {episode: "antes.de-empezar_0", index: 0});
+test("stage: parseHash reads #<episode>/<step>, 1-based", function () {
+  assertEqual(Stage.parseHash("#inherited-audit/3"), {episode: "inherited-audit", index: 2});
+  assertEqual(Stage.parseHash("#antes.de-empezar_0/1"), {episode: "antes.de-empezar_0", index: 0});
 });
 
 test("stage: parseHash rejects anything else", function () {
-  ["", "#", "#uno", "#uno/", "#uno/-1", "#uno/1.5", "#uno/x", "#/3", "uno/3", "#uno/3/4", "#a b/3", null, undefined]
+  ["", "#", "#uno", "#uno/", "#uno/0", "#uno/-1", "#uno/1.5", "#uno/x", "#/3", "uno/3", "#uno/3/4", "#a b/3", null, undefined]
     .forEach(function (h) { assertEqual(Stage.parseHash(h), null, String(h)); });
 });

@@ -99,10 +99,12 @@ var Stage = (function () {
     return {type: "key", key: ev.key, shift: !!ev.shiftKey};
   }
 
-  // Static preview hook: "#<episode-id>/<index>" -> {episode, index}, or null.
+  // Static preview hook: "#<episode-id>/<step>" -> {episode, index}, or null. The step is
+  // 1-based, like the "paso N de M" on the control: #id/1 is index 0 (#id/0 is rejected).
   function parseHash(hash) {
     var m = /^#([A-Za-z0-9._-]+)\/(\d+)$/.exec(typeof hash === "string" ? hash : "");
-    return m ? {episode: m[1], index: parseInt(m[2], 10)} : null;
+    var n = m ? parseInt(m[2], 10) : 0;
+    return n >= 1 ? {episode: m[1], index: n - 1} : null;
   }
 
   function readEpisodes() {

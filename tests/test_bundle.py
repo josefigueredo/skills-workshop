@@ -249,12 +249,12 @@ class StaticPreview(unittest.TestCase):
             tree.write("cursor", "01-p.json", ep)
             bundle.build(tree.root)
             page = (tree.root / "dist" / "serie-cursor.html").as_uri()
-            # flattened: 0 card, 1 term, 2 ask, 3 tool, 4 say
-            ask = self.dump(page + "#prev-ep/2")
+            # flattened: 0 card, 1 term, 2 ask, 3 tool, 4 say; the hash is 1-based (#id/1 = index 0)
+            ask = self.dump(page + "#prev-ep/3")
             self.assertNotIn("ws-fade-in", ask)
             self.assertIn("TEXTO-DEL-PASO-ASK", ask)
             self.assertNotIn("TEXTO-DEL-PASO-SAY", ask)
-            say = self.dump(page + "#prev-ep/4")
+            say = self.dump(page + "#prev-ep/5")
             self.assertIn("TEXTO-DEL-PASO-SAY", say)
 
 
