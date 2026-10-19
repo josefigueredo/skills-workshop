@@ -15,6 +15,7 @@ CHROME = os.environ.get("CHROME", DEFAULT_CHROME)
 HARNESS = ROOT / "tests" / "js" / "harness.html"
 HAVE_CHROME = Path(CHROME).exists()
 RENDER_TESTS = 15  # exact count: a test that silently fails to register must show up
+ANIMATE_TESTS = 17
 SKIP_MSG = "Chrome not found at %s (set CHROME to run the JS suites)" % CHROME
 
 
@@ -66,6 +67,11 @@ class EngineSuites(unittest.TestCase):
         result = run_suite("render")
         self.assertIn("FAIL 0", result, result)
         self.assertIn("PASS %d " % RENDER_TESTS, result + " ", result)
+
+    def test_animate_suite(self):
+        result = run_suite("animate")
+        self.assertIn("FAIL 0", result, result)
+        self.assertIn("PASS %d " % ANIMATE_TESTS, result + " ", result)
 
 
 if __name__ == "__main__":
