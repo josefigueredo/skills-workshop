@@ -71,17 +71,25 @@ def _files(paths: List[Path]):
             yield p
 
 
+def scan_text(text: str, where: str) -> List[str]:
+    """Hits in one text as `<where>:<line>: <label>: <excerpt>` (excerpt masked)."""
+    rs = rules()
+    hits: List[str] = []
+    for n, line in enumerate(text.splitlines(), 1):
+        for label, rx in rs.items():
+            for m in rx.finditer(line):
+                hits.append("%s:%d: %s: %s" % (where, n, label.split("#")[0], _excerpt(line, m)))
+    return hits
+
+
 def scan(paths: List[Path]) -> List[str]:
     """Return `<path>:<line>: <label>: <excerpt>` for every hit in text files."""
-    rs = rules()
+    rules()  # fail fast on an unreadable/invalid leak-terms file, even with nothing to scan
     hits: List[str] = []
     for f in _files(paths):
         try:
             text = f.read_bytes().decode("utf-8")
         except (OSError, UnicodeDecodeError):
             continue
-        for n, line in enumerate(text.splitlines(), 1):
-            for label, rx in rs.items():
-                for m in rx.finditer(line):
-                    hits.append("%s:%d: %s: %s" % (f, n, label.split("#")[0], _excerpt(line, m)))
+        hits.extend(scan_text(text, str(f)))
     return hits

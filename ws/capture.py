@@ -5,20 +5,24 @@ import copy
 import getpass
 import json
 import os
+import pwd
 import re
 import signal
+import socket
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 from typing import List, Optional
 
-from ws import schema
+from ws import privacy, schema
 
 DEMO_NAME = "Demo"
 DEMO_EMAIL = "demo@example.com"
 STEP_TIMEOUT = 120
 FAKE_USER = "persona"
+FAKE_HOST = "mi-mac"
+SYSTEM_PATH_DIRS = ("/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/bin", "/usr/sbin", "/sbin")
 
 _ANSI = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)|\x1b[@-Z\\-_]")
 
@@ -33,29 +37,49 @@ def skills_root(root: Path) -> Path:
     return Path(env) if env else Path(root).resolve().parent
 
 
-def _git_env() -> dict:
-    env = dict(os.environ)
-    env.update({
+def _under(path: str, base: str) -> bool:
+    path, base = os.path.realpath(path), os.path.realpath(base)
+    return path == base or path.startswith(base.rstrip("/") + "/")
+
+
+def _path() -> str:
+    """Explicit PATH: system and Homebrew dirs that exist, plus the running python's dir.
+
+    Never a directory under the real home."""
+    real_home = os.path.expanduser("~")
+    dirs = [d for d in SYSTEM_PATH_DIRS if os.path.isdir(d)]
+    exe = os.path.dirname(os.path.realpath(sys.executable))
+    if exe not in dirs and not _under(exe, real_home):
+        dirs.append(exe)
+    return os.pathsep.join(dirs)
+
+
+def scratch_env(home: Path) -> dict:
+    """The only environment a step (or setup/clone) ever sees: built from scratch."""
+    return {
+        "PATH": _path(), "HOME": str(home), "NO_COLOR": "1", "LANG": "C.UTF-8", "TERM": "dumb",
+        "USER": FAKE_USER, "LOGNAME": FAKE_USER, "PYTHONDONTWRITEBYTECODE": "1",
         "GIT_AUTHOR_NAME": DEMO_NAME, "GIT_AUTHOR_EMAIL": DEMO_EMAIL,
         "GIT_COMMITTER_NAME": DEMO_NAME, "GIT_COMMITTER_EMAIL": DEMO_EMAIL,
         "GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_SYSTEM": "/dev/null",
         "GIT_CONFIG_NOSYSTEM": "1", "GIT_TERMINAL_PROMPT": "0",
-    })
-    return env
+    }
 
 
-def _run_quiet(args: List[str], what: str, cwd: Optional[Path] = None) -> None:
-    r = subprocess.run(args, cwd=str(cwd) if cwd else None, env=_git_env(),
+def _run_quiet(args: List[str], what: str, env: dict, cwd: Optional[Path] = None) -> str:
+    r = subprocess.run(args, cwd=str(cwd) if cwd else None, env=env,
                        stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                        stderr=subprocess.STDOUT, universal_newlines=True)
     if r.returncode != 0:
         raise CaptureError("%s failed (exit %d): %s" % (what, r.returncode, r.stdout.strip()))
+    return r.stdout.strip()
 
 
 def prepare_home(root: Path, episode: dict, home: Path) -> None:
     """Build the demo at home/mi-servicio and the episode's skill at home/skills/<repo>."""
     root, home = Path(root), Path(home)
-    _run_quiet(["bash", str(root / "demo" / "setup.sh"), str(home)], "demo/setup.sh")
+    env = scratch_env(home)
+    _run_quiet(["bash", str(root / "demo" / "setup.sh"), str(home)], "demo/setup.sh", env)
     skill = episode["skill"]
     repo, commit = skill["repo"], skill["commit"]
     src = skills_root(root) / repo
@@ -65,9 +89,18 @@ def prepare_home(root: Path, episode: dict, home: Path) -> None:
     dest = home / "skills" / repo
     (home / "skills").mkdir(exist_ok=True)
     try:
-        _run_quiet(["git", "clone", "-q", str(src), str(dest)], "clone of %r" % repo)
+        try:
+            origin = _run_quiet(["git", "-C", str(src), "remote", "get-url", "origin"],
+                                "origin lookup", env)
+        except CaptureError:
+            origin = ""
+        _run_quiet(["git", "clone", "-q", str(src), str(dest)], "clone of %r" % repo, env)
         _run_quiet(["git", "-c", "advice.detachedHead=false", "checkout", "-q", commit],
-                   "checkout of commit %s" % commit, cwd=dest)
+                   "checkout of commit %s" % commit, env, cwd=dest)
+        if origin:
+            _run_quiet(["git", "remote", "set-url", "origin", origin], "origin reset", env, cwd=dest)
+        else:
+            _run_quiet(["git", "remote", "remove", "origin"], "origin removal", env, cwd=dest)
     except CaptureError as exc:
         raise CaptureError("skill %r at commit %s (source %s): %s" % (repo, commit, src, exc))
 
@@ -79,19 +112,43 @@ def _variants(path) -> List[str]:
     return sorted(set(out), key=len, reverse=True)
 
 
+def _login_names(user: Optional[str]) -> List[str]:
+    names = set()
+    if user is not None:
+        names.add(user)
+    else:
+        names.add(getpass.getuser())
+        try:
+            names.add(pwd.getpwuid(os.getuid()).pw_name)
+        except (KeyError, OSError):
+            pass
+    return sorted((n for n in names if n and n != FAKE_USER), key=len, reverse=True)
+
+
+def _hostnames() -> List[str]:
+    full = socket.gethostname()
+    names = {full, full.split(".")[0]}
+    return sorted((n for n in names if n), key=len, reverse=True)
+
+
+_BOUND = r"(?![A-Za-z0-9_-])"
+
+
 def normalise(text: str, home: Path, roots: Optional[List[Path]] = None,
               user: Optional[str] = None) -> str:
-    """Strip ANSI and replace fake HOME / temp roots / real home with `~`, real user with `persona`."""
+    """Strip ANSI; fake HOME / temp roots / real home -> `~`; real login names -> `persona`;
+    hostname -> `mi-mac`. Matches end at a boundary (`/Users/x` never eats `/Users/xavier`)."""
     text = _ANSI.sub("", text).replace("\r\n", "\n").replace("\r", "\n")
     paths = [home] + list(roots or [])
     paths.append(Path(os.path.expanduser("~")))
     for p in paths:
         for v in _variants(p):
             if v not in ("", "/"):
-                text = text.replace(v, "~")
-    name = user if user is not None else getpass.getuser()
-    if name and name != FAKE_USER:
-        text = re.sub(r"(?<![A-Za-z0-9_.-])%s(?![A-Za-z0-9_-])" % re.escape(name), FAKE_USER, text)
+                text = re.sub(re.escape(v) + _BOUND, "~", text)
+    for name in _login_names(user):
+        text = re.sub(r"(?<![A-Za-z0-9_.-])%s%s" % (re.escape(name), _BOUND), FAKE_USER, text)
+    for host in _hostnames():
+        text = re.sub(r"(?<![A-Za-z0-9_.-])%s%s" % (re.escape(host), _BOUND), FAKE_HOST, text)
     return text
 
 
@@ -105,15 +162,6 @@ def _resolve_cwd(cwd: str, home: Path) -> Path:
     if not real.is_dir():
         raise CaptureError("cwd %r does not exist in the fake HOME" % cwd)
     return real
-
-
-def _env(home: Path) -> dict:
-    env = _git_env()
-    env.update({"HOME": str(home), "NO_COLOR": "1", "LANG": "C.UTF-8", "TERM": "dumb",
-                "USER": FAKE_USER, "LOGNAME": FAKE_USER, "PYTHONDONTWRITEBYTECODE": "1"})
-    for k in ("LC_ALL", "PWD", "OLDPWD", "XDG_CONFIG_HOME"):
-        env.pop(k, None)
-    return env
 
 
 def _exec(cmd: str, cwd: Path, env: dict, timeout: float):
@@ -143,7 +191,7 @@ def run(episode: dict, home: Path, timeout: float = STEP_TIMEOUT) -> dict:
     """Re-run every `real` term step in the fake HOME; return a copy with fresh `out`."""
     home = Path(home)
     new = copy.deepcopy(episode)
-    env = _env(home)
+    env = scratch_env(home)
     roots = [home.parent]
     for chapter in new["chapters"]:
         for step in chapter["steps"]:
@@ -195,12 +243,22 @@ def capture_tree(root, episode_id: Optional[str] = None, emit=print) -> int:
                 failed += 1
                 emit("%s: capture failed: %s" % (ep["id"], exc))
                 continue
+        text = dump(new)
+        try:
+            hits = privacy.scan_text(text, "%s/%s" % (path.parent.name, path.name))
+        except ValueError as exc:
+            hits = ["privacy rules unavailable: %s" % exc]
+        if hits:
+            failed += 1
+            for h in hits:
+                emit(h)
+            emit("%s: capture failed: %d privacy hit(s); file left untouched" % (ep["id"], len(hits)))
+            continue
         for chapter in new["chapters"]:
             for j, step in enumerate(chapter["steps"]):
                 if step.get("type") == "term" and step.get("source") == "real":
                     emit("%s chapter %s step %d: %s (%d lines)"
                          % (ep["id"], chapter["id"], j, step["cmd"], len(step["out"])))
-        text = dump(new)
         if path.read_text(encoding="utf-8") != text:
             path.write_text(text, encoding="utf-8")
     return 1 if failed else 0

@@ -101,6 +101,28 @@ class RunTests(unittest.TestCase):
                           '|$GIT_COMMITTER_NAME|$GIT_CONFIG_GLOBAL"')
         self.assertEqual(out, ["1|C.UTF-8|persona|persona|Demo <demo@example.com>|Demo|/dev/null"])
 
+    def test_parent_environment_does_not_leak(self):
+        planted = {"WS_FAKE_SECRET": "planted-value", "TMPDIR": "/planted/tmpdir"}
+        with mock.patch.dict(os.environ, planted):
+            out = self.out_of("env")
+        text = "\n".join(out)
+        self.assertNotIn("WS_FAKE_SECRET", text)
+        self.assertNotIn("planted", text)
+        self.assertNotIn("TMPDIR", text)
+        names = {line.split("=", 1)[0] for line in out if "=" in line}
+        self.assertLessEqual(names, {"PATH", "HOME", "NO_COLOR", "LANG", "TERM", "USER", "LOGNAME",
+                                     "PYTHONDONTWRITEBYTECODE", "PWD", "SHLVL", "_", "OLDPWD",
+                                     "GIT_AUTHOR_NAME", "GIT_AUTHOR_EMAIL", "GIT_COMMITTER_NAME",
+                                     "GIT_COMMITTER_EMAIL", "GIT_CONFIG_GLOBAL", "GIT_CONFIG_SYSTEM",
+                                     "GIT_CONFIG_NOSYSTEM", "GIT_TERMINAL_PROMPT"})
+
+    def test_path_is_explicit_and_never_under_real_home(self):
+        real_home = os.path.realpath(os.path.expanduser("~"))
+        for d in capture._path().split(os.pathsep):
+            self.assertTrue(os.path.isabs(d), d)
+            if real_home not in ("/", ""):
+                self.assertFalse(os.path.realpath(d).startswith(real_home + "/"), d)
+
     def test_no_profile_is_read(self):
         (self.home / ".bash_profile").write_text("echo PROFILE\n")
         (self.home / ".bashrc").write_text("echo RC\n")
@@ -135,6 +157,25 @@ class RunTests(unittest.TestCase):
     def test_cwd_escaping_home_is_refused(self):
         with self.assertRaises(capture.CaptureError):
             capture.run(ep_with([real("ls", cwd="~/../x")]), self.home)
+
+
+class NormaliseTests(unittest.TestCase):
+    def test_home_prefix_respects_boundary(self):
+        with mock.patch("ws.capture.os.path.expanduser", return_value="/Users/x"):
+            out = capture.normalise("/Users/x/a /Users/xavier/b", Path("/nowhere/h"), user="zz")
+        self.assertEqual(out, "~/a /Users/xavier/b")
+
+    def test_both_login_names_are_replaced(self):
+        with mock.patch("ws.capture.getpass.getuser", return_value="alice"), \
+                mock.patch("ws.capture.pwd.getpwuid") as pw:
+            pw.return_value.pw_name = "bob"
+            out = capture.normalise("alice bob alicia", Path("/nowhere/h"))
+        self.assertEqual(out, "persona persona alicia")
+
+    def test_hostname_and_short_form_are_replaced(self):
+        with mock.patch("ws.capture.socket.gethostname", return_value="box.local"):
+            out = capture.normalise("box.local box boxes", Path("/nowhere/h"), user="zz")
+        self.assertEqual(out, "mi-mac mi-mac boxes")
 
 
 class DemoTests(unittest.TestCase):
@@ -220,6 +261,24 @@ class PrepareHomeTests(unittest.TestCase):
         self.assertIn("demo-skill", str(cm.exception))
         self.assertIn("deadbee", str(cm.exception))
 
+    def test_origin_is_removed_when_source_has_none(self):
+        first, _ = make_skill_repo(self.skills, "demo-skill")
+        self.prepare(minimal_episode(skill={"repo": "demo-skill", "commit": first, "date": "x"}))
+        self.assertEqual(git(self.home / "skills" / "demo-skill", "remote"), "")
+
+    def test_origin_is_copied_from_source_origin(self):
+        first, _ = make_skill_repo(self.skills, "demo-skill")
+        git(self.skills / "demo-skill", "remote", "add", "origin", "https://example.com/org/demo-skill.git")
+        self.prepare(minimal_episode(skill={"repo": "demo-skill", "commit": first, "date": "x"}))
+        dest = self.home / "skills" / "demo-skill"
+        self.assertEqual(git(dest, "remote", "get-url", "origin"), "https://example.com/org/demo-skill.git")
+
+    def test_clone_does_not_see_parent_environment(self):
+        first, _ = make_skill_repo(self.skills, "demo-skill")
+        with mock.patch.dict(os.environ, {"GIT_DIR": "/planted/nowhere", "GIT_WORK_TREE": "/planted"}):
+            self.prepare(minimal_episode(skill={"repo": "demo-skill", "commit": first, "date": "x"}))
+        self.assertEqual(git(self.home / "skills" / "demo-skill", "rev-parse", "HEAD"), first)
+
     def test_default_skills_root_is_workshop_parent(self):
         env = {k: v for k, v in os.environ.items() if k != "WS_SKILLS_ROOT"}
         with mock.patch.dict(os.environ, env, clear=True):
@@ -281,6 +340,26 @@ class CaptureCommandTests(unittest.TestCase):
         self.assertEqual(json.loads(ok.read_text())["chapters"][0]["steps"][0]["out"], ["fine"])
         self.assertIn("ghost", out + "")
         self.assertEqual(json.loads(bad.read_text())["chapters"][0]["steps"][0]["out"], ["old"])
+
+    def test_privacy_hit_fails_capture_and_leaves_file_untouched(self):
+        p = self.tree.write("cursor", "01-a.json", self.episode("a", 1, "echo write to leaky@corp.org"))
+        before = p.read_text()
+        code, out = self.run_cli()
+        self.assertEqual(code, 1)
+        self.assertEqual(p.read_text(), before)
+        self.assertIn("email", out)
+        self.assertNotIn("leaky@corp.org", out)
+        self.assertIn("privacy hit", out)
+
+    def test_leak_terms_file_gates_capture(self):
+        terms = self.tree.root / "terms.txt"
+        terms.write_text("forbiddenword\n")
+        p = self.tree.write("cursor", "01-a.json", self.episode("a", 1, "echo a forbiddenword b"))
+        before = p.read_text()
+        with mock.patch.dict(os.environ, {"WS_LEAK_TERMS": str(terms)}):
+            code, out = self.run_cli()
+        self.assertEqual(code, 1)
+        self.assertEqual(p.read_text(), before)
 
     def test_episode_filter(self):
         a = self.tree.write("cursor", "01-a.json", self.episode("a", 1, "echo A"))
