@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taller de skills</title>
+<!-- Template: build inlines tokens.css + screens.css at CSS, the episodes of ONE series
+     as <script type="application/json" id="episodes">[…]</script> at EPISODES, and
+     nav.js, render.js, animate.js, stage.js at JS. No external references. -->
+<!--CSS-->
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+  #ws-stage-root { position: fixed; inset: 0; background: #000; }
+  /* the 1600x900 canvas, centred and scaled by stage.js (letterboxed on black) */
+  #ws-frame { position: absolute; left: 50%; top: 50%; width: 1600px; height: 900px;
+              transform: translate(-50%, -50%); transform-origin: 50% 50%; background: #000; }
+  #ws-canvas { width: 1600px; height: 900px; }
+  #ws-blackout { position: absolute; inset: 0; background: #000; z-index: 10; }
+  #ws-blackout[hidden] { display: none; }
+  /* Fade-in of a card or an approve window, only while that step animates. */
+  @keyframes ws-fade-in { from { opacity: 0; } to { opacity: 1; } }
+  .ws-fade-in > .ws-card,
+  .ws-fade-in > .ws-screen > .ws-approve:not([hidden]) {
+    animation: ws-fade-in var(--ws-fade-ms, 250ms) ease-out forwards;
+  }
+</style>
+</head>
+<body>
+<div id="ws-stage-root">
+  <div id="ws-frame"><div id="ws-canvas"></div></div>
+  <div id="ws-blackout" hidden></div>
+</div>
+<!--EPISODES-->
+<!--JS-->
+</body>
+</html>

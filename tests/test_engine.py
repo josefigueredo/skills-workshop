@@ -16,6 +16,8 @@ HARNESS = ROOT / "tests" / "js" / "harness.html"
 HAVE_CHROME = Path(CHROME).exists()
 RENDER_TESTS = 15  # exact count: a test that silently fails to register must show up
 ANIMATE_TESTS = 21
+PROTOCOL_TESTS = 41
+CONTROL_JS = ROOT / "engine" / "control.js"
 SKIP_MSG = "Chrome not found at %s (set CHROME to run the JS suites)" % CHROME
 
 
@@ -72,6 +74,36 @@ class EngineSuites(unittest.TestCase):
         result = run_suite("animate")
         self.assertIn("FAIL 0", result, result)
         self.assertIn("PASS %d " % ANIMATE_TESTS, result + " ", result)
+
+    def test_protocol_suite(self):
+        result = run_suite("protocol")
+        self.assertIn("FAIL 0", result, result)
+        self.assertIn("PASS %d " % PROTOCOL_TESTS, result + " ", result)
+
+
+def function_body(src: str, name: str) -> str:
+    """Return the brace-matched body of `function <name>(...) {...}` in src ('' if absent)."""
+    m = re.search(r"function\s+%s\s*\([^)]*\)\s*\{" % re.escape(name), src)
+    if not m:
+        return ""
+    depth, i = 1, m.end()
+    while i < len(src) and depth:
+        depth += {"{": 1, "}": -1}.get(src[i], 0)
+        i += 1
+    return src[m.end():i - 1]
+
+
+class StageWindowOpen(unittest.TestCase):
+    def test_window_open_only_in_click_handler(self):
+        src = CONTROL_JS.read_text(encoding="utf-8")
+        self.assertEqual(src.count("window.open("), 1, "exactly one window.open( in control.js")
+        body = function_body(src, "onOpenStageClick")
+        self.assertIn("window.open(", body, "window.open( must live in onOpenStageClick")
+        self.assertIn('"ws-stage"', body)
+        bound = re.findall(r'(?:getElementById|\$)\("([\w-]+)"\)\.addEventListener\("click",\s*onOpenStageClick\)', src)
+        self.assertIn("open-stage", bound, "onOpenStageClick bound to the «Abrir escenario» button")
+        html = (ROOT / "engine" / "control.html").read_text(encoding="utf-8")
+        self.assertRegex(html, r'<button[^>]*id="open-stage"[^>]*>Abrir escenario</button>')
 
 
 if __name__ == "__main__":
