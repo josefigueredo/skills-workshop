@@ -84,6 +84,7 @@ class SchemaTests(unittest.TestCase):
 
     def test_in_zsh_only_on_term(self):
         ep = minimal_episode()
+        ep["chapters"][0]["screen"] = "cursor-full"
         step_of(ep, 0)["in"] = "zsh"
         self.assertEqual(schema.validate(ep, "x.json"), [])
         step_of(ep, 0)["in"] = "chat"
@@ -92,6 +93,50 @@ class SchemaTests(unittest.TestCase):
         self.assertEqual(len(msgs), 2, msgs)
         self.assertIn("step 0: 'in' must be \"zsh\"", msgs[0])
         self.assertIn("step 1: 'in' is only valid on a term step", msgs[1])
+
+    def test_in_zsh_only_in_cursor_full_chapter(self):
+        for screen in ("terminal", "cursor-agent", "claude-code"):
+            with self.subTest(screen=screen):
+                ep = minimal_episode()
+                ep["chapters"][0]["screen"] = screen
+                step_of(ep, 0)["in"] = "zsh"
+                msgs = schema.validate(ep, "x.json")
+                self.assertEqual(len(msgs), 1, msgs)
+                self.assertIn("chapter 0 (instalar) step 0: 'in' \"zsh\" is only valid in a cursor-full chapter", msgs[0])
+
+    def test_unknown_keys_are_rejected_everywhere(self):
+        cases = [
+            ("top level", lambda e: e.update(titel="x"), "x.json: unknown key 'titel'"),
+            ("pitch", lambda e: e["pitch"].update(extra=1), "x.json: pitch: unknown key 'extra'"),
+            ("skill", lambda e: e["skill"].update(sha="1"), "x.json: skill: unknown key 'sha'"),
+            ("workspace", lambda e: e["workspace"].update(file=[]), "x.json: workspace: unknown key 'file'"),
+            ("chapter", lambda e: e["chapters"][0].update(subtitel="x"),
+             "x.json chapter 0 (instalar): unknown key 'subtitel'"),
+            ("step", lambda e: step_of(e, 1).update(txt="x"),
+             "x.json chapter 0 (instalar) step 1: unknown key 'txt'"),
+            ("misspelt capture-only", lambda e: step_of(e, 0).update(**{"capture-only": True}),
+             "x.json chapter 0 (instalar) step 0: unknown key 'capture-only'"),
+            ("term key on ask", lambda e: step_of(e, 1).update(cwd="~"),
+             "x.json chapter 0 (instalar) step 1: unknown key 'cwd'"),
+            ("faq", lambda e: e["chapters"][0].update(faq=[{"q": "a", "a": "b", "x": 1}]),
+             "x.json chapter 0 (instalar) faq 0: unknown key 'x'"),
+        ]
+        for name, mutate, text in cases:
+            with self.subTest(name):
+                ep = minimal_episode()
+                mutate(ep)
+                msgs = schema.validate(ep, "x.json")
+                self.assertEqual(msgs, [text], msgs)
+
+    def test_allowed_optional_keys_stay_valid(self):
+        ep = minimal_episode()
+        ep["workspace"].update(files=["a"], chats=[{"title": "t", "age": "2d"}])
+        ep["chapters"][0].update(subtitle="s", faq=[{"q": "a", "a": "b"}])
+        ep["chapters"][0]["screen"] = "cursor-full"
+        for st in ep["chapters"][0]["steps"]:
+            st.update(notes="n", pause=True)
+        step_of(ep, 0).update(**{"in": "zsh", "capture_only": True})
+        self.assertEqual(schema.validate(ep, "x.json"), [])
 
     def test_capture_only_only_on_real_term(self):
         ep = minimal_episode()

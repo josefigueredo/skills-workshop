@@ -19,6 +19,18 @@ STEP_FIELDS = {
 }
 
 
+# Keys allowed besides the required ones, so a misspelt key fails instead of being ignored.
+# `in` and `capture_only` are accepted on any step so their own, clearer message reports a misplacement.
+STEP_COMMON = ("type", "source", "notes", "pause", "in", "capture_only")
+STEP_EXTRA = {"term": ("cwd",)}
+TOP_KEYS = ("id", "series", "order", "title", "pitch", "skill", "workspace", "chapters")
+CHAPTER_KEYS = ("id", "title", "subtitle", "screen", "faq", "steps")
+PITCH_KEYS = ("ask", "does")
+SKILL_KEYS = ("repo", "commit", "date")
+WORKSPACE_KEYS = ("repo", "files", "chats")
+FAQ_KEYS = ("q", "a")
+
+
 def load(path) -> dict:
     """Read one episode script from a JSON file."""
     with open(path, encoding="utf-8") as fh:
@@ -67,6 +79,12 @@ def _require(obj, fields, prefix, out):
     return clean
 
 
+def _unknown_keys(obj, allowed, prefix, out):
+    for key in obj:
+        if key not in allowed:
+            out.append("%s: unknown key %r" % (prefix, key))
+
+
 def _home_relative(cwd) -> bool:
     """'~' or '~/<path>' with no '..' segment and no backslash."""
     if not isinstance(cwd, str) or "\\" in cwd:
@@ -76,7 +94,7 @@ def _home_relative(cwd) -> bool:
     return ".." not in cwd.split("/")
 
 
-def _validate_step(step, prefix, out):
+def _validate_step(step, prefix, out, screen=None):
     if not isinstance(step, dict):
         out.append("%s: step must be an object" % prefix)
         return
@@ -85,6 +103,7 @@ def _validate_step(step, prefix, out):
         out.append("%s: unknown step type %r" % (prefix, stype))
         return
     _require(step, STEP_FIELDS[stype], prefix, out)
+    _unknown_keys(step, STEP_COMMON + tuple(STEP_FIELDS[stype]) + STEP_EXTRA.get(stype, ()), prefix, out)
     source = step.get("source")
     if "source" not in step:
         out.append("%s: missing 'source'" % prefix)
@@ -101,6 +120,8 @@ def _validate_step(step, prefix, out):
             out.append("%s: 'in' is only valid on a term step" % prefix)
         elif step["in"] != "zsh":
             out.append("%s: 'in' must be \"zsh\"" % prefix)
+        elif screen != "cursor-full":
+            out.append("%s: 'in' \"zsh\" is only valid in a cursor-full chapter" % prefix)
     # `capture_only: true` steps only advance the demo state during capture; the bundle
     # drops them, so the stage and the control never see them.
     if "capture_only" in step:
@@ -123,6 +144,7 @@ def _validate_chapter(chapter, i, out, where, seen_ids):
         out.append("%s: chapter must be an object" % prefix)
         return
     _require(chapter, {"id": str, "title": str, "screen": str, "steps": list}, prefix, out)
+    _unknown_keys(chapter, CHAPTER_KEYS, prefix, out)
     if isinstance(chapter.get("id"), str):
         if chapter["id"] in seen_ids:
             out.append("%s: duplicate chapter id %r" % (prefix, chapter["id"]))
@@ -136,11 +158,12 @@ def _validate_chapter(chapter, i, out, where, seen_ids):
             out.append("%s faq %d: must be an object" % (prefix, k))
             continue
         _require(item, {"q": str, "a": str}, "%s faq %d" % (prefix, k), out)
+        _unknown_keys(item, FAQ_KEYS, "%s faq %d" % (prefix, k), out)
     if "faq" in chapter and not isinstance(chapter["faq"], list):
         out.append("%s: 'faq' must be a list" % prefix)
     if isinstance(chapter.get("steps"), list):
         for j, step in enumerate(chapter["steps"]):
-            _validate_step(step, "%s step %d" % (prefix, j), out)
+            _validate_step(step, "%s step %d" % (prefix, j), out, chapter.get("screen"))
 
 
 def validate(episode: dict, where: str) -> list:
@@ -151,14 +174,18 @@ def validate(episode: dict, where: str) -> list:
     _require(episode, {"id": str, "series": str, "order": int, "title": str,
                        "pitch": dict, "skill": dict, "workspace": dict, "chapters": list},
              where, out)
+    _unknown_keys(episode, TOP_KEYS, where, out)
     if isinstance(episode.get("series"), str) and episode["series"] not in SERIES:
         out.append("%s: unknown series %r (expected one of %s)" % (where, episode["series"], ", ".join(SERIES)))
     if isinstance(episode.get("pitch"), dict):
         _require(episode["pitch"], {"ask": str, "does": str}, "%s: pitch" % where, out)
+        _unknown_keys(episode["pitch"], PITCH_KEYS, "%s: pitch" % where, out)
     if isinstance(episode.get("skill"), dict):
         _require(episode["skill"], {"repo": str, "commit": str, "date": str}, "%s: skill" % where, out)
+        _unknown_keys(episode["skill"], SKILL_KEYS, "%s: skill" % where, out)
     if isinstance(episode.get("workspace"), dict):
         _require(episode["workspace"], {"repo": str}, "%s: workspace" % where, out)
+        _unknown_keys(episode["workspace"], WORKSPACE_KEYS, "%s: workspace" % where, out)
     chapters = episode.get("chapters")
     if isinstance(chapters, list):
         if not chapters:
