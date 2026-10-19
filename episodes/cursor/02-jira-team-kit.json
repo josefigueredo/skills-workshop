@@ -1,0 +1,536 @@
+{
+  "id": "jira-team-kit",
+  "series": "cursor",
+  "order": 2,
+  "title": "jira-team-kit",
+  "pitch": {
+    "ask": "Creame una épica para esto que estuvimos trabajando",
+    "does": "Arma la épica con sus historias, tareas y subtareas, te la muestra antes de escribir y, cuando vos aprobás con un clic en una ventana, la crea en Jira y la deja como kanban local."
+  },
+  "skill": {
+    "repo": "jira-kanban",
+    "commit": "93a6126",
+    "date": "2026-10-19"
+  },
+  "workspace": {
+    "repo": "mi-servicio",
+    "files": [
+      "api",
+      "web",
+      "docs",
+      "README.md"
+    ],
+    "chats": [
+      {
+        "title": "Tope al descuento en pedidos",
+        "age": "1h"
+      }
+    ]
+  },
+  "chapters": [
+    {
+      "id": "instalar",
+      "title": "Instalar",
+      "subtitle": "Una vez por máquina, más tu token de Jira",
+      "screen": "terminal",
+      "faq": [
+        {
+          "q": "¿Puedo pedirle al agente que la instale?",
+          "a": "Sí. En Cursor decile «Instalá jira-team-kit: cloná el repo y corré ./install.sh --with-write» y hace lo mismo que ves acá. Lo mostramos en la terminal para que sepas qué deja en tu máquina."
+        },
+        {
+          "q": "¿Qué es --with-write y por qué no es el comportamiento normal?",
+          "a": "Sin esa opción se instalan solo las dos skills de lectura. Con --with-write se suman las dos que pueden escribir en Jira. Escribir es una decisión explícita, no un efecto de instalar."
+        },
+        {
+          "q": "¿Instala algo más, o toca mis archivos?",
+          "a": "No copia nada: deja enlaces a tu clon, así hay una sola fuente de verdad. Y nunca pisa un archivo real: si donde va un enlace ya hay un archivo, frena y te dice cuál mover."
+        },
+        {
+          "q": "Me dice «add ~/.local/bin to PATH». ¿Qué hago?",
+          "a": "Es el aviso que ves acá: jtk quedó en ~/.local/bin y tu terminal todavía no mira esa carpeta. Agregás una línea a tu ~/.zshrc (o le pedís al agente que la agregue) y abrís una terminal nueva."
+        },
+        {
+          "q": "¿Por qué el token lo creo yo y no se lo pido al agente?",
+          "a": "Porque es un secreto: se muestra una sola vez y nunca se pega en el chat. Lo creás vos y lo guardás vos, con un editor."
+        }
+      ],
+      "steps": [
+        {
+          "type": "term",
+          "cmd": "git clone git@github.com:josefigueredo/jira-team-kit.git skills/jira-kanban",
+          "out": [
+            "Cloning into 'skills/jira-kanban'..."
+          ],
+          "source": "inferido",
+          "cwd": "~",
+          "notes": "Primero bajamos el repo, que trae las cuatro skills y el comando jtk. Es un git clone común. Necesitás Python 3.9 o más, git y acceso por SSH a la organización (el repo es privado); si hiciste el episodio 0 ya lo tenés. El nombre de la carpeta da igual: el instalador calcula dónde está. Paso inferido: necesita red."
+        },
+        {
+          "type": "term",
+          "cmd": "~/skills/jira-kanban/install.sh --with-write",
+          "out": [
+            "skill: jira-standup (Claude Code, Codex, Cursor) -> ~/skills/jira-kanban/jira-standup",
+            "skill: jira-em (Claude Code, Codex, Cursor) -> ~/skills/jira-kanban/jira-em",
+            "skill: jira-team-kit (Claude Code, Codex, Cursor) -> ~/skills/jira-kanban",
+            "skill: jira-em-ops (Claude Code, Codex, Cursor) -> ~/skills/jira-kanban/jira-em-ops",
+            "cli: jtk -> ~/skills/jira-kanban/jtk.py",
+            "note: add ~/.local/bin to PATH to use jtk"
+          ],
+          "source": "real",
+          "cwd": "~",
+          "notes": "Esta es toda la instalación. Mirá las cuatro líneas «skill:»: dos de lectura (standup y em) y dos que escriben (jira-team-kit y jira-em-ops). Remarcá que no copia nada, son enlaces, y que se enlazan a la vez en Claude Code, Codex y Cursor. Y mirá el aviso del final: jtk existe, pero falta el PATH.",
+          "pause": true
+        },
+        {
+          "type": "term",
+          "cmd": "echo 'export PATH=\"$HOME/.local/bin:$PATH\"' >> ~/.zshrc",
+          "out": [],
+          "source": "real",
+          "cwd": "~",
+          "notes": "El aviso se arregla con una línea en tu ~/.zshrc. Después, abrís una terminal nueva. Si te trabás acá, es el error número uno: «el agente dice que jtk no existe»."
+        },
+        {
+          "type": "term",
+          "cmd": "~/.local/bin/jtk --version",
+          "out": [
+            "jtk 93a6126 2026-10-14"
+          ],
+          "source": "real",
+          "cwd": "~",
+          "notes": "Comprobamos que quedó andando. Imprime el commit y su fecha. Lo corremos con la ruta completa porque esta terminal todavía no tiene el PATH nuevo; en una terminal nueva alcanza con jtk --version. Todavía no tocamos Jira, ni hace falta."
+        },
+        {
+          "type": "term",
+          "cmd": "open -e ~/.zshrc",
+          "out": [],
+          "source": "inferido",
+          "cwd": "~",
+          "notes": "Ahora lo único que no hace el agente: las credenciales. Creás un token de API en id.atlassian.com, con el botón «Create API token» a secas, no el que dice «with scopes»: jtk entra por la URL de tu sitio y un token con alcance no funciona. Lo guardás vos, con un editor, en tres variables: JIRA_BASE_URL, JIRA_EMAIL y JIRA_API_TOKEN. Nunca por el chat. Después cerrás Cursor del todo y lo abrís de nuevo.",
+          "pause": true
+        }
+      ]
+    },
+    {
+      "id": "caso-principal",
+      "title": "Caso principal",
+      "subtitle": "De «creame una épica» a PLAT-123, con tu clic",
+      "screen": "cursor-full",
+      "faq": [
+        {
+          "q": "¿Puede el agente escribir en Jira sin que yo lo sepa?",
+          "a": "No. Todo comando que escribe necesita --apply, y --apply abre una ventana que solo responde a un clic tuyo en «Apruebo». El agente te avisa antes de lanzarla, pero no puede aprobar por vos."
+        },
+        {
+          "q": "¿Y si aprieto Cancelar, o me voy a tomar un café?",
+          "a": "No se escribe nada. Cancelar, Escape, cerrar la ventana o esperar 100 segundos dan lo mismo: el comando sale sin crear y el agente no vuelve a intentarlo salvo que se lo pidas."
+        },
+        {
+          "q": "¿Qué pasa si Jira rechaza una tarea a mitad de camino?",
+          "a": "Lo creado se conserva y jtk te dice las claves. Repetir el mismo comando retoma sin duplicar. Si solo falla un cambio de estado, no se repite el create: se termina con un push."
+        },
+        {
+          "q": "¿Por qué «Vos · en curso» y «A decidir»?",
+          "a": "Lo que dijiste que estás haciendo se te asigna sin preguntar. Lo que todavía no empezó necesita tu respuesta: asignártelo o dejarlo sin dueño. jtk nunca lo decide por vos."
+        },
+        {
+          "q": "¿Y el MCP de Atlassian que Cursor sugiere cuando escribo «jira»?",
+          "a": "No lo uses junto a esta skill. Sus herramientas de escritura no pasan por la ventana de aprobación. La skill le dice al agente que Jira va siempre por jtk."
+        }
+      ],
+      "steps": [
+        {
+          "type": "ask",
+          "text": "creame una épica para esto que estuvimos trabajando",
+          "source": "inferido",
+          "notes": "Una frase, como se la dirías a un compañero. Fijate el chat de la izquierda: veníamos hablando del tope al descuento. De ahí saca el contenido; nada de llenar formularios. Pedir así, al cerrar un trabajo, es el hábito que queremos instalar."
+        },
+        {
+          "type": "tool",
+          "label": "Read · ~/.cursor/skills/jira-team-kit/SKILL.md",
+          "source": "inferido",
+          "notes": "Cursor reconoce el pedido y carga la skill. Desde acá el agente sigue pasos fijos, no improvisa. El primero: mirar antes de escribir."
+        },
+        {
+          "type": "tool",
+          "label": "Ran · jtk update --check",
+          "source": "inferido",
+          "notes": "Una vez por conversación mira si hay una versión nueva del jtk. Es solo lectura, no toca Jira. Si todo está al día no dice nada, y acá no dice nada: ese es el comportamiento correcto."
+        },
+        {
+          "type": "term",
+          "cmd": "~/.local/bin/jtk create --check --project .",
+          "out": [
+            "Check          Result  Detail",
+            "wow plan       no      no wow/plan/manifest.json",
+            "jira project   none    ask the person which project and pass --jira-project KEY",
+            "existing epic  none    none in specs/*/spec.md or the branch; a key in the conversation is not checked here"
+          ],
+          "source": "real",
+          "cwd": "~/mi-servicio",
+          "notes": "Tres filas, sin red ni credenciales. «wow plan»: si el trabajo ya sale de un plan de WayOfWork, la épica la crea otra herramienta. «jira project»: no hay proyecto por defecto, así que hay que preguntarlo. «existing epic»: si ya existe una épica para esto, se pregunta antes de crear otra. Acá no hay ni plan ni épica. Falta el proyecto.",
+          "pause": true
+        },
+        {
+          "type": "say",
+          "md": "No hay plan de WayOfWork ni una épica previa para esto, pero no tengo un proyecto de Jira por defecto. **¿En qué proyecto la creo?**",
+          "source": "inferido",
+          "notes": "El agente se frena y pregunta, porque la skill dice que nunca se adivina el proyecto. Esta es una de las pocas preguntas obligatorias."
+        },
+        {
+          "type": "ask",
+          "text": "En PLAT.",
+          "source": "inferido",
+          "notes": "Una palabra alcanza. Desde acá el agente pasa --jira-project PLAT en todos los comandos."
+        },
+        {
+          "type": "tool",
+          "label": "Read · ~/.cursor/skills/jira-team-kit/references/spec.md",
+          "source": "inferido",
+          "notes": "Antes de redactar lee el formato del spec. Cada épica, tarea y subtarea necesita tres cosas: por qué, qué y hecho cuando. Si falta una, jtk se niega a seguir. Es lo que evita tickets de una línea que nadie entiende dentro de un mes."
+        },
+        {
+          "type": "tool",
+          "label": "Write · ~/scratchpad/spec.json",
+          "source": "inferido",
+          "notes": "El spec es un JSON que el agente arma desde la conversación: una épica, una tarea con una subtarea, y otra tarea. Lo deja en su carpeta temporal, no en tu repo."
+        },
+        {
+          "type": "term",
+          "cmd": "jtk create --spec ~/scratchpad/spec.json --jira-project PLAT --html ~/scratchpad/vista.html --project .",
+          "out": [
+            "Issue        Tipo      Estado       Asignado        Título",
+            "NUEVO-1      Epic      Backlog      A decidir       Tope de descuento",
+            "  NUEVO-2    Tarea     En progreso  Vos · en curso  [BE] Acotar el descuento",
+            "    NUEVO-3  Subtarea  Backlog      A decidir       Test del tope",
+            "  NUEVO-4    Tarea     Backlog      A decidir       [BE] Documentar el tope",
+            "preview: ~/scratchpad/vista.html",
+            "dry run: nothing created; --apply creates 4 issues in PLAT"
+          ],
+          "source": "inferido",
+          "cwd": "~/mi-servicio",
+          "notes": "El dry run: lo que se crearía, sin escribir nada. La tabla y una página vista.html con forma de pantalla de Jira. Fijate «NUEVO-1»: todavía no hay claves reales. La tarea que decimos que estamos haciendo ya figura «En progreso» y «Vos · en curso»; el resto, «A decidir». Esta salida es inferida: sin credenciales de Jira el comando no corre en la captura, y el formato sale del showcase de la skill.",
+          "pause": true
+        },
+        {
+          "type": "tool",
+          "label": "Ran · open ~/scratchpad/vista.html",
+          "source": "inferido",
+          "notes": "Abre la vista previa en el navegador: árbol a la izquierda, descripción con por qué, qué y hecho cuando. Revisala. Es el momento de corregir, no después."
+        },
+        {
+          "type": "say",
+          "md": "Armé la épica con **1 tarea con una subtarea** y **1 tarea más**, en PLAT. Abrí `vista.html` para revisarla.\n\nUna decisión que es tuya:\n- la tarea del tope ya la estás haciendo, así que queda **En progreso y a tu nombre**\n- las otras dos están abiertas: **¿te las asigno a vos o las dejo sin asignar?**\n\nCuando me digas, creo todo. No escribo nada hasta tu respuesta.",
+          "source": "inferido",
+          "notes": "Dos cosas para remarcar. Una: la skill espera un sí explícito antes de escribir. Dos: pregunta por las asignaciones y no las supone. Es la diferencia entre una herramienta que ordena y una que decide por vos.",
+          "pause": true
+        },
+        {
+          "type": "ask",
+          "text": "Asignámelas a mí y creala.",
+          "source": "inferido",
+          "notes": "Ese es el sí explícito, con la respuesta sobre las asignaciones incluida. Recién ahora el agente puede ir al comando que escribe."
+        },
+        {
+          "type": "say",
+          "md": "Voy a correr el comando que **escribe en Jira**. **Se va a abrir una ventana** con las 4 issues que se crean en PLAT, quién las recibe y los botones **Cancelar** y **Apruebo 4**.\n\nLa aprobación es tu clic en esa ventana: mi pregunta de recién no cuenta, y yo no puedo tocarla. Si cancelás, no lo vuelvo a correr salvo que me lo pidas.",
+          "source": "inferido",
+          "notes": "Este aviso es parte de la regla de la skill: antes de lanzar un comando con --apply, el agente dice en el chat que se abre una ventana y qué va a aprobarse. Y que la persona tiene que estar presente. Por eso este momento no se apura: esperá a que cada quien lo lea.",
+          "pause": true
+        },
+        {
+          "type": "approve",
+          "title": "Crear en PLAT",
+          "lines": [
+            "Epic · Tope de descuento · Crear · Asignado a: Persona del equipo",
+            "Tarea · [BE] Acotar el descuento · Crear y mover a En progreso · Asignado a: Persona del equipo",
+            "Subtarea · Test del tope · Crear · Asignado a: Persona del equipo",
+            "Tarea · [BE] Documentar el tope · Crear · Asignado a: Persona del equipo",
+            "Aprobás con un clic en Apruebo 4. Escape o Cancelar no escriben nada. Se cancela sola a los 100 s."
+          ],
+          "button": "Apruebo 4",
+          "source": "inferido",
+          "notes": "La ventana nativa de macOS, con una tarjeta por issue: qué se hace y a quién queda. Mirá la tarea del tope: «Crear y mover a En progreso». Crear y mover son dos escrituras, y las dos figuran antes de aprobar. El número del botón es la cantidad de issues. Return no aprueba. Acá la persona hace el clic; el agente espera. Ventana inferida: la captura no tiene Jira ni macOS de verdad.",
+          "pause": true
+        },
+        {
+          "type": "term",
+          "cmd": "jtk create --spec ~/scratchpad/spec.json --jira-project PLAT --apply --assign-open --project .",
+          "out": [
+            "Issue        Tipo      Estado       Asignado        Título",
+            "PLAT-123     Epic      Backlog      Vos             Tope de descuento",
+            "  PLAT-124   Tarea     En progreso  Vos · en curso  [BE] Acotar el descuento",
+            "    PLAT-125 Subtarea  Backlog      Vos             Test del tope",
+            "  PLAT-126   Tarea     Backlog      Vos             [BE] Documentar el tope",
+            "created PLAT-123; local kanban in .jira-team-kit/PLAT-123/"
+          ],
+          "source": "inferido",
+          "cwd": "~/mi-servicio",
+          "notes": "Con el clic, el comando termina: ahora sí hay claves reales, PLAT-123 a PLAT-126. Y quedó el kanban local en .jira-team-kit, que se mantiene sincronizado en los dos sentidos con pull y push. Inferido: escribe en Jira, por eso nunca corre en la captura."
+        },
+        {
+          "type": "worked",
+          "seconds": 48,
+          "source": "inferido",
+          "notes": "El tiempo que le llevó al agente, sin contar lo que tardaste vos en revisar y aprobar."
+        },
+        {
+          "type": "say",
+          "md": "Listo: la épica es **PLAT-123**, con 3 issues debajo (PLAT-124 a PLAT-126).\n\n#### Qué quedó\n- **En Jira:** la épica, la tarea en progreso a tu nombre, la subtarea y la tarea abierta\n- **En tu repo:** el kanban local en `.jira-team-kit/PLAT-123/`; lo editás en archivos y lo subís con `jtk push`\n- **En un registro:** cada escritura queda en `.jira-team-kit/jira-writes.jsonl`",
+          "source": "inferido",
+          "notes": "Cerrá con las tres cosas que quedaron y por qué importan: Jira tiene lo que aprobaste, tu repo tiene un espejo editable, y hay un registro de cada escritura. Si alguien pregunta «¿y quién creó esto?», el registro responde.",
+          "pause": true
+        }
+      ]
+    },
+    {
+      "id": "otro-caso",
+      "title": "Otro caso",
+      "subtitle": "Cambiar varios tickets a la vez con jira-em-ops",
+      "screen": "cursor-agent",
+      "faq": [
+        {
+          "q": "¿Cuántos tickets puedo cambiar de una vez?",
+          "a": "Hasta 25 por plan, y hasta 200 si lo pedís con --max. Mover a «entregado» o «descartado» además exige confirmarlo expresamente."
+        },
+        {
+          "q": "¿Qué pasa si alguien cambió un ticket entre el plan y el apply?",
+          "a": "Antes de cada escritura jtk vuelve a leer el issue. Si alguien lo movió o lo reasignó después de planificar, lo saltea y te lo informa. Aplicar el mismo plan dos veces es seguro."
+        },
+        {
+          "q": "¿Se puede deshacer?",
+          "a": "Hay jtk plan revert con el plan inverso, pero no garantiza deshacer todo, y lo dice. Por eso el plan se revisa antes de aplicarlo."
+        },
+        {
+          "q": "¿Por qué plan y apply son dos pasos?",
+          "a": "Porque planificar solo lee Jira y guarda un archivo: es seguro y lo hace el agente solo. Aplicar escribe, y abre la ventana. Separarlos te deja revisar exactamente qué se va a cambiar."
+        }
+      ],
+      "steps": [
+        {
+          "type": "ask",
+          "text": "Asigná a Ana Gómez los tickets sin dueño del view plataforma",
+          "source": "inferido",
+          "notes": "Otro pedido típico: no es crear, es cambiar muchas cosas ya existentes. Esta vez es jira-em-ops, la hermana de jira-team-kit para operaciones en lote. Necesita que antes hayas guardado el view y el perfil de tus boards, una sola vez."
+        },
+        {
+          "type": "tool",
+          "label": "Ran · jtk team status plataforma --list --unassigned",
+          "source": "inferido",
+          "notes": "Primero lista cuáles son, para que el plan trate exactamente de esos tickets y no de un número. La skill lo dice: si pedís «los 7 sin dueño», primero se listan."
+        },
+        {
+          "type": "term",
+          "cmd": "jtk plan assign plataforma --unassigned --person \"Ana Gómez\"",
+          "out": [
+            "Plan 3f9a1c07b2de · assign · view plataforma · 3 issue(s)",
+            "  PLAT-131: unassigned -> Ana Gómez",
+            "  PLAT-134: unassigned -> Ana Gómez",
+            "  PLAT-140: unassigned -> Ana Gómez",
+            "",
+            "Plan 3f9a1c07b2de saved in ~/.local/state/jtk/plans/3f9a1c07b2de.json. Nothing was written to Jira.",
+            "To apply it, run: jtk apply 3f9a1c07b2de",
+            "(a window shows the changes and a person clicks Apruebo; with no window, it asks for your approval in a terminal)"
+          ],
+          "source": "inferido",
+          "notes": "jtk plan solo lee Jira y guarda un archivo con las claves, el estado de origen y el de destino. Fijate el cierre: «Nothing was written to Jira». Por eso esto lo corre el agente sin pedirte nada. Salida inferida: lee Jira, y en la captura no hay Jira.",
+          "pause": true
+        },
+        {
+          "type": "say",
+          "md": "Armé el plan **3f9a1c07b2de**: asignar a **Ana Gómez** los **3 tickets sin dueño** de plataforma (PLAT-131, PLAT-134 y PLAT-140). Hasta acá no escribí nada.\n\n¿Lo aplico?",
+          "source": "inferido",
+          "notes": "El agente muestra el plan tal cual salió y pregunta. Es el segundo punto de control: el primero es el plan, el segundo es tu sí, y el tercero, el clic."
+        },
+        {
+          "type": "ask",
+          "text": "Sí, aplicalo.",
+          "source": "inferido",
+          "notes": "Un sí en el chat habilita al agente a lanzar el comando. No aprueba nada: eso es el clic."
+        },
+        {
+          "type": "say",
+          "md": "Voy a correr `jtk apply 3f9a1c07b2de`. **Se abre una ventana** con los 3 cambios y los botones **Cancelar** y **Apruebo 3**. Tu clic es la aprobación; un «sí» en el chat no cuenta.",
+          "source": "inferido",
+          "notes": "Mismo aviso previo que en el caso principal. La regla de jira-em-ops es todavía más explícita: nunca hacer clic, teclear ni automatizar la ventana.",
+          "pause": true
+        },
+        {
+          "type": "approve",
+          "title": "Aplicar el plan 3f9a1c07b2de",
+          "lines": [
+            "PLAT-131 · Sin asignar → Ana Gómez",
+            "PLAT-134 · Sin asignar → Ana Gómez",
+            "PLAT-140 · Sin asignar → Ana Gómez",
+            "Aprobás con un clic en Apruebo 3. Escape o Cancelar no escriben nada."
+          ],
+          "button": "Apruebo 3",
+          "source": "inferido",
+          "notes": "Misma ventana, otro contenido: una fila por ticket, con el cambio de cada uno. Inferida, igual que la anterior.",
+          "pause": true
+        },
+        {
+          "type": "term",
+          "cmd": "jtk apply 3f9a1c07b2de",
+          "out": [
+            "PLAT-131  applied",
+            "PLAT-134  applied",
+            "PLAT-140  applied"
+          ],
+          "source": "inferido",
+          "notes": "Apply ejecuta exactamente ese plan, ticket por ticket, y dice qué pasó con cada uno. Si alguno hubiera cambiado mientras tanto, diría que lo saltea. Inferido: escribe en Jira."
+        },
+        {
+          "type": "say",
+          "md": "Aplicado: los **3 tickets** son de Ana Gómez ahora. Si querés ver cómo quedó el equipo, corro `jtk team status plataforma`; y si querés volver atrás, `jtk plan revert 3f9a1c07b2de` (no garantiza deshacer todo).",
+          "source": "inferido",
+          "notes": "Dos salidas después de aplicar: ver el resultado o planificar la inversa. Siempre ofrecidas, nunca hechas sin que lo pidas.",
+          "pause": true
+        }
+      ]
+    },
+    {
+      "id": "las-otras-skills",
+      "title": "Las otras skills",
+      "subtitle": "Las que solo leen Jira",
+      "screen": "cursor-agent",
+      "faq": [
+        {
+          "q": "¿Estas dos también necesitan la ventana?",
+          "a": "No. jira-standup y jira-em solo leen: nunca escriben en Jira. Por eso ni siquiera piden aprobación."
+        },
+        {
+          "q": "¿Qué es un «view»?",
+          "a": "Una lista guardada de los boards y del equipo que seguís. La armás una sola vez con jtk team setup y después preguntás por «mi equipo» sin repetir nada."
+        },
+        {
+          "q": "¿Puedo preguntar por otra persona?",
+          "a": "Sí, con su nombre. Si hay dos personas que coinciden, jtk lista a los candidatos con su email y te pregunta; nunca elige entre dos."
+        }
+      ],
+      "steps": [
+        {
+          "type": "ask",
+          "text": "¿Qué hice ayer?",
+          "source": "inferido",
+          "notes": "jira-standup. Tres preguntas personales: qué hiciste, qué podés hacer, en qué estás bloqueado. Más la carga de un compañero y tus métricas de entrega."
+        },
+        {
+          "type": "tool",
+          "label": "Ran · jtk done --when yesterday",
+          "source": "inferido",
+          "notes": "El agente traduce «ayer» a un nombre de ventana y el CLI hace el calendario. Lee Jira en vivo y muestra la salida tal cual, como árbol de épica, tarea y subtarea."
+        },
+        {
+          "type": "say",
+          "md": "Ayer pasaste **2 issues** a En progreso o Done: **PLAT-124** (el tope al descuento) y **PLAT-125**. La ventana fue ayer, de lunes a domingo en la zona del equipo.\n\nRecordá que «hecho» significa asignado a vos: si otra persona cerró un issue tuyo, igual aparece.",
+          "source": "inferido",
+          "notes": "Las skills de lectura dicen qué es y qué no es cada número. Salida de ejemplo, inferida: depende del Jira de cada quien.",
+          "pause": true
+        },
+        {
+          "type": "ask",
+          "text": "¿Cómo viene mi equipo? ¿Qué está estancado?",
+          "source": "inferido",
+          "notes": "jira-em: para quien sigue varios boards y un equipo, no para uno mismo. La diferencia con standup es el «mi equipo»."
+        },
+        {
+          "type": "say",
+          "md": "Con el view **plataforma** miro `jtk team status` y `jtk team stalled`. Los boards necesitan su perfil guardado: qué estado significa «hecho» en cada proyecto. Si falta alguno te lo pregunto, **no lo adivino**.",
+          "source": "inferido",
+          "notes": "Un detalle que muestra el criterio de la skill: los roles de cada estado los decide una persona, una vez por proyecto. El agente los relaya, no los elige."
+        },
+        {
+          "type": "say",
+          "md": "#### Las cuatro skills\n- **jira-team-kit:** crea épicas desde la conversación y las sincroniza con pull y push\n- **jira-standup:** qué hiciste, qué podés hacer, qué te bloquea\n- **jira-em:** cómo viene el equipo y los boards, solo lectura\n- **jira-em-ops:** cambios en lote con plan y aprobación\n\nLas dos que escriben pasan siempre por la ventana. Las dos que leen, nunca escriben.",
+          "source": "inferido",
+          "notes": "El resumen del episodio en una tabla mental: dos leen, dos escriben, y las que escriben pasan por la ventana. Si recordás una sola cosa, que sea esa.",
+          "pause": true
+        }
+      ]
+    },
+    {
+      "id": "si-algo-falla",
+      "title": "Si algo falla",
+      "subtitle": "Los errores más comunes y cómo salir",
+      "screen": "terminal",
+      "faq": [
+        {
+          "q": "«No encuentro las credenciales», pero ya las puse",
+          "a": "Casi seguro Cursor se abrió antes de que las variables existieran. Cerralo del todo y abrilo de nuevo. Si sigue, revisá las tres variables, con los nombres exactos."
+        },
+        {
+          "q": "Puse el token y no entra",
+          "a": "Lo más probable es que lo creaste «con alcance». jtk entra por la URL de tu sitio con tu email y el token, y un token con alcance solo funciona por api.atlassian.com. Creá otro con el botón sin alcance."
+        },
+        {
+          "q": "La ventana no aparece y el comando termina sin escribir",
+          "a": "Puede ser que no hay ventana (no es macOS, estás por ssh o sin sesión gráfica) o que la cancelaste o pasaron 100 segundos. Sin ventana, el comando sale con código 3 e imprime la línea para correr en una terminal real."
+        },
+        {
+          "q": "El agente dice que falta un campo del spec",
+          "a": "Pedile que complete el por qué, el qué y el hecho cuando de ese issue. Con una descripción libre jtk se niega."
+        }
+      ],
+      "steps": [
+        {
+          "type": "term",
+          "cmd": "readlink ~/.local/bin/jtk",
+          "out": [
+            "~/skills/jira-kanban/jtk.py"
+          ],
+          "source": "real",
+          "cwd": "~",
+          "notes": "Si el agente dice que jtk no existe, mirá primero si el enlace está. Acá apunta al clon, o sea el instalador anduvo. Entonces lo que falta es el PATH: la línea del ~/.zshrc y una terminal nueva."
+        },
+        {
+          "type": "term",
+          "cmd": "~/.local/bin/jtk who \"Ana Gómez\" --jira-project PLAT",
+          "out": [
+            "jtk: Jira credentials not found (set JIRA_BASE_URL, JIRA_EMAIL and JIRA_API_TOKEN in the environment, ./.env.local or ./.spec-kit/.env)",
+            "# exit 1"
+          ],
+          "source": "real",
+          "cwd": "~",
+          "notes": "El segundo error típico, sin credenciales: jtk no entra y lo dice con las tres variables que busca. Es el mismo comando que se usa para comprobar que todo anda, porque solo lee. Acá falla a propósito: la captura no tiene tu Jira.",
+          "pause": true
+        }
+      ]
+    },
+    {
+      "id": "cierre",
+      "title": "Cierre",
+      "subtitle": "Lo que te llevás",
+      "screen": "cursor-agent",
+      "faq": [
+        {
+          "q": "¿Cuándo la uso?",
+          "a": "Al cerrar un trabajo para dejarlo registrado, o antes de empezar uno para planificarlo en Jira. Y los cambios en lote, cuando el número de tickets ya duele hacerlos a mano."
+        },
+        {
+          "q": "¿Reemplaza a Jira?",
+          "a": "No. Es una puerta con control: escribe en tu Jira con tu aprobación y deja un espejo local. Jira sigue siendo la fuente de verdad."
+        },
+        {
+          "q": "¿Qué necesito para el próximo episodio?",
+          "a": "Lo del episodio 0 y haber hecho este: confluence-team-kit usa la misma idea de plan y aprobación, pero para Confluence."
+        }
+      ],
+      "steps": [
+        {
+          "type": "ask",
+          "text": "¿Qué me llevo de esto?",
+          "source": "inferido",
+          "notes": "Cerrá con las tres ideas; no repitas el episodio."
+        },
+        {
+          "type": "say",
+          "md": "#### Lo que te llevás\n- **Un pedido de una frase** alcanza: «creame una épica para esto» y la skill trae el formato y el orden.\n- **Nada se escribe sin tu clic:** primero un dry run para revisar, después una ventana con el detalle. El agente avisa, vos aprobás.\n- **Quedan un espejo local y un registro** de cada escritura.\n\n#### Próximo episodio: confluence-team-kit\nCómo publicar la documentación de tu repo en Confluence sin pisar a nadie: un plan, el aviso si alguien editó la página y una aprobación humana.",
+          "source": "inferido",
+          "notes": "Las tres ideas son el porqué de adoptarla: poco esfuerzo, control y rastro. El próximo episodio sigue con la misma lógica de plan y aprobación, ahora para la documentación. Si cambia el orden de la serie, cambiá la línea del próximo episodio.",
+          "pause": true
+        }
+      ]
+    }
+  ]
+}
