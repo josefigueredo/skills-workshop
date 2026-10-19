@@ -1,5 +1,8 @@
 // Render tests. Structural only: the harness loads no CSS, so nothing here
 // depends on computed visibility.
+// Fixed prompt clock: every Render.step in this suite shows the same time.
+var FIXED_NOW = new Date(2026, 9, 19, 9, 5, 7);
+Render.now = function () { return FIXED_NOW; };
 function fixtureEpisode() {
   return {
     id: "demo", series: "cursor", order: 1, title: "demo-skill",
@@ -244,4 +247,48 @@ test("hooks hold on every screen", function () {
       assertEqual(idle.length, 0, screen + " has no idle prompt");
     }
   });
+});
+
+test("the prompt carries the folder, house and clock icons as inline SVG", function () {
+  var c = render(1);
+  var p = c.querySelector('[data-step="0"] .ws-prompt');
+  var SVG = "http://www.w3.org/2000/svg";
+  [["folder", ".ws-seg-path"], ["house", ".ws-seg-sys"], ["clock", ".ws-seg-time"]].forEach(function (x) {
+    var ico = p.querySelector(x[1] + " svg.ws-ico-" + x[0]);
+    assert(ico, x[0] + " icon missing in " + x[1]);
+    assertEqual(ico.namespaceURI, SVG, x[0] + " namespace");
+    assert(ico.querySelector("path, circle"), x[0] + " has no shape");
+  });
+  assertEqual(p.querySelectorAll("svg").length, 3, "exactly three icons");
+  assert(p.textContent.indexOf("▭") < 0 && p.textContent.indexOf("⌂") < 0 && p.textContent.indexOf("◷") < 0,
+         "no text glyph stand-ins left");
+});
+
+test("the prompt time is HH:MM:SS from the injected clock", function () {
+  var c = render(1);
+  var times = c.querySelectorAll(".ws-seg-time .ws-time");
+  assertEqual(times.length, 2, "step prompt and idle prompt");
+  for (var i = 0; i < times.length; i++) assertEqual(times[i].textContent, "09:05:07");
+  assertEqual(c.querySelector(".ws-seg-time").textContent, "at 09:05:07");
+  var saved = Render.now;
+  Render.now = function () { return new Date(2026, 0, 2, 23, 59, 3); };
+  try {
+    assertEqual(render(1).querySelector(".ws-time").textContent, "23:59:03");
+  } finally {
+    Render.now = saved;
+  }
+  assertEqual(Render.clockText(new Date(2026, 0, 1, 0, 0, 0)), "00:00:00");
+});
+
+test("the last path component of the prompt is bold", function () {
+  var ep = fixtureEpisode();
+  ep.chapters[0].steps[0].cwd = "~/CurrentCode/PRISM";
+  var seg = render(1, ep).querySelector('[data-step="0"] .ws-seg-path');
+  assertEqual(seg.textContent, "~/CurrentCode/PRISM");
+  var b = seg.querySelectorAll("b");
+  assertEqual(b.length, 1, "one bold run");
+  assertEqual(b[0].textContent, "PRISM");
+  ep.chapters[0].steps[0].cwd = "~";
+  seg = render(1, ep).querySelector('[data-step="0"] .ws-seg-path');
+  assertEqual(seg.querySelector("b").textContent, "~", "a bare ~ is its own last component");
 });

@@ -16,6 +16,9 @@
 // Stage.create(opts) -> {handle(msg) -> Promise, current()} is the testable core:
 //   opts: {canvas (Render container), blackout (element toggled with .hidden), episodes,
 //          post(msg), schedule?, unschedule? (passed to Animate.run)}.
+// Stage.tickClock(canvas) sets the idle prompt's time text (.ws-time inside
+//   [data-anim="idle"]) to Render.now(); it touches nothing else, so it never re-renders
+//   a step or disturbs a running animation. The page calls it every second.
 // The DOM bootstrap at the end runs only on the page with #ws-stage-root.
 var Stage = (function () {
   var FADE = "ws-fade-in";
@@ -93,6 +96,16 @@ var Stage = (function () {
     return {handle: handle, current: function () { return cur; }};
   }
 
+  // Refresh only the idle prompt's clock text; returns how many were updated.
+  function tickClock(canvas) {
+    var text = Render.clockText(Render.now());
+    var spans = canvas.querySelectorAll('[data-anim="idle"] .ws-time');
+    for (var i = 0; i < spans.length; i++) {
+      if (spans[i].textContent !== text) spans[i].textContent = text;
+    }
+    return spans.length;
+  }
+
   // The keydown the stage forwards to the control, or null.
   function keyMessage(ev) {
     if (!ev || KEYS.indexOf(ev.key) < 0 || ev.repeat || ev.metaKey || ev.ctrlKey || ev.altKey) return null;
@@ -129,7 +142,8 @@ var Stage = (function () {
     var frame = document.getElementById("ws-frame");
     var opener = window.opener;
     function post(msg) { if (opener && !opener.closed) opener.postMessage(msg, "*"); }
-    var stage = create({canvas: document.getElementById("ws-canvas"),
+    var canvas = document.getElementById("ws-canvas");
+    var stage = create({canvas: canvas,
                         blackout: document.getElementById("ws-blackout"),
                         episodes: readEpisodes(), post: post});
     window.addEventListener("message", function (ev) {
@@ -142,6 +156,7 @@ var Stage = (function () {
       ev.preventDefault();
       post(msg);
     });
+    setInterval(function () { tickClock(canvas); }, 1000);
     fit(frame);
     window.addEventListener("resize", function () { fit(frame); });
     if (!opener) {
@@ -159,5 +174,5 @@ var Stage = (function () {
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
 
-  return {create: create, keyMessage: keyMessage, parseHash: parseHash};
+  return {create: create, keyMessage: keyMessage, parseHash: parseHash, tickClock: tickClock};
 })();

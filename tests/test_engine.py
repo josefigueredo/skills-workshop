@@ -14,9 +14,9 @@ DEFAULT_CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 CHROME = os.environ.get("CHROME", DEFAULT_CHROME)
 HARNESS = ROOT / "tests" / "js" / "harness.html"
 HAVE_CHROME = Path(CHROME).exists()
-RENDER_TESTS = 17  # exact count: a test that silently fails to register must show up
+RENDER_TESTS = 20  # exact count: a test that silently fails to register must show up
 ANIMATE_TESTS = 23
-PROTOCOL_TESTS = 52
+PROTOCOL_TESTS = 54
 CONTROL_JS = ROOT / "engine" / "control.js"
 SKIP_MSG = "Chrome not found at %s (set CHROME to run the JS suites)" % CHROME
 

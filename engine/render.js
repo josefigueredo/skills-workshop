@@ -23,6 +23,12 @@
 //   data-anim="idle"     the wrapper of the waiting prompt (prompt line + "❯ █") at the
 //                        end of the terminal and of the cursor-full zsh panel. It is not
 //                        a step: hide it while a term step animates, show it at the end.
+//
+// Prompt clock: every prompt shows Render.now() as HH:MM:SS (local time) in a
+// .ws-time span. Render.now defaults to `new Date()`; tests and render-preview replace it
+// with a fixed date so the output stays deterministic. The stage refreshes only the idle
+// prompt's .ws-time every second (Stage.tickClock); steps are never re-rendered for it.
+// Prompt icons (folder, house, clock) are inline SVG built with createElementNS.
 // Unmarked descendants of a step root appear with the root; hooks inside one root are
 // revealed in document order. Chapter cards carry no hooks and appear whole.
 //
@@ -36,7 +42,6 @@ var Render = (function () {
   var USER = "Persona del equipo";
   var TEAM = "Equipo";
   var MODEL = "Sonnet 5.5";
-  var TIME = "11:30";
   var BRANCH = "main";
 
   // ---- DOM helpers (text only) ----
@@ -116,13 +121,51 @@ var Render = (function () {
     var home = "~/" + repo;
     return cwd === home || cwd.indexOf(home + "/") === 0;
   }
+  // ---- prompt clock and icons ----
+  function pad2(n) { return (n < 10 ? "0" : "") + n; }
+  function clockText(d) {
+    return pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + ":" + pad2(d.getSeconds());
+  }
+  function nowText() { return clockText(api.now()); }
+  var SVG_NS = "http://www.w3.org/2000/svg";
+  // Each icon: list of [tag, attributes] on a 16x16 viewBox; colour comes from currentColor.
+  var ICONS = {
+    folder: [["path", {d: "M1.5 3.5a1 1 0 0 1 1-1H6l1.5 1.5h6a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1z",
+                        fill: "currentColor"}]],
+    house: [["path", {d: "M8 1.5 15 7.5h-2V14H9.5v-4h-3v4H3V7.5H1z", fill: "currentColor"}]],
+    clock: [["circle", {cx: "8", cy: "8", r: "6.25", fill: "none", stroke: "currentColor", "stroke-width": "1.5"}],
+            ["path", {d: "M8 4.5V8l2.5 1.5", fill: "none", stroke: "currentColor", "stroke-width": "1.5",
+                      "stroke-linecap": "round", "stroke-linejoin": "round"}]]
+  };
+  function icon(name) {
+    var svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("class", "ws-ico ws-ico-" + name);
+    svg.setAttribute("viewBox", "0 0 16 16");
+    svg.setAttribute("aria-hidden", "true");
+    ICONS[name].forEach(function (spec) {
+      var n = document.createElementNS(SVG_NS, spec[0]);
+      Object.keys(spec[1]).forEach(function (k) { n.setAttribute(k, spec[1][k]); });
+      svg.appendChild(n);
+    });
+    return svg;
+  }
+  // "~/a/b" -> "~/a/" + <b>b</b>: the last path component in bold, like the real prompt.
+  function pathText(seg, cwd) {
+    var s = String(cwd), cut = s.lastIndexOf("/") + 1;
+    if (cut > 0 && cut === s.length) cut = s.lastIndexOf("/", s.length - 2) + 1;
+    if (cut > 0) seg.appendChild(document.createTextNode(s.slice(0, cut)));
+    seg.appendChild(el("b", "ws-path-last", s.slice(cut)));
+    return seg;
+  }
   // Two-line zsh prompt, first line: apple, folder, branch, dotted fill, system, time.
   function promptLine(cwd, repo) {
     var p = el("div", "ws-prompt");
-    add(p, el("span", "ws-seg ws-seg-apple", ""), el("span", "ws-seg ws-seg-path", "▭ " + cwd));
+    add(p, el("span", "ws-seg ws-seg-apple", ""),
+        pathText(add(el("span", "ws-seg ws-seg-path"), icon("folder")), cwd));
     if (inRepo(cwd, repo)) p.appendChild(el("span", "ws-seg ws-seg-git", "on ⑂ " + BRANCH));
-    add(p, el("span", "ws-seg-fill"), el("span", "ws-seg ws-seg-sys", "system ⌂"),
-        el("span", "ws-seg ws-seg-time", "at " + TIME + " ◷"));
+    add(p, el("span", "ws-seg-fill"),
+        add(el("span", "ws-seg ws-seg-sys", "system"), icon("house")),
+        add(el("span", "ws-seg ws-seg-time", "at "), el("span", "ws-time", nowText()), icon("clock")));
     return p;
   }
   function cmdLine(cmd) {
@@ -375,5 +418,7 @@ var Render = (function () {
     return container.firstChild;
   }
 
-  return {step: step, markdown: markdown};
+  var api = {step: step, markdown: markdown, clockText: clockText,
+             now: function () { return new Date(); }};
+  return api;
 })();

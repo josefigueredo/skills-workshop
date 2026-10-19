@@ -1,6 +1,9 @@
 // Animate tests. A fake scheduler collects (fn, ms); tests run the queue in order and
 // sum the ms, so no real time passes. The harness loads no CSS: visibility is checked
 // through the inline styles animate.js sets.
+// Fixed prompt clock: every Render.step in this suite shows the same time.
+var FIXED_NOW = new Date(2026, 9, 19, 9, 5, 7);
+Render.now = function () { return FIXED_NOW; };
 function animEpisode() {
   return {
     id: "demo", series: "cursor", order: 1, title: "demo-skill",

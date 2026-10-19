@@ -77,6 +77,9 @@
   --ws-z-time-bg: transparent;
   --ws-z-time-fg: #1d1d1f;
   --ws-z-fill: #7a7a7a;
+  --ws-z-path-icon: #ffffff;
+  --ws-z-sys-icon: #ffffff;
+  --ws-z-time-icon: #1d1d1f;
   --ws-z-ok: #2ea043;
   --ws-z-out: #3a3a3c;
 
@@ -92,17 +95,23 @@
   --ws-t-apple-bg: #d0d4db;
   --ws-t-apple-fg: #111111;
   --ws-t-path-bg: #86a6cc;
-  --ws-t-path-fg: #1b2433;
+  --ws-t-path-fg: #ffffff;
+  --ws-t-path-icon: #ffffff;
   --ws-t-git-bg: #2f8f8a;
   --ws-t-git-fg: #ffffff;
   --ws-t-sys-bg: #b994c9;
   --ws-t-sys-fg: #1b1b22;
+  --ws-t-sys-icon: #1b1b22;
   --ws-t-time-bg: #d6d9df;
   --ws-t-time-fg: #111111;
+  --ws-t-time-icon: #111111;
   --ws-t-fill: #5d6370;
   --ws-t-bar-h: 34px;
   --ws-seg-slant: 8px;
   --ws-fill-w: 2px;       /* dotted fill between prompt segments */
+  --ws-icon-s: 1em;       /* prompt icons (folder, house, clock), inline SVG */
+  --ws-icon-gap: .4em;    /* space between a prompt icon and its text */
+  --ws-icon-drop: -.14em; /* vertical-align of prompt icons on the text baseline */
 
   /* Claude Code tab */
   --ws-cc-accent: #d97757;

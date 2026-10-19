@@ -1,6 +1,9 @@
 // Protocol tests: the control's pure reducer (Control.reduce) and the stage's message
 // handler (Stage.create). No windows, no real timers: the stage gets a fake scheduler
 // and the control gets explicit {kind:"tick", now} inputs.
+// Fixed prompt clock: every Render.step in this suite shows the same time.
+var FIXED_NOW = new Date(2026, 9, 19, 9, 5, 7);
+Render.now = function () { return FIXED_NOW; };
 function protoEpisodes() {
   return [
     {id: "uno", series: "cursor", order: 1, title: "uno-skill",
@@ -407,6 +410,52 @@ function rendered(ep, i) {
   Render.step(c, ep, i);
   return c.innerHTML;
 }
+
+test("stage: tickClock updates only the idle prompt's time text", function () {
+  var t = makeStage();
+  return t.stage.handle(show(1, false)).then(function () {
+    var before = t.canvas.innerHTML;
+    var saved = Render.now;
+    Render.now = function () { return new Date(2026, 9, 19, 15, 5, 14); };
+    try {
+      assertEqual(Stage.tickClock(t.canvas), 1, "one idle prompt");
+    } finally {
+      Render.now = saved;
+    }
+    assertEqual(t.canvas.querySelector('[data-anim="idle"] .ws-time').textContent, "15:05:14");
+    var steps = t.canvas.querySelectorAll('[data-step] .ws-time');
+    assert(steps.length >= 1, "step prompts have a time");
+    for (var i = 0; i < steps.length; i++) assertEqual(steps[i].textContent, "09:05:07", "step time untouched");
+    var back = t.canvas.querySelector('[data-anim="idle"] .ws-time');
+    back.textContent = "09:05:07";
+    assertEqual(t.canvas.innerHTML, before, "nothing else changed");
+  });
+});
+
+test("stage: tickClock during a running animation leaves the animation intact", function () {
+  var t = makeStage();
+  return t.stage.handle(show(0, false)).then(function () {
+    var p = t.stage.handle(show(1, true));
+    var typed = t.canvas.querySelector('[data-anim="type"]');
+    var idle = t.canvas.querySelector('[data-anim="idle"]');
+    var hidden = idle.style.display;
+    var saved = Render.now;
+    Render.now = function () { return new Date(2026, 9, 19, 15, 5, 14); };
+    try {
+      Stage.tickClock(t.canvas);
+    } finally {
+      Render.now = saved;
+    }
+    assertEqual(idle.querySelector(".ws-time").textContent, "15:05:14", "idle clock ticked");
+    assertEqual(typed.textContent, "", "typing state untouched");
+    assertEqual(idle.style.display, hidden, "idle visibility untouched");
+    assert(t.canvas.querySelector('[data-anim="type"]') === typed, "same nodes, no re-render");
+    t.clock.drain();
+    return p;
+  }).then(function () {
+    assertEqual(t.canvas.innerHTML, rendered(protoEpisodes()[0], 1));
+  });
+});
 
 test("stage: black and empty before the first show", function () {
   var t = makeStage();

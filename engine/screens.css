@@ -136,6 +136,10 @@
 }
 .ws-seg-apple { clip-path: polygon(0 0, 100% 0, calc(100% - var(--ws-seg-slant)) 100%, 0 100%); }
 .ws-seg-fill { flex: 1; align-self: center; height: 0; margin: 0 var(--ws-pad-sm); border-bottom: var(--ws-fill-w) dotted; }
+.ws-ico { display: inline-block; width: var(--ws-icon-s); height: var(--ws-icon-s); vertical-align: var(--ws-icon-drop); }
+.ws-ico-folder { margin-right: var(--ws-icon-gap); }
+.ws-ico-house, .ws-ico-clock { margin-left: var(--ws-icon-gap); }
+.ws-path-last { font-weight: 700; }
 .ws-cmdline, .ws-out { white-space: pre-wrap; word-break: break-word; }
 .ws-caret { display: inline-block; width: var(--ws-caret-w); }
 
@@ -145,6 +149,9 @@
 .ws-zsh .ws-seg-sys { background: var(--ws-z-sys-bg); color: var(--ws-z-sys-fg); }
 .ws-zsh .ws-seg-time { background: var(--ws-z-time-bg); color: var(--ws-z-time-fg); }
 .ws-zsh .ws-seg-fill { color: var(--ws-z-fill); }
+.ws-zsh .ws-ico-folder { color: var(--ws-z-path-icon); }
+.ws-zsh .ws-ico-house { color: var(--ws-z-sys-icon); }
+.ws-zsh .ws-ico-clock { color: var(--ws-z-time-icon); }
 .ws-zsh .ws-caret-prompt { color: var(--ws-z-ok); font-weight: 700; }
 .ws-zsh .ws-out { color: var(--ws-z-out); }
 .ws-zsh .ws-caret { outline: var(--ws-line) solid var(--ws-z-tx); }
@@ -162,6 +169,9 @@
 .ws-term-theme .ws-seg-sys { background: var(--ws-t-sys-bg); color: var(--ws-t-sys-fg); }
 .ws-term-theme .ws-seg-time { background: var(--ws-t-time-bg); color: var(--ws-t-time-fg); }
 .ws-term-theme .ws-seg-fill { color: var(--ws-t-fill); }
+.ws-term-theme .ws-ico-folder { color: var(--ws-t-path-icon); }
+.ws-term-theme .ws-ico-house { color: var(--ws-t-sys-icon); }
+.ws-term-theme .ws-ico-clock { color: var(--ws-t-time-icon); }
 .ws-term-theme .ws-caret-prompt { color: var(--ws-t-ok); font-weight: 700; }
 .ws-term-theme .ws-cmd { color: var(--ws-t-cmd); }
 .ws-term-theme .ws-caret { background: var(--ws-t-caret); }
