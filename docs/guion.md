@@ -104,7 +104,7 @@ python3 build.py check                          # revisa privacidad de episodes/
 
 ### Privacidad: `check` y `WS_LEAK_TERMS`
 
-`check` aplica reglas genéricas (mails que no sean `@example.com`, rutas `/Users/…`, tokens y claves) y, además, los términos propios que le des con la variable `WS_LEAK_TERMS`: un archivo con **una expresión regular por línea** (nombres, usuarios, dominios internos). Guardalo **fuera del repo**, porque listaría justamente lo que no tiene que estar en él.
+`check` aplica reglas genéricas (mails que no sean `@example.com` (la única excepción es `git@github.com`, el usuario de las direcciones SSH de GitHub), rutas `/Users/…`, tokens y claves) y, además, los términos propios que le des con la variable `WS_LEAK_TERMS`: un archivo con **una expresión regular por línea** (nombres, usuarios, dominios internos). Guardalo **fuera del repo**, porque listaría justamente lo que no tiene que estar en él.
 
 ```
 WS_LEAK_TERMS=~/privado/leak-terms.txt python3 build.py check
