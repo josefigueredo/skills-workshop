@@ -7,7 +7,7 @@
     "ask": "¿Qué tengo que tener instalado antes del curso?",
     "does": "Te da la lista de lo que hace falta y un comando que revisa todo y te dice qué falta y cómo arreglarlo."
   },
-  "skill": {"repo": "skills-workshop", "commit": "fda1584", "date": "2026-10-19"},
+  "skill": {"repo": "skills-workshop", "commit": "d22e011", "date": "2026-10-19"},
   "workspace": {"repo": "mi-servicio"},
   "chapters": [
     {
