@@ -36,7 +36,7 @@
       "faq": [
         {
           "q": "¿Puedo pedirle al agente que la instale?",
-          "a": "Sí. En Cursor decile «Instalá la skill inherited-audit desde ~/skills/inherited-audit» y corre el mismo ./install.sh. Lo mostramos en la terminal para que veas qué hace."
+          "a": "Sí. En Cursor decile «Instalá la skill inherited-audit desde ~/skills/inherited-audit» y corre el mismo install.sh. Lo mostramos en la terminal para que veas qué hace."
         },
         {
           "q": "¿Por qué se instala en ~/.claude/skills si uso Cursor?",
@@ -64,12 +64,12 @@
         },
         {
           "type": "term",
-          "cmd": "./install.sh",
+          "cmd": "~/skills/inherited-audit/install.sh",
           "out": [
             "skill: ~/.claude/skills/inherited-audit -> ~/skills/inherited-audit/skill"
           ],
           "source": "real",
-          "cwd": "~/skills/inherited-audit",
+          "cwd": "~",
           "notes": "Esta es toda la instalación. Remarcá que no copia nada: deja un enlace a la carpeta skill/ del clon, así que cuando actualizás el clon con git pull, la skill se actualiza sola. Y que la misma carpeta sirve para Cursor y para Claude Code.",
           "pause": true
         },
@@ -673,13 +673,13 @@
         },
         {
           "type": "term",
-          "cmd": "./install.sh --agents",
+          "cmd": "~/skills/inherited-audit/install.sh --agents",
           "out": [
             "skill: ~/.claude/skills/inherited-audit -> ~/skills/inherited-audit/skill",
             "agents: ia-auditor linked for Claude Code and Cursor"
           ],
           "source": "real",
-          "cwd": "~/skills/inherited-audit",
+          "cwd": "~",
           "notes": "El mismo instalador, con --agents: además de la skill, enlaza el subagente ia-auditor para Cursor y para Claude Code."
         },
         {
@@ -712,22 +712,22 @@
       "steps": [
         {
           "type": "term",
-          "cmd": "./install.sh",
+          "cmd": "~/skills/inherited-audit/install.sh",
           "out": [
             "refusing to replace ~/.claude/skills/inherited-audit: it is not a symlink; move it away and re-run"
           ],
           "source": "inferido",
-          "cwd": "~/skills/inherited-audit",
+          "cwd": "~",
           "notes": "Primer tropiezo: ya había una carpeta de verdad con ese nombre, por ejemplo de una copia hecha a mano. El instalador no la pisa. Paso inferido: es la salida real del instalador en ese caso."
         },
         {
           "type": "term",
-          "cmd": "mv ~/.claude/skills/inherited-audit ~/inherited-audit-viejo && ./install.sh",
+          "cmd": "mv ~/.claude/skills/inherited-audit ~/inherited-audit-viejo && ~/skills/inherited-audit/install.sh",
           "out": [
             "skill: ~/.claude/skills/inherited-audit -> ~/skills/inherited-audit/skill"
           ],
           "source": "inferido",
-          "cwd": "~/skills/inherited-audit",
+          "cwd": "~",
           "notes": "El arreglo es el que dice el mensaje: mover la carpeta vieja y volver a instalar, a mano o pedíselo al agente. Paso inferido, con la salida real del instalador."
         },
         {
