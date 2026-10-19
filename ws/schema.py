@@ -208,6 +208,9 @@ def check_tree(root) -> list:
             out.append("%s: invalid JSON (%s)" % (where, exc))
             continue
         out.extend(validate(ep, where))
+        from ws import scaffold  # late: scaffold imports schema
+
+        out.extend(scaffold.pending(ep, where))
         if not isinstance(ep, dict):
             continue
         if ep.get("series") != path.parent.name:

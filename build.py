@@ -91,14 +91,32 @@ def cmd_capture(args) -> int:
     return capture.capture_tree(root, args.episode)
 
 
+def cmd_new(args) -> int:
+    from ws import scaffold
+
+    try:
+        path = scaffold.create(Path(args.root), args.skill_repo, args.series, args.order)
+    except scaffold.ScaffoldError as exc:
+        print("new: %s" % exc)
+        return 1
+    print("ok: wrote %s/%s" % (path.parent.name, path.name))
+    print("next: fill every COMPLETAR (validate and build refuse them), then capture and build")
+    return 0
+
+
 def make_parser() -> argparse.ArgumentParser:
-    parser = _Parser(prog="build.py", description="Workshop engine: validate, check, capture, build.")
+    parser = _Parser(prog="build.py", description="Workshop engine: validate, check, capture, build, new.")
     parser.add_argument("--root", default=str(HERE), help="repo root (default: this repo)")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("validate", help="validate episode scripts").set_defaults(func=cmd_validate)
     sub.add_parser("check", help="privacy scan of episodes/, demo/, dist/").set_defaults(func=cmd_check)
     sub.add_parser("build", help="validate, bundle into dist/, privacy-check; writes only if all pass") \
         .set_defaults(func=cmd_build)
+    new = sub.add_parser("new", help="write an episode skeleton for a skill (every text is COMPLETAR)")
+    new.add_argument("skill_repo", help="skill repo name; also the episode id")
+    new.add_argument("--series", choices=("cursor", "claude-code"), default="cursor")
+    new.add_argument("--order", type=int, metavar="N", help="position in the series (default: next free)")
+    new.set_defaults(func=cmd_new)
     cap = sub.add_parser("capture", help="re-run `real` terminal steps in a fake HOME")
     cap.add_argument("--episode", metavar="ID", help="capture only this episode id")
     cap.set_defaults(func=cmd_capture)
