@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import contextlib
 import io
+import subprocess
 import unittest
 from unittest import mock
 
@@ -109,6 +110,26 @@ class Report(unittest.TestCase):
         self.assertNotIn("a: screen", out)
         code, out = self.run_duration({}, "--episode", "zzz")
         self.assertEqual(code, 2, out)
+
+    def test_measure_failures_exit_2_without_a_traceback(self):
+        self.tree.write("cursor", "01-a.json", ep_notes("w", id="a", order=1))
+        for exc in (subprocess.TimeoutExpired("chrome", 1), RuntimeError("no json"), KeyError("a")):
+            def boom(root, episodes, exc=exc):
+                raise exc
+            with mock.patch.object(duration, "measure", boom), \
+                    mock.patch.object(duration, "chrome_available", lambda: True):
+                code, out = run_cli(self.tree.root, "duration")
+            self.assertEqual(code, 2, out)
+            self.assertIn("duration: ", out)
+
+    def test_malformed_episode_json_exits_2(self):
+        d = self.tree.root / "episodes" / "cursor"
+        d.mkdir(parents=True)
+        (d / "01-a.json").write_text("{not json", encoding="utf-8")
+        with mock.patch.object(duration, "chrome_available", lambda: True):
+            code, out = run_cli(self.tree.root, "duration")
+        self.assertEqual(code, 2, out)
+        self.assertIn("duration: ", out)
 
     def test_without_chrome_it_skips_and_exits_0(self):
         self.tree.write("cursor", "01-a.json", ep_notes("w", id="a", order=1))

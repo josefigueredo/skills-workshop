@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-import os
 import re
 import subprocess
 import tempfile
@@ -11,8 +10,8 @@ from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
 from ws import bundle, schema
+from ws.chrome import chrome_available, chrome_path
 
-DEFAULT_CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 ENGINE_SCRIPTS = ("nav.js", "render.js", "animate.js")
 WORDS_PER_MINUTE = 150
 MIN_MS, MAX_MS = 6 * 60000, 12 * 60000
@@ -32,14 +31,6 @@ document.getElementById("result").textContent = JSON.stringify(out);
 </script>
 </body></html>
 """
-
-
-def chrome_path() -> str:
-    return os.environ.get("CHROME", DEFAULT_CHROME)
-
-
-def chrome_available() -> bool:
-    return Path(chrome_path()).exists()
 
 
 def narration_words(episode: dict) -> int:
@@ -97,23 +88,34 @@ def report(root, episode_id: Optional[str] = None, emit: Callable = print,
     if not chrome_available():
         emit("duration: skipped, Chrome not found at %s (set CHROME)" % chrome_path())
         return 0
-    episodes = [schema.load(p) for p in schema.episode_files(Path(root))]
-    if episode_id is not None:
-        episodes = [e for e in episodes if e.get("id") == episode_id]
-        if not episodes:
-            emit("duration: no episode with id %r" % episode_id)
-            return 2
-    episodes.sort(key=lambda e: (str(e.get("series")), e.get("order", 0)))
-    measured = (measure_fn or measure)(root, episodes)
+    try:
+        episodes = [schema.load(p) for p in schema.episode_files(Path(root))]
+        if episode_id is not None:
+            episodes = [e for e in episodes if e.get("id") == episode_id]
+            if not episodes:
+                emit("duration: no episode with id %r" % episode_id)
+                return 2
+        episodes.sort(key=lambda e: (str(e.get("series")), e.get("order", 0)))
+        measured = (measure_fn or measure)(root, episodes)
+        rows = []
+        for ep in episodes:
+            m = measured[ep["id"]]
+            words = narration_words(ep)
+            chapters = []
+            for ch, cm in zip(ep["chapters"], m["chapters"]):
+                cw = sum(len(s["notes"].split()) for s in ch["steps"] if isinstance(s.get("notes"), str))
+                chapters.append((ch["id"], cm["ms"], cw))
+            rows.append((ep, m["total"], words, chapters))
+    except (subprocess.SubprocessError, OSError, RuntimeError, ValueError, KeyError, TypeError) as exc:
+        emit("duration: %s: %s" % (type(exc).__name__, exc))
+        return 2
     bad = []
-    for ep in episodes:
-        m = measured[ep["id"]]
-        total = m["total"] + narration_ms(narration_words(ep))
+    for ep, screen, words, chapters in rows:
+        total = screen + narration_ms(words)
         intro = ep.get("order") == 0
-        emit(_line(ep["id"], m["total"], narration_words(ep)) + ("  (setup intro, not range-checked)" if intro else ""))
-        for ch, cm in zip(ep["chapters"], m["chapters"]):
-            words = sum(len(s["notes"].split()) for s in ch["steps"] if isinstance(s.get("notes"), str))
-            emit("  " + _line(ch["id"], cm["ms"], words))
+        emit(_line(ep["id"], screen, words) + ("  (setup intro, not range-checked)" if intro else ""))
+        for cid, cms, cw in chapters:
+            emit("  " + _line(cid, cms, cw))
         if not intro and not (MIN_MS <= total <= MAX_MS):
             bad.append((ep["id"], total))
     for ep_id, total in bad:

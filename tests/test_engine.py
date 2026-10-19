@@ -9,11 +9,11 @@ from html import unescape
 from pathlib import Path
 
 from tests.helpers import ROOT
+from ws.chrome import chrome_available, chrome_path
 
-DEFAULT_CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-CHROME = os.environ.get("CHROME", DEFAULT_CHROME)
+CHROME = chrome_path()
 HARNESS = ROOT / "tests" / "js" / "harness.html"
-HAVE_CHROME = Path(CHROME).exists()
+HAVE_CHROME = chrome_available()
 RENDER_TESTS = 20  # exact count: a test that silently fails to register must show up
 ANIMATE_TESTS = 23
 PROTOCOL_TESTS = 59
