@@ -87,7 +87,7 @@ Si tu episodio necesita estado extra (una rama, un reporte), ponelo en `demo/pre
 Dos cuidados:
 
 - **Nunca captures `git log` ni `git show` sobre el clon de una skill**: muestran el autor real del commit y es un dato personal. Si necesitás mostrar historia, que sea de `~/mi-servicio` (autor «Demo»).
-- Dentro de la captura el `python` del HOME real no está en el PATH: los pasos usan `/usr/bin/python3`.
+- Dentro de la captura el PATH tiene solo el `python3` del sistema o de Homebrew, nunca uno dentro de tu carpeta personal: los pasos usan `/usr/bin/python3`.
 
 ## Los comandos
 
