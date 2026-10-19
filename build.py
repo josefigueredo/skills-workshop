@@ -47,6 +47,37 @@ def cmd_check(args) -> int:
     return 0
 
 
+def cmd_build(args) -> int:
+    from ws import bundle, privacy, schema
+
+    root = Path(args.root)
+    problems = schema.check_tree(root)
+    if problems:
+        for p in problems:
+            print(p)
+        print("%d problem(s): nothing written" % len(problems))
+        return 1
+    try:
+        rendered = bundle.render(root)
+        hits = privacy.scan([root / "episodes", root / "demo"])
+        for name, text in rendered.items():
+            hits.extend(privacy.scan_text(text, "dist/" + name))
+    except bundle.BundleError as exc:
+        print("build: %s" % exc)
+        return 1
+    except ValueError as exc:
+        sys.stderr.write("build: %s\n" % exc)
+        return 2
+    for h in hits:
+        print(h)
+    if hits:
+        print("%d privacy hit(s): nothing written" % len(hits))
+        return 1
+    paths = bundle.write(root, rendered)
+    print("ok: wrote %s" % ", ".join(p.name for p in paths))
+    return 0
+
+
 def cmd_capture(args) -> int:
     from ws import capture, schema
 
@@ -66,6 +97,8 @@ def make_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("validate", help="validate episode scripts").set_defaults(func=cmd_validate)
     sub.add_parser("check", help="privacy scan of episodes/, demo/, dist/").set_defaults(func=cmd_check)
+    sub.add_parser("build", help="validate, bundle into dist/, privacy-check; writes only if all pass") \
+        .set_defaults(func=cmd_build)
     cap = sub.add_parser("capture", help="re-run `real` terminal steps in a fake HOME")
     cap.add_argument("--episode", metavar="ID", help="capture only this episode id")
     cap.set_defaults(func=cmd_capture)

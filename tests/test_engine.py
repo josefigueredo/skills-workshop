@@ -16,7 +16,7 @@ HARNESS = ROOT / "tests" / "js" / "harness.html"
 HAVE_CHROME = Path(CHROME).exists()
 RENDER_TESTS = 15  # exact count: a test that silently fails to register must show up
 ANIMATE_TESTS = 21
-PROTOCOL_TESTS = 50
+PROTOCOL_TESTS = 52
 CONTROL_JS = ROOT / "engine" / "control.js"
 SKIP_MSG = "Chrome not found at %s (set CHROME to run the JS suites)" % CHROME
 

@@ -1,0 +1,1158 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taller de skills</title>
+<!-- Template: build inlines tokens.css + screens.css at CSS, the episodes of ONE series
+     as <script type="application/json" id="episodes">[…]</script> at EPISODES, and
+     nav.js, render.js, animate.js, stage.js at JS. No external references. -->
+<style>
+/* Every colour, font and size of the stage. When Cursor or the terminal change, edit here.
+   Sizes are for the fixed 1600x900 canvas (the stage scales it). */
+:root {
+  /* canvas */
+  --ws-w: 1600px;
+  --ws-h: 900px;
+
+  /* fonts */
+  --ws-font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --ws-font-mono: "SF Mono", Menlo, Monaco, "Courier New", monospace;
+  --ws-fs: 15px;          /* Cursor body text */
+  --ws-fs-sm: 13.5px;     /* sidebar, tabs, footers */
+  --ws-fs-xs: 12.5px;     /* section labels, ages */
+  --ws-fs-h4: 19px;       /* say #### heading */
+  --ws-fs-mono: 13.5px;   /* code, chips, zsh */
+  --ws-fs-term: 16px;     /* personal terminal and Claude Code */
+  --ws-lh: 1.6;
+  --ws-lh-mono: 1.55;
+  --ws-lh-tight: 1.3;     /* user label block */
+  --ws-lh-list: 2;        /* file tree, Open Tabs */
+  --ws-caret-w: .6em;     /* terminal caret block */
+
+  /* spacing and radii */
+  --ws-gap: 12px;
+  --ws-pad: 18px;
+  --ws-pad-sm: 8px;
+  --ws-pad-xs: 4px;
+  --ws-radius: 12px;
+  --ws-radius-sm: 6px;
+  --ws-radius-xs: 4px;
+  --ws-line: 1px;
+
+  /* window chrome */
+  --ws-dot: 12px;
+  --ws-dot-r: #ff5f57;
+  --ws-dot-y: #febc2e;
+  --ws-dot-g: #28c840;
+
+  /* Cursor, light theme */
+  --ws-c-bg: #ffffff;
+  --ws-c-side: #f3f3f3;
+  --ws-c-line: #e6e6e6;
+  --ws-c-tx: #1d1d1f;
+  --ws-c-tx2: #3a3a3c;
+  --ws-c-mut: #7a7a7a;
+  --ws-c-faint: #a0a0a0;
+  --ws-c-sel: #e3e3e3;
+  --ws-c-chip: #f2f2f2;
+  --ws-c-code: #efefef;
+  --ws-c-send-bg: #111111;
+  --ws-c-send-fg: #ffffff;
+  --ws-c-plus: #1a7f37;
+  --ws-c-avatar: #8a7b6b;
+  --ws-c-shadow: 0 1px 4px rgba(0, 0, 0, .06);
+  --ws-c-sidebar-w: 250px;
+  --ws-c-right-w: 680px;
+  --ws-c-tree-w: 230px;
+  --ws-c-zsh-h: 400px;
+  --ws-c-opentabs-w: 270px;
+  --ws-c-top-h: 40px;
+  --ws-c-tabs-h: 40px;
+  --ws-c-avatar-s: 26px;
+  --ws-c-send-s: 22px;
+  --ws-c-preview-fs: 28px;
+
+  /* zsh prompt segments inside Cursor (light) */
+  --ws-z-bg: #ffffff;
+  --ws-z-tx: #1d1d1f;
+  --ws-z-apple-bg: #ffffff;
+  --ws-z-apple-fg: #111111;
+  --ws-z-path-bg: #1f4f8f;
+  --ws-z-path-fg: #ffffff;
+  --ws-z-git-bg: #2a8a76;
+  --ws-z-git-fg: #ffffff;
+  --ws-z-sys-bg: #8e1f6f;
+  --ws-z-sys-fg: #ffffff;
+  --ws-z-time-bg: transparent;
+  --ws-z-time-fg: #1d1d1f;
+  --ws-z-fill: #7a7a7a;
+  --ws-z-ok: #2ea043;
+  --ws-z-out: #3a3a3c;
+
+  /* personal terminal (dark) */
+  --ws-t-bg: #252830;
+  --ws-t-bar: #2d3139;
+  --ws-t-bar-fg: #c9ced8;
+  --ws-t-tx: #d7dae0;
+  --ws-t-mut: #8b919c;
+  --ws-t-cmd: #79c0ff;
+  --ws-t-ok: #7ee000;
+  --ws-t-caret: #d7dae0;
+  --ws-t-apple-bg: #d0d4db;
+  --ws-t-apple-fg: #111111;
+  --ws-t-path-bg: #86a6cc;
+  --ws-t-path-fg: #1b2433;
+  --ws-t-git-bg: #2f8f8a;
+  --ws-t-git-fg: #ffffff;
+  --ws-t-sys-bg: #b994c9;
+  --ws-t-sys-fg: #1b1b22;
+  --ws-t-time-bg: #d6d9df;
+  --ws-t-time-fg: #111111;
+  --ws-t-fill: #5d6370;
+  --ws-t-bar-h: 34px;
+  --ws-seg-slant: 8px;
+  --ws-fill-w: 2px;       /* dotted fill between prompt segments */
+
+  /* Claude Code tab */
+  --ws-cc-accent: #d97757;
+  --ws-cc-ok: #3fb950;
+  --ws-cc-user: #9aa0aa;
+  --ws-cc-box: #5d6370;
+  --ws-cc-gutter: 2ch;    /* width of the ⏺ / ⎿ / > gutter */
+
+  /* macOS approval window */
+  --ws-a-scrim: rgba(0, 0, 0, .28);
+  --ws-a-bg: #ececec;
+  --ws-a-tx: #1d1d1f;
+  --ws-a-mut: #4a4a4c;
+  --ws-a-line: #d2d2d2;
+  --ws-a-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+  --ws-a-w: 560px;
+  --ws-a-radius: 14px;
+  --ws-a-icon: 56px;
+  --ws-a-icon-bg: #2d6cdf;
+  --ws-a-btn-bg: #ffffff;
+  --ws-a-btn-fg: #1d1d1f;
+  --ws-a-ok-bg: #0a6cf0;
+  --ws-a-ok-fg: #ffffff;
+  --ws-a-fs-title: 17px;
+  --ws-a-fs: 14px;
+  --ws-a-lh: 1.45;
+
+  /* chapter card */
+  --ws-k-grad: linear-gradient(135deg, #2d6cdf, #7a4fe0);
+  --ws-k-fg: #ffffff;
+  --ws-k-fs-kicker: 22px;
+  --ws-k-fs-title: 88px;
+  --ws-k-fs-sub: 30px;
+  --ws-k-pad: 140px;
+  --ws-k-sub-w: 1100px;
+  --ws-k-kicker-track: .12em;
+  --ws-k-kicker-op: .8;
+  --ws-k-sub-op: .9;
+  --ws-k-title-mt: .2em;
+  --ws-k-title-mb: .3em;
+  --ws-k-lh-title: 1.05;
+  --ws-k-lh-sub: 1.35;
+}
+
+/* Stage screens: card, cursor-full, cursor-agent, terminal, claude-code, approve overlay.
+   Values come from tokens.css; this file only lays things out. */
+.ws-screen {
+  position: relative; box-sizing: border-box; width: var(--ws-w); height: var(--ws-h);
+  overflow: hidden; font-family: var(--ws-font-ui);
+}
+.ws-screen *, .ws-screen *::before, .ws-screen *::after { box-sizing: border-box; }
+.ws-empty { background: var(--ws-c-bg); }
+.ws-mut { color: var(--ws-c-mut); }
+
+/* bottom-anchored area: short content on top, long content shows its newest part */
+.ws-scroll { display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; min-height: 0; }
+.ws-flow { flex: 1 0 auto; }
+
+.ws-dots { display: flex; gap: calc(var(--ws-dot) / 2); }
+.ws-dot { display: inline-block; width: var(--ws-dot); height: var(--ws-dot); border-radius: 50%; }
+.ws-dot-r { background: var(--ws-dot-r); }
+.ws-dot-y { background: var(--ws-dot-y); }
+.ws-dot-g { background: var(--ws-dot-g); }
+
+/* ---------- chapter card ---------- */
+.ws-card { background: var(--ws-k-grad); color: var(--ws-k-fg); display: flex; align-items: center; }
+.ws-card-inner { padding: 0 var(--ws-k-pad); }
+.ws-card-kicker { font-size: var(--ws-k-fs-kicker); letter-spacing: var(--ws-k-kicker-track); text-transform: uppercase; opacity: var(--ws-k-kicker-op); }
+.ws-card-title { margin: var(--ws-k-title-mt) 0 var(--ws-k-title-mb); font-size: var(--ws-k-fs-title); line-height: var(--ws-k-lh-title); font-weight: 700; }
+.ws-card-sub { margin: 0; font-size: var(--ws-k-fs-sub); opacity: var(--ws-k-sub-op); max-width: var(--ws-k-sub-w); line-height: var(--ws-k-lh-sub); }
+
+/* ---------- Cursor ---------- */
+.ws-cursor { display: flex; background: var(--ws-c-bg); color: var(--ws-c-tx); font-size: var(--ws-fs); line-height: var(--ws-lh); }
+.ws-sb {
+  width: var(--ws-c-sidebar-w); flex: none; background: var(--ws-c-side); border-right: var(--ws-line) solid var(--ws-c-line);
+  display: flex; flex-direction: column; padding: var(--ws-gap) 0; font-size: var(--ws-fs-sm); color: var(--ws-c-tx2);
+}
+.ws-sb .ws-dots { padding: 0 var(--ws-gap) var(--ws-pad); }
+.ws-sb-nav { padding: var(--ws-pad-xs) var(--ws-gap); }
+.ws-sb-sec { padding: var(--ws-pad) var(--ws-gap) var(--ws-pad-xs); color: var(--ws-c-mut); font-size: var(--ws-fs-xs); }
+.ws-sb-repo { padding: var(--ws-pad-xs) var(--ws-gap); }
+.ws-sb-chat {
+  display: flex; gap: var(--ws-pad-sm); justify-content: space-between;
+  margin: 0 var(--ws-pad-sm); padding: var(--ws-pad-xs) var(--ws-pad-sm) var(--ws-pad-xs) var(--ws-pad);
+  border-radius: var(--ws-radius-sm);
+}
+.ws-sb-chat-t { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.ws-sb-chat b { font-weight: 400; color: var(--ws-c-mut); flex: none; }
+.ws-sb-chat.ws-on { background: var(--ws-c-sel); color: var(--ws-c-tx); }
+.ws-me { margin-top: auto; padding: var(--ws-gap); display: flex; align-items: center; gap: var(--ws-pad-sm); line-height: var(--ws-lh-tight); }
+.ws-avatar { width: var(--ws-c-avatar-s); height: var(--ws-c-avatar-s); border-radius: 50%; background: var(--ws-c-avatar); flex: none; }
+
+.ws-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ws-top {
+  height: var(--ws-c-top-h); flex: none; display: flex; align-items: center; padding: 0 var(--ws-pad);
+  font-size: var(--ws-fs-sm); color: var(--ws-c-tx2);
+}
+.ws-top-r { margin-left: auto; color: var(--ws-c-mut); font-size: var(--ws-fs-xs); white-space: pre; }
+.ws-conv { flex: 1; padding: 0 var(--ws-pad); }
+.ws-conv .ws-flow { display: flex; flex-direction: column; gap: var(--ws-gap); padding-bottom: var(--ws-gap); }
+.ws-ask {
+  border: var(--ws-line) solid var(--ws-c-line); border-radius: var(--ws-radius); padding: var(--ws-gap) var(--ws-gap) var(--ws-pad-sm);
+  box-shadow: var(--ws-c-shadow); background: var(--ws-c-bg); white-space: pre-wrap;
+}
+.ws-ask-row { display: flex; align-items: center; gap: var(--ws-gap); margin-top: var(--ws-pad-sm); color: var(--ws-c-mut); font-size: var(--ws-fs-sm); white-space: normal; }
+.ws-send {
+  margin-left: auto; width: var(--ws-c-send-s); height: var(--ws-c-send-s); border-radius: 50%;
+  background: var(--ws-c-send-bg); color: var(--ws-c-send-fg); display: flex; align-items: center; justify-content: center; font-size: var(--ws-fs-xs);
+}
+.ws-worked { color: var(--ws-c-mut); }
+.ws-tool {
+  align-self: flex-start; font-family: var(--ws-font-mono); font-size: var(--ws-fs-mono); color: var(--ws-c-tx2);
+  background: var(--ws-c-chip); border-radius: var(--ws-radius-sm); padding: var(--ws-pad-xs) var(--ws-pad-sm);
+  white-space: pre-wrap; word-break: break-word;
+}
+.ws-ran { display: flex; flex-direction: column; gap: var(--ws-pad-xs); }
+.ws-ran-out {
+  font-family: var(--ws-font-mono); font-size: var(--ws-fs-mono); line-height: var(--ws-lh-mono); color: var(--ws-z-out);
+  border: var(--ws-line) solid var(--ws-c-line); border-radius: var(--ws-radius-sm); padding: var(--ws-pad-sm) var(--ws-gap);
+}
+.ws-ran-out .ws-out { white-space: pre-wrap; word-break: break-word; }
+.ws-say p, .ws-say ul, .ws-say h4 { margin: 0 0 var(--ws-pad-sm); }
+.ws-say > :last-child { margin-bottom: 0; }
+.ws-say h4 { font-size: var(--ws-fs-h4); margin-top: var(--ws-pad-xs); }
+.ws-say ul { padding-left: var(--ws-pad); }
+.ws-cursor code {
+  font-family: var(--ws-font-mono); font-size: var(--ws-fs-mono); background: var(--ws-c-code);
+  border-radius: var(--ws-radius-xs); padding: 0 var(--ws-pad-xs);
+}
+.ws-followup {
+  flex: none; margin: var(--ws-pad-sm) var(--ws-pad) var(--ws-pad-xs); border: var(--ws-line) solid var(--ws-c-line);
+  border-radius: var(--ws-radius); padding: var(--ws-pad-sm) var(--ws-gap); display: flex; color: var(--ws-c-faint);
+  font-size: var(--ws-fs-sm); box-shadow: var(--ws-c-shadow); white-space: pre;
+}
+.ws-followup-m { margin-left: auto; color: var(--ws-c-mut); }
+.ws-foot { flex: none; display: flex; gap: var(--ws-pad); padding: var(--ws-pad-xs) var(--ws-pad) var(--ws-gap); color: var(--ws-c-mut); font-size: var(--ws-fs-sm); }
+
+/* right panel (cursor-full) */
+.ws-rp { width: var(--ws-c-right-w); flex: none; border-left: var(--ws-line) solid var(--ws-c-line); display: flex; flex-direction: column; font-size: var(--ws-fs-sm); }
+.ws-rp-tabs { height: var(--ws-c-tabs-h); flex: none; display: flex; align-items: center; gap: var(--ws-gap); padding: 0 var(--ws-gap); color: var(--ws-c-mut); }
+.ws-tab.ws-on { background: var(--ws-c-chip); border-radius: var(--ws-radius-sm); padding: 0 var(--ws-pad-sm); font-style: italic; color: var(--ws-c-tx); }
+.ws-rp-sub {
+  height: var(--ws-c-tabs-h); flex: none; display: flex; align-items: center; padding: 0 var(--ws-gap);
+  color: var(--ws-c-tx2); border-top: var(--ws-line) solid var(--ws-c-line); border-bottom: var(--ws-line) solid var(--ws-c-line); white-space: pre;
+}
+.ws-rp-sub-r { margin-left: auto; display: flex; gap: var(--ws-pad-sm); color: var(--ws-c-mut); }
+.ws-pill { background: var(--ws-c-chip); border-radius: var(--ws-radius-sm); padding: 0 var(--ws-pad-sm); color: var(--ws-c-tx); }
+.ws-rp-files { flex: 1; min-height: 0; display: flex; }
+.ws-preview { flex: 1; padding: var(--ws-pad); }
+.ws-preview h1 { margin: var(--ws-pad-sm) 0 0; font-size: var(--ws-c-preview-fs); }
+.ws-tree { width: var(--ws-c-tree-w); flex: none; border-left: var(--ws-line) solid var(--ws-c-line); padding: var(--ws-gap) var(--ws-pad-sm); color: var(--ws-c-tx2); line-height: var(--ws-lh-list); }
+.ws-tree-h { color: var(--ws-c-mut); padding: 0 var(--ws-pad-xs); }
+.ws-tree-i { padding: 0 var(--ws-pad-xs); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ws-zsh { height: var(--ws-c-zsh-h); flex: none; border-top: var(--ws-line) solid var(--ws-c-line); background: var(--ws-z-bg); display: flex; flex-direction: column; }
+.ws-zsh-tabs { flex: none; display: flex; align-items: center; gap: var(--ws-gap); padding: var(--ws-pad-sm) var(--ws-gap) 0; color: var(--ws-c-mut); }
+.ws-zsh-title { flex: none; padding: var(--ws-pad-sm) var(--ws-gap); color: var(--ws-c-tx2); }
+.ws-zsh-body {
+  flex: 1; padding: 0 var(--ws-gap) var(--ws-pad-sm); font-family: var(--ws-font-mono); font-size: var(--ws-fs-mono);
+  line-height: var(--ws-lh-mono); color: var(--ws-z-tx);
+}
+
+/* Open Tabs column (cursor-agent) */
+.ws-opentabs { width: var(--ws-c-opentabs-w); flex: none; padding: var(--ws-c-top-h) var(--ws-pad) var(--ws-pad); color: var(--ws-c-tx2); font-size: var(--ws-fs-sm); line-height: var(--ws-lh-list); }
+.ws-ot-h { color: var(--ws-c-mut); font-size: var(--ws-fs-xs); margin-top: var(--ws-gap); }
+.ws-ot-h:first-child { margin-top: 0; }
+.ws-plus { color: var(--ws-c-plus); }
+
+/* ---------- shell lines (zsh in Cursor and personal terminal) ---------- */
+.ws-prompt { display: flex; align-items: center; white-space: nowrap; margin-top: var(--ws-pad-xs); }
+.ws-seg {
+  display: inline-block; padding: 0 calc(var(--ws-seg-slant) + var(--ws-pad-xs));
+  clip-path: polygon(var(--ws-seg-slant) 0, 100% 0, calc(100% - var(--ws-seg-slant)) 100%, 0 100%);
+  margin-right: calc(var(--ws-seg-slant) / -2);
+}
+.ws-seg-apple { clip-path: polygon(0 0, 100% 0, calc(100% - var(--ws-seg-slant)) 100%, 0 100%); }
+.ws-seg-fill { flex: 1; align-self: center; height: 0; margin: 0 var(--ws-pad-sm); border-bottom: var(--ws-fill-w) dotted; }
+.ws-cmdline, .ws-out { white-space: pre-wrap; word-break: break-word; }
+.ws-caret { display: inline-block; width: var(--ws-caret-w); }
+
+.ws-zsh .ws-seg-apple { background: var(--ws-z-apple-bg); color: var(--ws-z-apple-fg); }
+.ws-zsh .ws-seg-path { background: var(--ws-z-path-bg); color: var(--ws-z-path-fg); }
+.ws-zsh .ws-seg-git { background: var(--ws-z-git-bg); color: var(--ws-z-git-fg); }
+.ws-zsh .ws-seg-sys { background: var(--ws-z-sys-bg); color: var(--ws-z-sys-fg); }
+.ws-zsh .ws-seg-time { background: var(--ws-z-time-bg); color: var(--ws-z-time-fg); }
+.ws-zsh .ws-seg-fill { color: var(--ws-z-fill); }
+.ws-zsh .ws-caret-prompt { color: var(--ws-z-ok); font-weight: 700; }
+.ws-zsh .ws-out { color: var(--ws-z-out); }
+.ws-zsh .ws-caret { outline: var(--ws-line) solid var(--ws-z-tx); }
+
+/* ---------- terminal theme (personal terminal and Claude Code) ---------- */
+.ws-term-theme { background: var(--ws-t-bg); color: var(--ws-t-tx); display: flex; flex-direction: column; font-size: var(--ws-fs-term); }
+.ws-tbar {
+  height: var(--ws-t-bar-h); flex: none; background: var(--ws-t-bar); color: var(--ws-t-bar-fg); display: flex;
+  align-items: center; gap: var(--ws-gap); padding: 0 var(--ws-gap); font-size: var(--ws-fs-sm);
+}
+.ws-term-body, .ws-cc-body { flex: 1; padding: var(--ws-pad-sm) var(--ws-gap); font-family: var(--ws-font-mono); line-height: var(--ws-lh-mono); }
+.ws-term-theme .ws-seg-apple { background: var(--ws-t-apple-bg); color: var(--ws-t-apple-fg); }
+.ws-term-theme .ws-seg-path { background: var(--ws-t-path-bg); color: var(--ws-t-path-fg); }
+.ws-term-theme .ws-seg-git { background: var(--ws-t-git-bg); color: var(--ws-t-git-fg); }
+.ws-term-theme .ws-seg-sys { background: var(--ws-t-sys-bg); color: var(--ws-t-sys-fg); }
+.ws-term-theme .ws-seg-time { background: var(--ws-t-time-bg); color: var(--ws-t-time-fg); }
+.ws-term-theme .ws-seg-fill { color: var(--ws-t-fill); }
+.ws-term-theme .ws-caret-prompt { color: var(--ws-t-ok); font-weight: 700; }
+.ws-term-theme .ws-cmd { color: var(--ws-t-cmd); }
+.ws-term-theme .ws-caret { background: var(--ws-t-caret); }
+.ws-plain-say p, .ws-plain-say ul, .ws-plain-say h4 { margin: 0; font-size: inherit; }
+.ws-plain-say ul { padding-left: var(--ws-pad); }
+.ws-term-theme code { font-family: inherit; color: var(--ws-t-cmd); }
+
+/* Claude Code transcript */
+.ws-cc-body .ws-flow { display: flex; flex-direction: column; gap: var(--ws-gap); }
+.ws-cc-head {
+  align-self: flex-start; border: var(--ws-line) solid var(--ws-cc-accent); border-radius: var(--ws-radius-sm);
+  padding: var(--ws-pad-sm) var(--ws-pad); margin-bottom: var(--ws-pad-sm);
+}
+.ws-cc-head .ws-mut { color: var(--ws-t-mut); }
+.ws-cc-brand { color: var(--ws-cc-accent); font-weight: 700; }
+.ws-cc-line { display: flex; white-space: pre-wrap; word-break: break-word; }
+.ws-cc-g { flex: none; white-space: pre; width: var(--ws-cc-gutter); }
+.ws-cc-ask { color: var(--ws-cc-user); }
+.ws-cc-tool .ws-cc-g, .ws-cc-say > .ws-cc-g { color: var(--ws-cc-ok); }
+.ws-cc-out { color: var(--ws-t-mut); padding-left: var(--ws-cc-gutter); }
+.ws-cc-worked { color: var(--ws-cc-accent); }
+.ws-cc-md p, .ws-cc-md ul, .ws-cc-md h4 { margin: 0 0 var(--ws-pad-xs); font-size: inherit; }
+.ws-cc-md ul { padding-left: var(--ws-pad); }
+.ws-cc-input {
+  flex: none; display: flex; margin: 0 var(--ws-gap) var(--ws-gap); padding: var(--ws-pad-sm) var(--ws-gap);
+  border: var(--ws-line) solid var(--ws-cc-box); border-radius: var(--ws-radius-sm); font-family: var(--ws-font-mono);
+}
+
+/* ---------- macOS approval window ---------- */
+.ws-approve { position: absolute; inset: 0; background: var(--ws-a-scrim); display: flex; align-items: center; justify-content: center; font-family: var(--ws-font-ui); }
+.ws-approve[hidden] { display: none; }
+.ws-approve-win {
+  width: var(--ws-a-w); background: var(--ws-a-bg); color: var(--ws-a-tx); border-radius: var(--ws-a-radius);
+  box-shadow: var(--ws-a-shadow); padding: var(--ws-pad); display: flex; flex-direction: column; align-items: center;
+  font-size: var(--ws-a-fs); line-height: var(--ws-a-lh);
+}
+.ws-approve-icon { width: var(--ws-a-icon); height: var(--ws-a-icon); border-radius: var(--ws-radius); background: var(--ws-a-icon-bg); margin-bottom: var(--ws-gap); }
+.ws-approve-title { font-weight: 700; font-size: var(--ws-a-fs-title); text-align: center; margin-bottom: var(--ws-pad-sm); }
+.ws-approve-lines {
+  align-self: stretch; color: var(--ws-a-mut); border-top: var(--ws-line) solid var(--ws-a-line); border-bottom: var(--ws-line) solid var(--ws-a-line);
+  padding: var(--ws-pad-sm) 0; margin-bottom: var(--ws-pad); white-space: pre-wrap; word-break: break-word;
+}
+.ws-approve-btns { align-self: stretch; display: flex; gap: var(--ws-gap); }
+.ws-btn {
+  flex: 1; font: inherit; border: var(--ws-line) solid var(--ws-a-line); border-radius: var(--ws-radius-sm);
+  padding: var(--ws-pad-xs) var(--ws-gap); background: var(--ws-a-btn-bg); color: var(--ws-a-btn-fg);
+}
+.ws-btn-ok { background: var(--ws-a-ok-bg); color: var(--ws-a-ok-fg); border-color: var(--ws-a-ok-bg); }
+
+</style>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+  #ws-stage-root { position: fixed; inset: 0; background: #000; }
+  /* the 1600x900 canvas, centred and scaled by stage.js (letterboxed on black) */
+  #ws-frame { position: absolute; left: 50%; top: 50%; width: 1600px; height: 900px;
+              transform: translate(-50%, -50%); transform-origin: 50% 50%; background: #000; }
+  #ws-canvas { width: 1600px; height: 900px; }
+  #ws-blackout { position: absolute; inset: 0; background: #000; z-index: 10; }
+  #ws-blackout[hidden] { display: none; }
+  /* Fade-in of a card or an approve window, only while that step animates. */
+  @keyframes ws-fade-in { from { opacity: 0; } to { opacity: 1; } }
+  .ws-fade-in > .ws-card,
+  .ws-fade-in > .ws-screen > .ws-approve:not([hidden]) {
+    animation: ws-fade-in var(--ws-fade-ms, 250ms) ease-out forwards;
+  }
+</style>
+</head>
+<body>
+<div id="ws-stage-root">
+  <div id="ws-frame"><div id="ws-canvas"></div></div>
+  <div id="ws-blackout" hidden></div>
+</div>
+<script type="application/json" id="episodes">[]</script>
+<script>
+// Pure navigation over an episode: the global index is the flattened list of
+// (chapter card + its steps). No DOM, no state.
+var Nav = (function () {
+  function flatten(ep) {
+    var out = [];
+    (ep.chapters || []).forEach(function (ch, i) {
+      out.push({chapter: i, step: -1, kind: "card"});
+      (ch.steps || []).forEach(function (st, j) {
+        out.push({chapter: i, step: j, kind: st.type});
+      });
+    });
+    return out;
+  }
+
+  function clamp(ep, i) {
+    var last = flatten(ep).length - 1;
+    return Math.max(0, Math.min(Math.floor(i) || 0, Math.max(last, 0)));
+  }
+
+  function nextChapter(ep, i) {
+    var flat = flatten(ep);
+    i = clamp(ep, i);
+    for (var k = i + 1; k < flat.length; k++) {
+      if (flat[k].step === -1) return k;
+    }
+    return Math.max(flat.length - 1, 0);
+  }
+
+  function prevChapter(ep, i) {
+    var flat = flatten(ep);
+    i = clamp(ep, i);
+    var cur = i;
+    while (cur > 0 && flat[cur].step !== -1) cur--;
+    if (cur < i) return cur;
+    for (var k = i - 1; k >= 0; k--) {
+      if (flat[k].step === -1) return k;
+    }
+    return 0;
+  }
+
+  function position(ep, i) {
+    var flat = flatten(ep);
+    i = clamp(ep, i);
+    var e = flat[i] || {chapter: 0, step: -1};
+    var ch = (ep.chapters || [])[e.chapter] || {};
+    return {chapter: e.chapter, step: e.step, total: flat.length, chapterTitle: ch.title};
+  }
+
+  return {flatten: flatten, clamp: clamp, nextChapter: nextChapter,
+          prevChapter: prevChapter, position: position};
+})();
+
+</script>
+<script>
+// Static render of the stage: Render.step(container, episode, index) replaces the
+// container's content with the FINISHED state of global index `index` (see nav.js).
+// Pure function of (episode, index): nothing is kept between calls.
+//
+// Screens are laid out for a fixed 1600x900 canvas (.ws-screen); the stage scales it.
+// All episode text goes through textContent / createTextNode; `say` markdown is parsed
+// into DOM nodes, never assigned as HTML.
+//
+// Animation hooks (for animate.js, which renders the finished state, hides, reveals):
+//   data-step="<j>"      on the root node of every applied step (j = index of the step
+//                        inside its chapter). Nothing else carries data-step. Steps may
+//                        live in different areas (term on cursor-full sits in the zsh
+//                        panel, approve is an overlay at the end of the screen root), so
+//                        document order is not step order: select by value.
+//   data-anim="type"     the element holding exactly the text that gets typed
+//                        (ask text, term command).
+//   data-anim="line"     an output line, a say paragraph / heading / list item; revealed
+//                        one at a time.
+//   data-anim="node"     tool, worked and approve nodes (and the "▸ Ran · cmd" chip and
+//                        the "⏺ Bash(cmd)" line); revealed whole.
+//   hidden               an approve step that is not the current index keeps its node
+//                        (so the step count holds) but is hidden: the window closed.
+//   data-anim="idle"     the wrapper of the waiting prompt (prompt line + "❯ █") at the
+//                        end of the terminal and of the cursor-full zsh panel. It is not
+//                        a step: hide it while a term step animates, show it at the end.
+// Unmarked descendants of a step root appear with the root; hooks inside one root are
+// revealed in document order. Chapter cards carry no hooks and appear whole.
+var Render = (function () {
+  var USER = "Persona del equipo";
+  var TEAM = "Equipo";
+  var MODEL = "Sonnet 5.5";
+  var TIME = "11:30";
+  var BRANCH = "main";
+
+  // ---- DOM helpers (text only) ----
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined && text !== null) n.textContent = String(text);
+    return n;
+  }
+  function add(parent) {
+    for (var i = 1; i < arguments.length; i++) {
+      if (arguments[i]) parent.appendChild(arguments[i]);
+    }
+    return parent;
+  }
+  function stepNode(tag, cls, j, anim) {
+    var n = el(tag, cls);
+    n.setAttribute("data-step", String(j));
+    if (anim) n.setAttribute("data-anim", anim);
+    return n;
+  }
+  function anim(node, kind) { node.setAttribute("data-anim", kind); return node; }
+  function dots() {
+    return add(el("div", "ws-dots"), el("i", "ws-dot ws-dot-r"), el("i", "ws-dot ws-dot-y"),
+               el("i", "ws-dot ws-dot-g"));
+  }
+  // A bottom-anchored area: short content sits on top, long content shows its newest part.
+  function scroller(cls) {
+    var outer = el("div", "ws-scroll " + cls);
+    var flow = el("div", "ws-flow");
+    outer.appendChild(flow);
+    return {outer: outer, flow: flow};
+  }
+
+  // ---- tiny markdown: **b**, `code`, "- " lists, "#### " heading, blank line = paragraph ----
+  function inline(parent, text) {
+    String(text).split(/(\*\*[^*]+?\*\*|`[^`]+`)/).forEach(function (part) {
+      if (!part) return;
+      if (/^\*\*[^*]+?\*\*$/.test(part)) parent.appendChild(el("strong", null, part.slice(2, -2)));
+      else if (/^`[^`]+`$/.test(part)) parent.appendChild(el("code", null, part.slice(1, -1)));
+      else parent.appendChild(document.createTextNode(part));
+    });
+    return parent;
+  }
+  function markdown(md) {
+    var frag = document.createDocumentFragment();
+    var para = [], list = null;
+    function flushPara() {
+      if (para.length) frag.appendChild(anim(inline(el("p"), para.join(" ")), "line"));
+      para = [];
+    }
+    String(md || "").split("\n").forEach(function (raw) {
+      var line = raw.replace(/\s+$/, "");
+      if (/^- /.test(line)) {
+        flushPara();
+        if (!list) { list = el("ul"); frag.appendChild(list); }
+        list.appendChild(anim(inline(el("li"), line.slice(2)), "line"));
+        return;
+      }
+      list = null;
+      if (/^#### /.test(line)) {
+        flushPara();
+        frag.appendChild(anim(inline(el("h4"), line.slice(5)), "line"));
+      } else if (!line) {
+        flushPara();
+      } else {
+        para.push(line);
+      }
+    });
+    flushPara();
+    return frag;
+  }
+
+  // ---- shared pieces ----
+  function workedText(st) { return "Worked for " + (st.seconds || 0) + "s"; }
+  function inRepo(cwd, repo) {
+    var home = "~/" + repo;
+    return cwd === home || cwd.indexOf(home + "/") === 0;
+  }
+  // Two-line zsh prompt, first line: apple, folder, branch, dotted fill, system, time.
+  function promptLine(cwd, repo) {
+    var p = el("div", "ws-prompt");
+    add(p, el("span", "ws-seg ws-seg-apple", ""), el("span", "ws-seg ws-seg-path", "▭ " + cwd));
+    if (inRepo(cwd, repo)) p.appendChild(el("span", "ws-seg ws-seg-git", "on ⑂ " + BRANCH));
+    add(p, el("span", "ws-seg-fill"), el("span", "ws-seg ws-seg-sys", "system ⌂"),
+        el("span", "ws-seg ws-seg-time", "at " + TIME + " ◷"));
+    return p;
+  }
+  function cmdLine(cmd) {
+    var l = el("div", "ws-cmdline");
+    add(l, el("span", "ws-caret-prompt", "❯ "), anim(el("span", "ws-cmd", cmd), "type"));
+    return l;
+  }
+  function idlePrompt(flow, cwd, repo) {
+    var l = el("div", "ws-cmdline");
+    add(l, el("span", "ws-caret-prompt", "❯ "), el("span", "ws-caret", " "));
+    flow.appendChild(add(anim(el("div", "ws-idle"), "idle"), promptLine(cwd, repo), l));
+  }
+  // A shell term step: prompt, typed command, output lines.
+  function shellStep(st, j, cwd, repo) {
+    var n = stepNode("div", "ws-shell-step", j);
+    add(n, promptLine(cwd, repo), cmdLine(st.cmd));
+    (st.out || []).forEach(function (o) { n.appendChild(anim(el("div", "ws-out", o), "line")); });
+    return n;
+  }
+  function approveOverlay(st, j, current) {
+    var ov = stepNode("div", "ws-approve", j, "node");
+    if (j !== current) ov.setAttribute("hidden", "");
+    var win = el("div", "ws-approve-win");
+    add(win, el("div", "ws-approve-icon"), el("div", "ws-approve-title", st.title));
+    var body = el("div", "ws-approve-lines");
+    (st.lines || []).forEach(function (l) { body.appendChild(el("div", "ws-approve-line", l)); });
+    var btns = add(el("div", "ws-approve-btns"), el("button", "ws-btn ws-btn-cancel", "Cancelar"),
+                   el("button", "ws-btn ws-btn-ok", st.button));
+    add(win, body, btns);
+    ov.appendChild(win);
+    return ov;
+  }
+  function chapterSteps(ch, last) { return (ch.steps || []).slice(0, last + 1); }
+
+  // ---- card ----
+  function card(ep, ci) {
+    var ch = ep.chapters[ci];
+    var root = el("div", "ws-screen ws-card");
+    var inner = el("div", "ws-card-inner");
+    add(inner, el("div", "ws-card-kicker", cardSkill(ep) + " · " + (ci + 1) + " de " + ep.chapters.length),
+        el("h1", "ws-card-title", ch.title),
+        ch.subtitle ? el("p", "ws-card-sub", ch.subtitle) : null);
+    root.appendChild(inner);
+    return root;
+  }
+  // Kicker name: the episode title (equals skill.repo for skill episodes; episode 0 has
+  // its own title).
+  function cardSkill(ep) { return ep.title || (ep.skill && ep.skill.repo) || ""; }
+
+  // ---- Cursor (full and agent-only) ----
+  function cursorSidebar(ep, ch) {
+    var ws = ep.workspace || {};
+    var sb = el("div", "ws-sb");
+    sb.appendChild(dots());
+    ["✎ New Chat", "⌕ Search", "◷ Automations", "⚙ Customize"].forEach(function (t) {
+      sb.appendChild(el("div", "ws-sb-nav", t));
+    });
+    add(sb, el("div", "ws-sb-sec", "Repositories"), el("div", "ws-sb-repo", "▭ " + (ws.repo || "")));
+    var cur = add(el("div", "ws-sb-chat ws-on"), el("span", "ws-sb-chat-t", ch.title), el("b", null, "now"));
+    sb.appendChild(cur);
+    (ws.chats || []).forEach(function (c) {
+      sb.appendChild(add(el("div", "ws-sb-chat"), el("span", "ws-sb-chat-t", c.title), el("b", null, c.age)));
+    });
+    var me = add(el("div", "ws-me"), el("div", "ws-avatar"),
+                 add(el("div", "ws-me-t"), el("div", null, USER), el("div", "ws-mut", TEAM)));
+    sb.appendChild(me);
+    return sb;
+  }
+  function modelRow() {
+    return add(el("div", "ws-ask-row"), el("span", null, "＋"), el("span", null, MODEL + " ⌄"),
+               el("span", "ws-send", "↑"));
+  }
+  function cursorMain(ch) {
+    var main = el("div", "ws-main");
+    var top = add(el("div", "ws-top"), el("span", null, ch.title), el("span", "ws-top-r", "IDE ↗  ···"));
+    var conv = scroller("ws-conv");
+    var fu = add(el("div", "ws-followup"), el("span", null, "＋  Send follow-up"),
+                 el("span", "ws-followup-m", MODEL + " ⌄"));
+    var foot = add(el("div", "ws-foot"), el("span", null, "⑂ " + BRANCH + " ⌄"), el("span", null, "▭ This Mac ⌄"));
+    add(main, top, conv.outer, fu, foot);
+    return {main: main, flow: conv.flow};
+  }
+  function cursorRight(ep) {
+    var ws = ep.workspace || {};
+    var rp = el("div", "ws-rp");
+    var tabs = add(el("div", "ws-rp-tabs"), el("span", "ws-tab ws-on", "README.md"), el("span", "ws-tab", "± Changes"),
+                   el("span", "ws-tab", "⊕ Browser"), el("span", "ws-tab", "✎ Canvas"), el("span", "ws-tab", "＋"));
+    var sub = add(el("div", "ws-rp-sub"), el("span", null, "←  →  README.md"),
+                  add(el("span", "ws-rp-sub-r"), el("span", "ws-pill", "Preview"), el("span", null, "Source")));
+    var files = el("div", "ws-rp-files");
+    var tree = add(el("div", "ws-tree"), el("div", "ws-tree-h", ws.repo || ""));
+    (ws.files || []).forEach(function (f) {
+      var isDir = String(f).indexOf(".") < 0;
+      tree.appendChild(el("div", "ws-tree-i" + (isDir ? " ws-dir" : ""), (isDir ? "▭ " : "◫ ") + f));
+    });
+    add(files, add(el("div", "ws-preview"), el("h1", null, ws.repo || "")), tree);
+    var zsh = el("div", "ws-zsh");
+    var zt = add(el("div", "ws-zsh-tabs"), el("span", "ws-pill", "▣ zsh"), el("span", null, "＋"));
+    var body = scroller("ws-zsh-body");
+    add(zsh, zt, el("div", "ws-zsh-title", "zsh"), body.outer);
+    add(rp, tabs, sub, files, zsh);
+    return {rp: rp, flow: body.flow};
+  }
+  function openTabs(ep) {
+    var repo = (ep.workspace || {}).repo || "";
+    var col = el("div", "ws-opentabs");
+    add(col, el("div", "ws-ot-h", "Open Tabs"));
+    ["◫ README.md", "⊕ Browser", "✎ Canvas", "▣ zsh"].forEach(function (t) { col.appendChild(el("div", "ws-ot-i", t)); });
+    col.appendChild(el("div", "ws-ot-h", "On " + repo));
+    col.appendChild(add(el("div", "ws-ot-i"), document.createTextNode("± Changes "), el("span", "ws-plus", "+0")));
+    ["⊕ Browser", "▣ 1 Terminal", "◫ Files"].forEach(function (t) { col.appendChild(el("div", "ws-ot-i", t)); });
+    return col;
+  }
+  function cursorScreen(ep, ch, last, full) {
+    var repo = (ep.workspace || {}).repo || "";
+    var root = el("div", "ws-screen ws-cursor " + (full ? "ws-cursor-full" : "ws-cursor-agent"));
+    var m = cursorMain(ch);
+    var right = full ? cursorRight(ep) : null;
+    add(root, cursorSidebar(ep, ch), m.main, full ? right.rp : openTabs(ep));
+    var cwd = "~/" + repo, overlays = [];
+    chapterSteps(ch, last).forEach(function (st, j) {
+      if (st.type === "ask") {
+        var a = stepNode("div", "ws-ask", j);
+        add(a, anim(el("div", "ws-ask-text", st.text), "type"), modelRow());
+        m.flow.appendChild(a);
+      } else if (st.type === "worked") {
+        m.flow.appendChild(add(stepNode("div", "ws-worked", j, "node"), document.createTextNode(workedText(st))));
+      } else if (st.type === "tool") {
+        m.flow.appendChild(add(stepNode("div", "ws-tool", j, "node"), document.createTextNode("▸ " + st.label)));
+      } else if (st.type === "say") {
+        m.flow.appendChild(add(stepNode("div", "ws-say", j), markdown(st.md)));
+      } else if (st.type === "term" && full) {
+        if (st.cwd) cwd = st.cwd;
+        right.flow.appendChild(shellStep(st, j, cwd, repo));
+      } else if (st.type === "term") {
+        var r = stepNode("div", "ws-ran", j);
+        r.appendChild(anim(el("div", "ws-tool", "▸ Ran · " + st.cmd), "node"));
+        var out = el("div", "ws-ran-out");
+        (st.out || []).forEach(function (o) { out.appendChild(anim(el("div", "ws-out", o), "line")); });
+        if (out.firstChild) r.appendChild(out);
+        m.flow.appendChild(r);
+      } else if (st.type === "approve") {
+        overlays.push(approveOverlay(st, j, last));
+      }
+    });
+    if (full) idlePrompt(right.flow, cwd, repo);
+    overlays.forEach(function (o) { root.appendChild(o); });
+    return root;
+  }
+
+  // ---- personal terminal ----
+  function termBar(title) {
+    return add(el("div", "ws-tbar"), dots(), el("span", "ws-tbar-t", title));
+  }
+  function terminalScreen(ep, ch, last) {
+    var repo = (ep.workspace || {}).repo || "";
+    var steps = chapterSteps(ch, last);
+    var cwd = "~", overlays = [];
+    steps.forEach(function (st) { if (st.type === "term" && st.cwd) cwd = st.cwd; });
+    var root = el("div", "ws-screen ws-term-theme ws-terminal");
+    var body = scroller("ws-term-body");
+    add(root, termBar("▭ " + cwd), body.outer);
+    cwd = "~";
+    steps.forEach(function (st, j) {
+      if (st.type === "term") {
+        if (st.cwd) cwd = st.cwd;
+        body.flow.appendChild(shellStep(st, j, cwd, repo));
+      } else if (st.type === "ask") {
+        body.flow.appendChild(add(stepNode("div", "ws-out ws-plain", j), anim(el("span", null, st.text), "type")));
+      } else if (st.type === "tool") {
+        body.flow.appendChild(add(stepNode("div", "ws-out ws-plain", j, "node"), document.createTextNode(st.label)));
+      } else if (st.type === "worked") {
+        body.flow.appendChild(add(stepNode("div", "ws-out ws-plain", j, "node"), document.createTextNode(workedText(st))));
+      } else if (st.type === "say") {
+        body.flow.appendChild(add(stepNode("div", "ws-plain-say", j), markdown(st.md)));
+      } else if (st.type === "approve") {
+        overlays.push(approveOverlay(st, j, last));
+      }
+    });
+    idlePrompt(body.flow, cwd, repo);
+    overlays.forEach(function (o) { root.appendChild(o); });
+    return root;
+  }
+
+  // ---- Claude Code tab (terminal theme, transcript layout) ----
+  function ccLine(gutter, cls) {
+    return add(el("div", "ws-cc-line " + (cls || "")), el("span", "ws-cc-g", gutter));
+  }
+  function claudeCodeScreen(ep, ch, last) {
+    var repo = (ep.workspace || {}).repo || "";
+    var root = el("div", "ws-screen ws-term-theme ws-claude-code");
+    var head = add(el("div", "ws-cc-head"), el("div", "ws-cc-brand", "✻ Claude Code"),
+                   el("div", "ws-mut", MODEL + " · ~/" + repo));
+    var body = scroller("ws-cc-body");
+    body.flow.appendChild(head);
+    var input = add(el("div", "ws-cc-input"), el("span", "ws-cc-g", "> "), el("span", "ws-caret", " "));
+    add(root, termBar("▭ ~/" + repo + " — claude"), body.outer, input);
+    var overlays = [];
+    chapterSteps(ch, last).forEach(function (st, j) {
+      var n;
+      if (st.type === "ask") {
+        n = add(stepNode("div", "ws-cc-line ws-cc-ask", j), el("span", "ws-cc-g", "> "), anim(el("span", null, st.text), "type"));
+      } else if (st.type === "term") {
+        n = stepNode("div", "ws-cc-block", j);
+        n.appendChild(anim(add(ccLine("⏺ ", "ws-cc-tool"), document.createTextNode("Bash(" + st.cmd + ")")), "node"));
+        (st.out || []).forEach(function (o, k) {
+          n.appendChild(anim(add(ccLine(k === 0 ? "⎿ " : "", "ws-cc-out"), document.createTextNode(o)), "line"));
+        });
+      } else if (st.type === "tool") {
+        n = add(stepNode("div", "ws-cc-line ws-cc-tool", j, "node"), el("span", "ws-cc-g", "⏺ "), document.createTextNode(st.label));
+      } else if (st.type === "say") {
+        n = add(stepNode("div", "ws-cc-line ws-cc-say", j), el("span", "ws-cc-g", "⏺ "),
+                add(el("div", "ws-cc-md"), markdown(st.md)));
+      } else if (st.type === "worked") {
+        n = add(stepNode("div", "ws-cc-line ws-cc-worked", j, "node"), el("span", "ws-cc-g", "✻ "),
+                document.createTextNode(workedText(st)));
+      } else if (st.type === "approve") {
+        overlays.push(approveOverlay(st, j, last));
+      }
+      if (n) body.flow.appendChild(n);
+    });
+    overlays.forEach(function (o) { root.appendChild(o); });
+    return root;
+  }
+
+  function build(ep, index) {
+    var flat = Nav.flatten(ep);
+    if (!flat.length) return el("div", "ws-screen ws-empty");
+    var e = flat[Nav.clamp(ep, index)];
+    if (e.step === -1) return card(ep, e.chapter);
+    var ch = ep.chapters[e.chapter];
+    if (ch.screen === "cursor-full") return cursorScreen(ep, ch, e.step, true);
+    if (ch.screen === "cursor-agent") return cursorScreen(ep, ch, e.step, false);
+    if (ch.screen === "claude-code") return claudeCodeScreen(ep, ch, e.step);
+    return terminalScreen(ep, ch, e.step);
+  }
+
+  function step(container, ep, index) {
+    while (container.firstChild) container.removeChild(container.firstChild);
+    container.appendChild(build(ep, index));
+    return container.firstChild;
+  }
+
+  return {step: step, markdown: markdown};
+})();
+
+</script>
+<script>
+// Forward animation of ONE step, plus the playback policy as pure functions.
+//
+// Animate.run(container, episode, index, opts) -> {cancel(), done: Promise}
+//   Renders the finished state with Render.step(container, episode, index), hides the
+//   current step's hooks (see render.js header) and reveals them in document order on
+//   the injected scheduler, so it looks like the step at `index` playing on top of
+//   Render.step(index - 1). Both completion and cancel() end with a fresh
+//   Render.step(container, episode, index): the final DOM is identical by construction.
+//   `done` resolves in both cases (never rejects). A new run on the same container
+//   cancels the previous one first, and a reveal that throws ends the run in the final
+//   state too.
+// Animate.stop(container): cancels the active run on `container` without rendering
+//   (call it before a static Render.step, e.g. on a back-step).
+//   opts: {speed = 1 (clamped to >= 0.1), schedule(fn, ms) -> id = setTimeout,
+//          unschedule(id) = clearTimeout, now() = Date.now (accepted, not used: every
+//          wait goes through schedule)}.
+//
+// Timing (every value is divided by speed):
+//   type  28 ms per character (code points), the text grows one character per tick
+//   line  120 ms per line / say block
+//   node  250 ms, then the node appears whole (tool, worked, chips)
+//   fade  250 ms for a card and an approve window: opacity 0 until the tick
+//   autoplay delay between steps 900 ms
+// Animate.stepDuration walks the same plan the animation schedules, so the estimate
+// and the playback cannot drift apart.
+var Animate = (function () {
+  var CHAR_MS = 28;
+  var LINE_MS = 120;
+  var NODE_MS = 250;
+  var FADE_MS = 250;
+  var AUTOPLAY_MS = 900;
+  var MIN_SPEED = 0.1;
+
+  function speedOf(s) {
+    s = Number(s);
+    if (!(s > 0)) s = MIN_SPEED;
+    return Math.max(s, MIN_SPEED);
+  }
+  function chars(text) { return Array.from(String(text || "")); }
+  function hide(n) { n.style.display = "none"; }
+  function show(n) { n.style.display = ""; }
+
+  // Render the finished state into `container`, hide what the step at `index` adds and
+  // return the reveal plan: [{ms, fn}] in order (ms already divided by speed).
+  function prepare(container, ep, index, speed) {
+    Render.step(container, ep, index);
+    var flat = Nav.flatten(ep);
+    if (!flat.length) return [];
+    var e = flat[Nav.clamp(ep, index)];
+    var plan = [];
+    var screen = container.firstChild;
+    if (e.step === -1) {
+      screen.style.opacity = "0";
+      plan.push({ms: FADE_MS / speed, fn: function () { screen.style.opacity = "1"; }});
+      return plan;
+    }
+    var root = container.querySelector('[data-step="' + e.step + '"]');
+    if (!root) return plan;
+    var step = ep.chapters[e.chapter].steps[e.step];
+    if (step.type === "term") {
+      var idle = container.querySelector('[data-anim="idle"]');
+      if (idle) hide(idle);
+    }
+    var hooks = [];
+    if (root.hasAttribute("data-anim")) hooks.push(root);
+    Array.prototype.forEach.call(root.querySelectorAll("[data-anim]"), function (n) { hooks.push(n); });
+    hooks.forEach(function (n) {
+      var kind = n.getAttribute("data-anim");
+      if (kind === "type") {
+        var cs = chars(n.textContent);
+        n.textContent = "";
+        cs.forEach(function (_, k) {
+          plan.push({ms: CHAR_MS / speed, fn: function () { n.textContent = cs.slice(0, k + 1).join(""); }});
+        });
+      } else if (kind === "line") {
+        hide(n);
+        plan.push({ms: LINE_MS / speed, fn: function () { show(n); }});
+      } else if (kind === "node" && step.type === "approve" && n === root) {
+        n.style.opacity = "0";
+        plan.push({ms: FADE_MS / speed, fn: function () { n.style.opacity = "1"; }});
+      } else if (kind === "node") {
+        hide(n);
+        plan.push({ms: NODE_MS / speed, fn: function () { show(n); }});
+      }
+    });
+    return plan;
+  }
+
+  // One active run per container: a new run (or stop) cancels the previous one first.
+  var active = typeof WeakMap === "function" ? new WeakMap() : null;
+  function getActive(c) { return active ? active.get(c) : c.__wsAnimRun; }
+  function setActive(c, r) { if (active) active.set(c, r); else c.__wsAnimRun = r; }
+  function clearActive(c, r) {
+    if (getActive(c) !== r) return;
+    if (active) active.delete(c); else delete c.__wsAnimRun;
+  }
+
+  // Cancel any active run on `container` without rendering (its `done` resolves).
+  function stop(container) {
+    var r = getActive(container);
+    if (r) r.abort();
+  }
+
+  function run(container, ep, index, opts) {
+    opts = opts || {};
+    stop(container);
+    var speed = speedOf(opts.speed === undefined ? 1 : opts.speed);
+    var schedule = opts.schedule || function (fn, ms) { return setTimeout(fn, ms); };
+    var unschedule = opts.unschedule || function (id) { clearTimeout(id); };
+    var finished = false, timer = null, resolveDone;
+    var done = new Promise(function (resolve) { resolveDone = resolve; });
+    var handle = {cancel: function () { end(true); }, done: done, abort: function () { end(false); }};
+    setActive(container, handle);
+    var plan = prepare(container, ep, index, speed);
+
+    function end(render) {
+      if (finished) return;
+      finished = true;
+      if (timer !== null) { unschedule(timer); timer = null; }
+      clearActive(container, handle);
+      if (render) Render.step(container, ep, index);
+      resolveDone();
+    }
+    function next(k) {
+      if (finished) return;
+      if (k >= plan.length) { end(true); return; }
+      timer = schedule(function () {
+        timer = null;
+        if (finished) return;
+        try {
+          plan[k].fn();
+        } catch (err) {
+          // A broken reveal must not stall playback: jump to the final state.
+          if (typeof console !== "undefined") console.error("Animate: reveal failed", err);
+          end(true);
+          return;
+        }
+        next(k + 1);
+      }, plan[k].ms);
+    }
+    next(0);
+    return {cancel: handle.cancel, done: done};
+  }
+
+  // Sum of the ms the animation of `index` schedules (same plan, detached container).
+  function stepDuration(ep, index, speed) {
+    var plan = prepare(document.createElement("div"), ep, index, speedOf(speed));
+    return plan.reduce(function (s, a) { return s + a.ms; }, 0);
+  }
+
+  // What autoplay does after `index` finished animating.
+  function autoplay(ep, index, speed) {
+    var flat = Nav.flatten(ep);
+    var i = Nav.clamp(ep, index);
+    if (!flat.length || i >= flat.length - 1) return {stop: true, delay: 0};
+    var e = flat[i];
+    var steps = ep.chapters[e.chapter].steps || [];
+    if (e.step === steps.length - 1) return {stop: true, delay: 0};  // also an empty chapter's card
+    if (e.step >= 0 && steps[e.step].pause) return {stop: true, delay: 0};
+    return {stop: false, delay: AUTOPLAY_MS / speedOf(speed)};
+  }
+
+  // Estimated length: step animations plus autoplay delays (none after a stop).
+  function episodeDuration(ep, speed) {
+    var flat = Nav.flatten(ep);
+    var chapters = (ep.chapters || []).map(function (ch) { return {id: ch.id, ms: 0}; });
+    var total = 0;
+    flat.forEach(function (e, i) {
+      var a = autoplay(ep, i, speed);
+      var ms = stepDuration(ep, i, speed) + (a.stop ? 0 : a.delay);
+      chapters[e.chapter].ms += ms;
+      total += ms;
+    });
+    return {total: total, chapters: chapters};
+  }
+
+  return {run: run, stop: stop, stepDuration: stepDuration, autoplay: autoplay, episodeDuration: episodeDuration,
+          CHAR_MS: CHAR_MS, LINE_MS: LINE_MS, NODE_MS: NODE_MS, FADE_MS: FADE_MS, AUTOPLAY_MS: AUTOPLAY_MS};
+})();
+
+</script>
+<script>
+// Stage page: what the audience sees. It holds (episode, index), renders or animates on
+// `show` and answers the control. Messages (see the episode format):
+//   in : {type:"show", episode, index, animate, speed} | {type:"blackout", on} | {type:"ping"}
+//        {type:"wait", delay, seq} | {type:"wait-cancel"}
+//   out: {type:"ready"} on load, {type:"shown", episode, index}, then
+//        {type:"done-animating", index} (only for the latest show), {type:"pong"},
+//        {type:"advance", seq} when a wait ends,
+//        {type:"key", key, shift} for the presenter's keys pressed while the stage has focus.
+// The stage times the autoplay delay (`wait`) because its window is the visible one:
+// the control's timers may be throttled while the stage has focus. A new show, a new wait
+// or wait-cancel drops the pending wait.
+// A `show` animates only when animate is true and index == current + 1 in the same
+// episode; anything else cancels the running animation and renders the finished state.
+// The stage never shows notes, sources or the skill commit: it only calls Render.step.
+//
+// Stage.create(opts) -> {handle(msg) -> Promise, current()} is the testable core:
+//   opts: {canvas (Render container), blackout (element toggled with .hidden), episodes,
+//          post(msg), schedule?, unschedule? (passed to Animate.run)}.
+// The DOM bootstrap at the end runs only on the page with #ws-stage-root.
+var Stage = (function () {
+  var FADE = "ws-fade-in";
+  var KEYS = ["ArrowLeft", "ArrowRight", " ", "Spacebar", "b", "B"];
+
+  function create(opts) {
+    var canvas = opts.canvas, blackout = opts.blackout;
+    var post = opts.post || function () {};
+    var byId = {};
+    (opts.episodes || []).forEach(function (ep) { if (ep && ep.id) byId[ep.id] = ep; });
+    var cur = null;   // {episode, index} of the latest show
+    var seq = 0;      // id of the latest show; older runs stay silent
+    var schedule = opts.schedule || function (fn, ms) { return setTimeout(fn, ms); };
+    var unschedule = opts.unschedule || function (id) { clearTimeout(id); };
+    var waiting = null;  // timer id of the pending wait
+    function cancelWait() {
+      if (waiting !== null) { unschedule(waiting); waiting = null; }
+    }
+    function onWait(msg) {
+      cancelWait();
+      var delay = Math.max(Number(msg.delay) || 0, 0);
+      waiting = schedule(function () {
+        waiting = null;
+        post({type: "advance", seq: msg.seq});
+      }, delay);
+    }
+    if (blackout) blackout.hidden = true;
+
+    function fades(ep, index) {
+      var e = Nav.flatten(ep)[index];
+      return !!e && (e.kind === "card" || e.kind === "approve");
+    }
+
+    function onShow(msg) {
+      var ep = byId[msg.episode];
+      if (!ep) return Promise.resolve();
+      var index = Nav.clamp(ep, msg.index);
+      var id = ++seq;
+      cancelWait();
+      var animate = msg.animate === true && cur !== null && cur.episode === ep.id && index === cur.index + 1;
+      cur = {episode: ep.id, index: index};
+      canvas.classList.remove(FADE);
+      if (!animate) {
+        Animate.stop(canvas);
+        Render.step(canvas, ep, index);
+        post({type: "shown", episode: ep.id, index: index});
+        post({type: "done-animating", index: index});
+        return Promise.resolve();
+      }
+      var speed = Math.max(Number(msg.speed) || 1, 0.1);
+      if (fades(ep, index)) {
+        canvas.style.setProperty("--ws-fade-ms", Math.round(Animate.FADE_MS / speed) + "ms");
+        canvas.classList.add(FADE);
+      }
+      var run = Animate.run(canvas, ep, index, {speed: speed, schedule: schedule, unschedule: unschedule});
+      post({type: "shown", episode: ep.id, index: index});
+      return run.done.then(function () {
+        if (id !== seq) return;
+        // Same task as Animate's final render: the fresh node never starts the fade.
+        canvas.classList.remove(FADE);
+        post({type: "done-animating", index: index});
+      });
+    }
+
+    function handle(msg) {
+      if (!msg || typeof msg !== "object") return Promise.resolve();
+      if (msg.type === "show") return onShow(msg);
+      if (msg.type === "blackout") { if (blackout) blackout.hidden = !msg.on; }
+      else if (msg.type === "ping") post({type: "pong"});
+      else if (msg.type === "wait") onWait(msg);
+      else if (msg.type === "wait-cancel") cancelWait();
+      return Promise.resolve();
+    }
+
+    return {handle: handle, current: function () { return cur; }};
+  }
+
+  // The keydown the stage forwards to the control, or null.
+  function keyMessage(ev) {
+    if (!ev || KEYS.indexOf(ev.key) < 0 || ev.repeat || ev.metaKey || ev.ctrlKey || ev.altKey) return null;
+    return {type: "key", key: ev.key, shift: !!ev.shiftKey};
+  }
+
+  // Static preview hook: "#<episode-id>/<index>" -> {episode, index}, or null.
+  function parseHash(hash) {
+    var m = /^#([A-Za-z0-9._-]+)\/(\d+)$/.exec(typeof hash === "string" ? hash : "");
+    return m ? {episode: m[1], index: parseInt(m[2], 10)} : null;
+  }
+
+  function readEpisodes() {
+    var node = document.getElementById("episodes");
+    if (!node) return [];
+    try {
+      var data = JSON.parse(node.textContent);
+      return Array.isArray(data) ? data : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // Scale the 1600x900 frame to fit the window, letterboxed on black.
+  function fit(frame) {
+    var s = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
+    frame.style.transform = "translate(-50%, -50%) scale(" + s + ")";
+  }
+
+  function boot() {
+    if (!document.getElementById("ws-stage-root")) return;
+    var frame = document.getElementById("ws-frame");
+    var opener = window.opener;
+    function post(msg) { if (opener && !opener.closed) opener.postMessage(msg, "*"); }
+    var stage = create({canvas: document.getElementById("ws-canvas"),
+                        blackout: document.getElementById("ws-blackout"),
+                        episodes: readEpisodes(), post: post});
+    window.addEventListener("message", function (ev) {
+      if (!opener || ev.source !== opener) return;
+      stage.handle(ev.data);
+    });
+    document.addEventListener("keydown", function (ev) {
+      var msg = keyMessage(ev);
+      if (!msg) return;
+      ev.preventDefault();
+      post(msg);
+    });
+    fit(frame);
+    window.addEventListener("resize", function () { fit(frame); });
+    if (!opener) {
+      // No control driving this page: the hash picks a finished step to render (static preview).
+      var preview = function () {
+        var h = parseHash(location.hash);
+        if (h) stage.handle({type: "show", episode: h.episode, index: h.index, animate: false});
+      };
+      window.addEventListener("hashchange", preview);
+      preview();
+    }
+    post({type: "ready"});
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
+
+  return {create: create, keyMessage: keyMessage, parseHash: parseHash};
+})();
+
+</script>
+</body>
+</html>

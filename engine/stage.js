@@ -99,6 +99,12 @@ var Stage = (function () {
     return {type: "key", key: ev.key, shift: !!ev.shiftKey};
   }
 
+  // Static preview hook: "#<episode-id>/<index>" -> {episode, index}, or null.
+  function parseHash(hash) {
+    var m = /^#([A-Za-z0-9._-]+)\/(\d+)$/.exec(typeof hash === "string" ? hash : "");
+    return m ? {episode: m[1], index: parseInt(m[2], 10)} : null;
+  }
+
   function readEpisodes() {
     var node = document.getElementById("episodes");
     if (!node) return [];
@@ -136,11 +142,20 @@ var Stage = (function () {
     });
     fit(frame);
     window.addEventListener("resize", function () { fit(frame); });
+    if (!opener) {
+      // No control driving this page: the hash picks a finished step to render (static preview).
+      var preview = function () {
+        var h = parseHash(location.hash);
+        if (h) stage.handle({type: "show", episode: h.episode, index: h.index, animate: false});
+      };
+      window.addEventListener("hashchange", preview);
+      preview();
+    }
     post({type: "ready"});
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
 
-  return {create: create, keyMessage: keyMessage};
+  return {create: create, keyMessage: keyMessage, parseHash: parseHash};
 })();
