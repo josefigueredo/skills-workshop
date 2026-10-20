@@ -41,7 +41,7 @@ Serie Cursor:
 | # | Episodio | Estado |
 |---|---|---|
 | 0 | Antes de empezar | listo |
-| 1 | inherited-audit | piloto en revisión |
+| 1 | inherited-audit | listo |
 | 2 | jira-team-kit | en revisión |
 | 3 | confluence-team-kit | en revisión |
 | 4 | product-brain-mcp | en revisión |
