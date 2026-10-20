@@ -96,17 +96,23 @@ def report(root, episode_id: Optional[str] = None, emit: Callable = print,
                 emit("duration: no episode with id %r" % episode_id)
                 return 2
         episodes.sort(key=lambda e: (str(e.get("series")), e.get("order", 0)))
+        # What the stage shows: capture_only steps out, pages inlined. Screen and narration use the same steps.
+        episodes = [bundle.for_stage(e, root) for e in episodes]
         measured = (measure_fn or measure)(root, episodes)
         rows = []
         for ep in episodes:
             m = measured[ep["id"]]
             words = narration_words(ep)
+            if len(m["chapters"]) != len(ep["chapters"]):
+                raise RuntimeError("%s has %d chapters but Chrome measured %d"
+                                   % (ep["id"], len(ep["chapters"]), len(m["chapters"])))
             chapters = []
             for ch, cm in zip(ep["chapters"], m["chapters"]):
                 cw = sum(len(s["notes"].split()) for s in ch["steps"] if isinstance(s.get("notes"), str))
                 chapters.append((ch["id"], cm["ms"], cw))
             rows.append((ep, m["total"], words, chapters))
-    except (subprocess.SubprocessError, OSError, RuntimeError, ValueError, KeyError, TypeError) as exc:
+    except (subprocess.SubprocessError, OSError, RuntimeError, ValueError, KeyError, TypeError,
+            bundle.BundleError) as exc:
         emit("duration: %s: %s" % (type(exc).__name__, exc))
         return 2
     bad = []

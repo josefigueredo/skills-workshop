@@ -10,7 +10,7 @@ from unittest import mock
 import build
 from tests.helpers import ROOT, TempTree, minimal_episode
 from tests.test_engine import HAVE_CHROME, SKIP_MSG
-from ws import duration
+from ws import duration, schema
 
 MIN = 60000
 
@@ -131,6 +131,30 @@ class Report(unittest.TestCase):
         self.assertEqual(code, 2, out)
         self.assertIn("duration: ", out)
 
+    def test_capture_only_steps_count_neither_on_screen_nor_in_narration(self):
+        ep = ep_notes("w " * 300, id="a", order=1)
+        ep["chapters"][0]["steps"].append({"type": "term", "cmd": "prep", "out": [], "source": "real", "cwd": "~",
+                                           "capture_only": True, "notes": "w " * 600})
+        self.tree.write("cursor", "01-a.json", ep)
+        seen = []
+
+        def measure(root, episodes):
+            seen.extend(len(c["steps"]) for e in episodes for c in e["chapters"])
+            return fake_measure({"a": (4 * MIN, [4 * MIN])})(root, episodes)
+        with mock.patch.object(duration, "measure", measure), \
+                mock.patch.object(duration, "chrome_available", lambda: True):
+            code, out = run_cli(self.tree.root, "duration")
+        self.assertEqual(code, 0, out)
+        self.assertEqual(seen, [1], "Chrome must measure the steps the stage shows")
+        self.assertIn("a: screen 4:00 · narración 2:00 · total 6:00", out)
+        self.assertIn("c0: screen 4:00 · narración 2:00", out)
+
+    def test_a_chapter_count_mismatch_exits_2_instead_of_dropping_chapters(self):
+        self.tree.write("cursor", "01-a.json", ep_notes("w " * 300, "w " * 300, id="a", order=1))
+        code, out = self.run_duration({"a": (4 * MIN, [4 * MIN])})
+        self.assertEqual(code, 2, out)
+        self.assertIn("2 chapters but Chrome measured 1", out)
+
     def test_without_chrome_it_skips_and_exits_0(self):
         self.tree.write("cursor", "01-a.json", ep_notes("w", id="a", order=1))
         with mock.patch.object(duration, "chrome_available", lambda: False):
@@ -141,10 +165,10 @@ class Report(unittest.TestCase):
 
 @unittest.skipUnless(HAVE_CHROME, SKIP_MSG)
 class RealEpisodes(unittest.TestCase):
-    def test_the_two_existing_episodes_print_two_lines_and_exit_0(self):
+    def test_every_episode_prints_its_line_and_exits_0(self):
         code, out = run_cli(ROOT, "duration")
         self.assertEqual(code, 0, out)
-        for ep_id in ("antes-de-empezar", "inherited-audit"):
+        for ep_id in [e["id"] for e in schema.load_all(ROOT)]:
             self.assertRegex(out, r"(?m)^%s: screen \d+:\d\d · narración \d+:\d\d · total \d+:\d\d" % ep_id)
 
     def test_screen_time_comes_from_the_engine(self):
