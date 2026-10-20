@@ -20,7 +20,7 @@ Abrís `dist/control.html`, hacés clic en «Abrir escenario» y compartís solo
 Se arranca con `python3 build.py new <skill>` (un esqueleto con `COMPLETAR` que `build` no deja pasar), se completa el guion JSON, se captura lo que corre de verdad, se arma `dist/` y se revisa la privacidad. Todo en [docs/guion.md](docs/guion.md).
 
 ```
-python3 build.py new SKILL [--series S] [--order N] | validate | capture [--episode ID] | build | check
+python3 build.py new SKILL [--series S] [--order N] [--id ID] | validate | capture [--episode ID] | build | check | duration [--episode ID]
 ```
 
 ## Desarrollo
