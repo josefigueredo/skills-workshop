@@ -27,6 +27,10 @@
           "a": "python3 3.9 o más y git, que ya vienen del episodio 0, más dos cosas que sí son nuevas: tmux y cursor-agent con la sesión iniciada. Y acceso por SSH al repo de la skill."
         },
         {
+          "q": "¿Cómo instalo cursor-agent?",
+          "a": "Es el agente de línea de comandos de Cursor, y se instala siguiendo la documentación oficial de Cursor sobre su CLI: no hay un comando que yo te pueda dictar acá. Una vez instalado, con cursor-agent login lo dejás con tu cuenta."
+        },
+        {
           "q": "¿Qué es tmux y por qué lo necesito?",
           "a": "Es una terminal «de repuesto» que queda corriendo escondida. cursor-agent necesita una terminal de verdad para funcionar de forma interactiva, y tmux se la da al agente sin que vos veas nada abierto."
         },
@@ -62,7 +66,7 @@
           ],
           "source": "real",
           "cwd": "~",
-          "notes": "Un comando: deja la skill para Claude Code, Codex y Cursor, y suma el hook. Mirá las líneas note: avisan que falta tmux y cursor-agent en esta máquina de grabación, y por eso termina con código 1: el instalador no se detiene, pero te dice qué te falta. En tu máquina, con ambos instalados, no aparecen. Salida real.",
+          "notes": "Un comando: deja la skill para Claude Code, Codex y Cursor, y suma el hook. Mirá las líneas note: avisan que falta tmux y cursor-agent en esta máquina de grabación, y por eso termina con código 1: el instalador no se detiene, pero te dice qué te falta. En tu máquina, con ambos instalados, no aparecen. Ojo con el «# exit 1»: la instalación sí se hizo (los enlaces y el hook están); el código 1 es solo el aviso de lo que falta. Salida real.",
           "pause": true
         },
         {
@@ -128,7 +132,7 @@
           ],
           "source": "inferido",
           "cwd": "~",
-          "notes": "Comprobamos las dos herramientas. Las versiones son de ejemplo: lo que importa es que respondan. Inferido, porque en la máquina de grabación no están."
+          "notes": "Comprobamos las dos herramientas. Si cursor-agent no está, se instala siguiendo la documentación oficial de Cursor sobre su CLI (el episodio 0 no lo cubre): no inventamos el comando acá. Las versiones son de ejemplo. Inferido, porque en la máquina de grabación no están."
         },
         {
           "type": "term",
@@ -181,13 +185,13 @@
         },
         {
           "type": "say",
-          "md": "Se lo mando a Cursor con `ric run`. Abre un `cursor-agent` interactivo en `mi-servicio`, dentro de `tmux`, y espera a que termine el turno. Ojo: Cursor corre con `--force`, o sea que ejecuta sus comandos de shell sin pedir permiso.",
+          "md": "Se lo mando a Cursor con `ric run`. Abre un `cursor-agent` interactivo en `mi-servicio`, dentro de `tmux`, y espera a que termine el turno. Ojo: Cursor corre con `--force`, o sea que ejecuta sus comandos de shell sin pedir permiso; por eso le pongo un `--deny` para `sync-status`, que escribe en Jira y es tuyo.",
           "source": "inferido",
-          "notes": "Dos cosas que el agente avisa antes de correr: que espera el turno y que Cursor no pide permiso para sus comandos. Por eso lo que publica queda para vos; lo vemos en el próximo capítulo. Texto ilustrativo."
+          "notes": "Dos cosas que el agente avisa antes de correr: que espera el turno y que Cursor no pide permiso para sus comandos. Por eso pasa --deny por lo que la persona se reserva (acá, sync-status). Texto ilustrativo."
         },
         {
           "type": "term",
-          "cmd": "python3 ~/.agents/skills/run-in-cursor/ric.py run --workspace ~/mi-servicio \"/spec-kit.plan specs/001-devoluciones\"",
+          "cmd": "python3 ~/.agents/skills/run-in-cursor/ric.py run --workspace ~/mi-servicio --deny \"sync-status\" \"/spec-kit.plan specs/001-devoluciones\"",
           "out": [
             "session: ric-spec-kit-plan-20261020-101500",
             "status: completed",
@@ -202,7 +206,7 @@
             "next: ric send ric-spec-kit-plan-20261020-101500 \"<reply>\" --workspace ~/mi-servicio  |  ric quit ric-spec-kit-plan-20261020-101500 --workspace ~/mi-servicio"
           ],
           "source": "inferido",
-          "notes": "Esta es la salida de ric: la sesión, el estado, los tokens, el log y la pantalla de Cursor entre las dos líneas. Al final, la línea next ya trae el send y el quit armados. La sesión se llama ric-, el comando, la fecha y la hora. Inferido: abrir Cursor gasta uso real, así que nunca lo corrimos para grabar; la salida sigue el formato del código.",
+          "notes": "Esta es la salida de ric: la sesión, el estado, los tokens, el log y la pantalla de Cursor entre las dos líneas. Al final, la línea next ya trae el send y el quit armados. La sesión se llama ric-, el comando, la fecha y la hora. Inferido: abrir Cursor gasta uso real, así que nunca lo corrimos para grabar; la salida sigue el formato del código. Fijate el --deny \"sync-status\": es lo que la persona se reserva, y la skill lo pasa en cada run y en cada send.",
           "pause": true
         },
         {
@@ -225,7 +229,7 @@
         },
         {
           "type": "term",
-          "cmd": "python3 ~/.agents/skills/run-in-cursor/ric.py send ric-spec-kit-plan-20261020-101500 \"SQLite\" --workspace ~/mi-servicio",
+          "cmd": "python3 ~/.agents/skills/run-in-cursor/ric.py send ric-spec-kit-plan-20261020-101500 \"SQLite\" --workspace ~/mi-servicio --deny \"sync-status\"",
           "out": [
             "session: ric-spec-kit-plan-20261020-101500",
             "status: completed",
@@ -283,13 +287,13 @@
           "type": "ask",
           "text": "Mandale a Cursor /spec-kit.implement specs/001-devoluciones y que después haga git push. Hacelo sin que haga push.",
           "source": "inferido",
-          "notes": "El pedido trae las dos cosas: lo que querés que haga y lo que te reservás. Es el ejemplo de la guía de instalación de la skill."
+          "notes": "El pedido trae las dos cosas: lo que querés que haga y, al final, el push. Es el ejemplo de la guía de instalación de la skill. Pero ojo: el agente ya sabe que el push es tuyo."
         },
         {
           "type": "say",
-          "md": "Cursor corre sus comandos sin pedir permiso, así que le pongo un freno con `--deny`. Con el `git push` en el texto, `ric` se niega antes de abrir nada:",
+          "md": "El push te lo reservás vos, así que lo mando con `--deny \"git push\"`. Si el texto que armé lo nombrara, `ric` se niega antes de abrir nada. Pruebo con el texto tal cual me lo pediste, como red de seguridad:",
           "source": "inferido",
-          "notes": "El agente aplica la regla de la skill: pasar --deny por cualquier comando que la persona se reserve. Texto ilustrativo."
+          "notes": "Mostramos la red de seguridad funcionando: el texto original menciona el push y --deny lo atrapa. Es el ejemplo de la guía de la skill. Texto ilustrativo."
         },
         {
           "type": "term",
@@ -304,9 +308,32 @@
         },
         {
           "type": "say",
-          "md": "No se abrió ninguna sesión. Si querés, lo mando sin la parte del push y con el freno puesto.\n\nOjo con lo que protege: `--deny` mira **el texto que mando**, no lo que Cursor decida hacer. El push te lo reservás vos.",
+          "md": "La red funcionó: no se abrió ninguna sesión. Ahora lo mando sin la parte del push y con el mismo freno:",
           "source": "inferido",
-          "notes": "La advertencia que más importa del episodio: --deny es una lista sobre lo escrito, no una barrera. Si un texto no nombra el push, igual podría terminar en uno. Lo que no se puede arriesgar, se hace a mano. Texto ilustrativo."
+          "notes": "Después del rechazo, el agente reenvía sin el push y con el mismo --deny, como pide la skill. Texto ilustrativo."
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.agents/skills/run-in-cursor/ric.py run --workspace ~/mi-servicio --deny \"git push\" \"/spec-kit.implement specs/001-devoluciones\"",
+          "out": [
+            "session: ric-spec-kit-implement-20261020-113000",
+            "status: completed",
+            "tokens: in=61400 out=7200",
+            "log: ~/mi-servicio/.run-in-cursor/runs/ric-spec-kit-implement-20261020-113000.jsonl",
+            "--- screen ---",
+            "> /spec-kit.implement specs/001-devoluciones",
+            "  Implementé las tareas de specs/001-devoluciones. No hice push.",
+            "--- end ---",
+            "next: ric send ric-spec-kit-implement-20261020-113000 \"<reply>\" --workspace ~/mi-servicio  |  ric quit ric-spec-kit-implement-20261020-113000 --workspace ~/mi-servicio"
+          ],
+          "source": "inferido",
+          "notes": "Ahora sí corre: el texto ya no nombra el push. Y ojo con lo que protege: --deny mira el texto que se manda, no lo que Cursor decida hacer después. Inferido: abre Cursor y gasta uso."
+        },
+        {
+          "type": "say",
+          "md": "Cursor terminó la implementación y no hizo push; cerré la sesión con `ric quit`. Recordá que `--deny` mira **el texto que mando**, no lo que Cursor decida hacer: el push te lo reservás vos. Cuando revises el resultado, lo hacés a mano.",
+          "source": "inferido",
+          "notes": "La advertencia que más importa del episodio: --deny es una lista sobre lo escrito, no una barrera. Lo que no se puede arriesgar, se hace a mano. Texto ilustrativo."
         },
         {
           "type": "term",
@@ -317,7 +344,7 @@
           ],
           "in": "zsh",
           "source": "inferido",
-          "notes": "Cuando revisaste lo que hizo Cursor, el push lo tipeás vos con el signo de exclamación: es el modo bash de Claude Code, y el agente nunca lo corre. Es el patrón de toda la serie: el agente deja el comando listo, la persona publica. Inferido.",
+          "notes": "Cuando termine y revises lo que hizo Cursor, el push lo tipeás vos con el signo de exclamación: es el modo bash de Claude Code, y el agente nunca lo corre. Es el patrón de toda la serie: el agente deja el comando listo, la persona publica. Inferido.",
           "pause": true
         }
       ]
@@ -363,11 +390,11 @@
           "type": "term",
           "cmd": "cat ~/mi-servicio/.run-in-cursor/runs/ric-spec-kit-plan-20261020-101500.jsonl",
           "out": [
-            "{\"event\": \"stop\", \"status\": \"completed\", \"model\": \"demo-model\", \"input_tokens\": 48210, \"output_tokens\": 3150, \"reason\": null, \"t\": 1792506249}"
+            "{\"event\": \"stop\", \"status\": \"completed\", \"model\": \"demo-model\", \"input_tokens\": 48210, \"output_tokens\": 3150, \"reason\": null, \"t\": 1792506795}"
           ],
           "source": "real",
           "cwd": "~",
-          "notes": "Es el archivo que escribe el hook, con la salida real de ric hook. Ojo: no hubo sesión de Cursor, el evento lo armamos a mano para la demo, con datos de ejemplo. Mirá qué hay: estado, modelo y tokens. Y qué falta: el prompt, que estaba en el evento y nunca se guardó. El número t es la hora en segundos. Salida real."
+          "notes": "Es el archivo que escribe el hook, con la salida real de ric hook. Ojo: no hubo sesión de Cursor, el evento lo armamos a mano para la demo, con datos de ejemplo. Mirá qué hay: estado, modelo y tokens. Y qué falta: el prompt, que estaba en el evento y nunca se guardó. El número t es la hora de la captura, en segundos, no la de la sesión del ejemplo. Salida real."
         },
         {
           "type": "say",
@@ -431,7 +458,7 @@
           ],
           "source": "real",
           "cwd": "~",
-          "notes": "Volver a instalar el hook es seguro: reconoce su propia entrada y no agrega otra, por eso dice «already present». Si en cambio el Python se mudó, no lo reemplaza: hay que corregir esa línea de hooks.json a mano. Salida real."
+          "notes": "Volver a instalar el hook es seguro: reconoce su propia entrada y no agrega otra, por eso dice «already present». Si en cambio el Python se mudó, no lo reemplaza: hay que corregir esa línea de hooks.json a mano. En una máquina sin el hook diría «hook added on stop and sessionEnd»; acá ya estaba, por el instalador. Salida real."
         },
         {
           "type": "term",
@@ -467,7 +494,7 @@
         },
         {
           "q": "¿Dónde sigo después del taller?",
-          "a": "En el showcase de cada skill: un escenario por caso, con los comandos que corre y qué pasa si falla. Y en el README del taller, que lista todos los episodios."
+          "a": "En el showcase de cada skill: un escenario por caso, con los comandos que corre y qué pasa si falla."
         },
         {
           "q": "Si algo cambia en una skill, ¿el episodio queda viejo?",
@@ -483,7 +510,7 @@
         },
         {
           "type": "say",
-          "md": "#### Lo que te llevás de run-in-cursor\n- **Cursor, desde acá:** `ric run` abre un `cursor-agent` interactivo dentro de `tmux` y espera el turno: cuenta como uso real, con turnos, modelo y tokens.\n- **Lo tuyo es tuyo:** las decisiones que Cursor pregunta y lo que se publica. `--deny` frena textos, no acciones.\n- **Siempre se cierra:** `ric quit`, para que Cursor mande el fin de la sesión.\n\n#### Lo que te llevás del taller\n- **El agente prepara, vos aprobás:** de la serie de Cursor a la de Claude Code, lo que escribe afuera (Jira, Confluence, un push) lo corrés vos, o lo aprobás en una ventana.\n- **Medir, no especular:** cada skill muestra evidencia antes de afirmar, y un `[?]` nunca cuenta como hecho.\n- **Una vez por máquina:** instalar es enlazar a un clon y comprobar que responde; las herramientas que faltan, como tmux, se instalan una vez.\n\n#### Fin del taller\nGracias por llegar hasta acá. Ahora te toca usarlo en tu repo.",
+          "md": "#### Lo que te llevás de run-in-cursor\n- **Cursor, desde acá:** `ric run` abre un `cursor-agent` interactivo dentro de `tmux` y espera el turno: cuenta como uso real, con turnos, modelo y tokens.\n- **Lo tuyo es tuyo:** las decisiones que Cursor pregunta y lo que se publica. `--deny` frena textos, no acciones.\n- **Siempre se cierra:** `ric quit`, para que Cursor mande el fin de la sesión.\n\n#### Lo que te llevás del taller\n- **El agente prepara, vos aprobás:** de la serie de Cursor a la de Claude Code, lo que escribe afuera (Jira, Confluence, un push) lo corrés vos, o lo aprobás en una ventana.\n- **Medir, no especular:** lo que se afirma lleva evidencia, y lo que no se pudo verificar se rotula como tal.\n- **Una vez por máquina:** instalar es enlazar a un clon y comprobar que responde; las herramientas que faltan, como tmux, se instalan una vez.\n\n#### Fin del taller\nGracias por llegar hasta acá. Ahora te toca usarlo en tu repo.",
           "source": "inferido",
           "notes": "Cerramos el taller con tres ideas que se repitieron en todos los episodios: el agente prepara y la persona aprueba, se mide antes de afirmar, y todo se instala una vez. Y una frase corta de despedida. No hay próximo episodio: es el final de la serie.",
           "pause": true
