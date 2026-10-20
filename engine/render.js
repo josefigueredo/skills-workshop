@@ -88,13 +88,45 @@ var Render = (function () {
   }
   function markdown(md) {
     var frag = document.createDocumentFragment();
-    var para = [], list = null;
+    var para = [], list = null, table = null;
     function flushPara() {
       if (para.length) frag.appendChild(anim(inline(el("p"), para.join(" ")), "line"));
       para = [];
     }
+    // A pipe table: the row before the |---| separator is the header; every row animates as a line.
+    function cells(line) { return line.slice(1, -1).split("|").map(function (c) { return c.trim(); }); }
+    function tableRow(line) {
+      if (!table) {
+        flushPara();
+        table = {last: null, body: el("tbody")};
+        var t = el("table");
+        table.head = el("thead");
+        add(t, table.head, table.body);
+        frag.appendChild(add(el("div", "ws-md-table"), t));
+      }
+      if (/^\|[\s:|-]+\|$/.test(line) && table.last && !table.head.firstChild) {
+        var head = table.last;
+        Array.prototype.forEach.call(head.children, function (td) {
+          var th = el("th");
+          while (td.firstChild) th.appendChild(td.firstChild);
+          head.replaceChild(th, td);
+        });
+        table.head.appendChild(head);
+        return;
+      }
+      var tr = anim(el("tr"), "line");
+      cells(line).forEach(function (c) { tr.appendChild(inline(el("td"), c)); });
+      table.body.appendChild(tr);
+      table.last = tr;
+    }
     String(md || "").split("\n").forEach(function (raw) {
       var line = raw.replace(/\s+$/, "");
+      if (/^\|.*\|$/.test(line)) {
+        list = null;
+        tableRow(line);
+        return;
+      }
+      table = null;
       if (/^- /.test(line)) {
         flushPara();
         if (!list) { list = el("ul"); frag.appendChild(list); }
@@ -102,9 +134,9 @@ var Render = (function () {
         return;
       }
       list = null;
-      if (/^#### /.test(line)) {
+      if (/^#{2,4} /.test(line)) {
         flushPara();
-        frag.appendChild(anim(inline(el("h4"), line.slice(5)), "line"));
+        frag.appendChild(anim(inline(el("h4"), line.replace(/^#+ /, "")), "line"));
       } else if (!line) {
         flushPara();
       } else {

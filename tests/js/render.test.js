@@ -148,6 +148,27 @@ test("say markdown renders strong, code, list items and a heading", function () 
   assertEqual(say.querySelector("h4").textContent, "Hecho");
 });
 
+test("say markdown renders ## and ### headings and a pipe table with its header row", function () {
+  var ep = fixtureEpisode();
+  ep.chapters[1].steps[4].md = "## Estado\n**7 abiertos**\n\n### Por board\n| Board | Abiertos |\n| ----- | -------- |\n" +
+    "| PLAT  | **7**    |\n| DESK  | 2        |\nDespués.";
+  var say = render(8, ep).querySelector('[data-step="4"]');
+  assertEqual(Array.prototype.map.call(say.querySelectorAll("h4"), function (h) { return h.textContent; }),
+              ["Estado", "Por board"]);
+  var table = say.querySelector("table");
+  assert(table, "no table");
+  assertEqual(Array.prototype.map.call(table.querySelectorAll("thead th"), function (t) { return t.textContent; }),
+              ["Board", "Abiertos"]);
+  var rows = table.querySelectorAll("tbody tr");
+  assertEqual(rows.length, 2, "the separator row is not a body row");
+  assertEqual(Array.prototype.map.call(rows[1].querySelectorAll("td"), function (t) { return t.textContent; }),
+              ["DESK", "2"]);
+  assertEqual(rows[0].querySelector("td strong").textContent, "7");
+  assertEqual(rows[0].getAttribute("data-anim"), "line");
+  assertEqual(say.lastChild.textContent, "Después.");
+  assert(say.textContent.indexOf("|") < 0 && say.textContent.indexOf("#") < 0, "markup left: " + say.textContent);
+});
+
 test("episode text is inserted as text, never as markup", function () {
   var ep = fixtureEpisode();
   ep.chapters[1].steps[0].text = "<script>window.pwned=1</script>";

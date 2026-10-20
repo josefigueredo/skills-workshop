@@ -57,7 +57,8 @@ Soporta solo esto:
 
 - `**negrita**` y `` `código` ``
 - `- ` al principio de la línea para una lista
-- `#### ` al principio para un subtítulo
+- `## `, `### ` o `#### ` al principio para un subtítulo (los tres se ven igual)
+- una tabla con barras (`| a | b |`): la fila antes del separador `| --- | --- |` es el encabezado. Sirve para mostrar tal cual la salida de un CLI que ya imprime Markdown, como `jtk team`
 - una línea en blanco separa párrafos
 
 Límites que conviene conocer:

@@ -85,6 +85,13 @@
 .ws-say > :last-child { margin-bottom: 0; }
 .ws-say h4 { font-size: var(--ws-fs-h4); margin-top: var(--ws-pad-xs); }
 .ws-say ul { padding-left: var(--ws-pad); }
+.ws-md-table { overflow-x: auto; margin: 0 0 var(--ws-pad-sm); }
+.ws-md-table table { border-collapse: collapse; font-size: var(--ws-fs-sm); }
+.ws-md-table th, .ws-md-table td {
+  border: var(--ws-line) solid var(--ws-c-line); padding: var(--ws-pad-xs) var(--ws-pad-sm); text-align: left;
+  white-space: nowrap;
+}
+.ws-md-table th { font-weight: 600; }
 .ws-cursor code {
   font-family: var(--ws-font-mono); font-size: var(--ws-fs-mono); background: var(--ws-c-code);
   border-radius: var(--ws-radius-xs); padding: 0 var(--ws-pad-xs);
