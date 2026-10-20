@@ -114,7 +114,7 @@
           ],
           "source": "inferido",
           "cwd": "~",
-          "notes": "uv y tmux salen del episodio 0. Spec-Kit y Cursor hacen falta para las fases 4 a 6; sin ellos la guía se queda en la fase 3. wow sk run además necesita tmux, cursor-agent y la skill run-in-cursor, que es el próximo episodio. Las credenciales de Jira las cargás vos con un editor, nunca por el chat. Inferido: necesita red.",
+          "notes": "uv y tmux salen del episodio 0. Spec-Kit y Cursor hacen falta para las fases 4 a 6; sin ellos la guía se queda en la fase 3. wow sk run además necesita tmux, cursor-agent y la skill run-in-cursor, que es el próximo episodio. Las credenciales de Jira las cargás vos con un editor, nunca por el chat. La dirección completa está en docs/instalacion.md de WayOfWork; el repo es privado y de otra organización, así que el acceso se lo pedís a su equipo. Inferido: necesita red.",
           "pause": true
         }
       ]
@@ -194,7 +194,7 @@
           "type": "say",
           "md": "#### Flujo PB (Product Brain): 62%\n- **Bloqueo, y es tuyo:** hay una decisión del owner abierta en `pending-owner.md`: si avisamos por mail cuando sale el reintegro. No la decido yo.\n- **Próximo paso:** generar el paquete de E2 (reintegro del pago). Dónde: acá, con el modelo fuerte (claude-opus). Comando: `wow pack epic --id E2`, porque `wow/pb/epic-E2.md` no existe.\n\n#### Flujo SK · PLAT-123 (E1, pedir una devolución): 44%\n- Spec-Kit ya tiene el clarify y el plan; faltan las tareas y los work units.\n- Los `[?]` no se pudieron verificar porque Jira no está configurado: **no cuentan como hechos**.",
           "source": "inferido",
-          "notes": "Tres cosas que la skill cuida: primero los bloqueos, que son de una persona; los ids con una glosa corta, E2 (reintegro del pago), para no tener que volver atrás; y nunca un paso que no esté en el estado. Texto ilustrativo sobre salida real."
+          "notes": "Tres cosas que la skill cuida: primero los bloqueos, que son de una persona; los ids con una glosa corta, E2 (reintegro del pago), para no tener que volver atrás; y nunca un paso que no esté en el estado. Texto ilustrativo sobre salida real. claude-opus es el modelo que la guía de WayOfWork recomienda para ese paso, no el de esta sesión."
         },
         {
           "type": "tool",

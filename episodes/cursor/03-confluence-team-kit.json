@@ -116,7 +116,7 @@
           "out": [],
           "source": "real",
           "cwd": "~",
-          "notes": "La skill es lo que le enseña al agente cuándo usar ctk y qué reglas seguir. Primero creamos la carpeta donde Cursor busca skills, si todavía no existe."
+          "notes": "ctk no trae instalador de skill; su guía dice «la carpeta de skills que use tu instalación». Usamos ~/.cursor/skills, como el instalador de jira-team-kit."
         },
         {
           "type": "term",

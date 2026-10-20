@@ -59,7 +59,7 @@
             "Cloning into '~/skills/arq-review'..."
           ],
           "source": "inferido",
-          "notes": "Bajamos la herramienta. Es privado y va por SSH: si dice «Permission denied», falta el acceso (clave del episodio 0). Inferido: necesita red.",
+          "notes": "Bajamos la herramienta. Es privado y va por SSH: si dice «Permission denied», falta el acceso (clave del episodio 0). Para quien no usa la terminal, docs/instalacion.md del repo hace lo mismo con prompts. Inferido: necesita red.",
           "cwd": "~"
         },
         {

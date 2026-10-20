@@ -49,6 +49,10 @@
         {
           "q": "El clone dice «Permission denied», ¿qué hago?",
           "a": "Falta acceso a este repo, que es de otra organización. Pedíselo al equipo dueño; la clave SSH del episodio 0 sirve en cuanto te lo den."
+        },
+        {
+          "q": "El instalador pide usuario y contraseña de GitHub, ¿qué hago?",
+          "a": "El script trae la skill por HTTPS desde un repo interno de otra organización. Si no tenés credenciales de git para HTTPS, corré gh auth login (elegí HTTPS) o gh auth setup-git, y volvé a correr el instalador. Si dice «not found», te falta el acceso: pedíselo al equipo dueño."
         }
       ],
       "steps": [

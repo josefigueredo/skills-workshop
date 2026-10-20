@@ -339,7 +339,7 @@
           "type": "term",
           "cmd": "git push",
           "out": [
-            "To <repo>",
+            "To github.com:mi-equipo/mi-servicio.git",
             "   3f2a9c1..b81d4e7  feat/devoluciones -> feat/devoluciones"
           ],
           "in": "zsh",
