@@ -370,13 +370,20 @@ var Render = (function () {
                    el("div", "ws-mut", MODEL + " · ~/" + repo));
     var body = scroller("ws-cc-body");
     body.flow.appendChild(head);
-    var input = add(el("div", "ws-cc-input"), el("span", "ws-cc-g", "> "), el("span", "ws-caret", " "));
+    var input = add(el("div", "ws-cc-input"), el("span", "ws-cc-g", "› "), el("span", "ws-caret", " "));
     add(root, termBar("▭ ~/" + repo + " — claude"), body.outer, input);
     var overlays = [];
     chapterSteps(ch, last).forEach(function (st, j) {
       var n;
       if (st.type === "ask") {
-        n = add(stepNode("div", "ws-cc-line ws-cc-ask", j), el("span", "ws-cc-g", "> "), anim(el("span", null, st.text), "type"));
+        n = add(stepNode("div", "ws-cc-line ws-cc-ask", j), el("span", "ws-cc-g", "› "), anim(el("span", null, st.text), "type"));
+      } else if (st.type === "term" && st["in"] === "zsh") {
+        // The person's own `!` command (bash mode): typed by them, not an agent Bash call.
+        n = stepNode("div", "ws-cc-block ws-cc-bang", j);
+        n.appendChild(add(ccLine("! ", "ws-cc-bang-cmd"), anim(el("span", null, st.cmd), "type")));
+        (st.out || []).forEach(function (o, k) {
+          n.appendChild(anim(add(ccLine(k === 0 ? "⎿ " : "", "ws-cc-out"), document.createTextNode(o)), "line"));
+        });
       } else if (st.type === "term") {
         n = stepNode("div", "ws-cc-block", j);
         n.appendChild(anim(add(ccLine("⏺ ", "ws-cc-tool"), document.createTextNode("Bash(" + st.cmd + ")")), "node"));
@@ -385,6 +392,13 @@ var Render = (function () {
         });
       } else if (st.type === "tool") {
         n = add(stepNode("div", "ws-cc-line ws-cc-tool", j, "node"), el("span", "ws-cc-g", "⏺ "), document.createTextNode(st.label));
+        if (/^Skill\(/.test(st.label)) {  // Claude Code confirms every skill it loads
+          var tool = n;
+          n = add(stepNode("div", "ws-cc-block", j, "node"), tool);
+          tool.removeAttribute("data-step");
+          tool.removeAttribute("data-anim");
+          n.appendChild(add(ccLine("⎿ ", "ws-cc-out"), document.createTextNode("Successfully loaded skill")));
+        }
       } else if (st.type === "say") {
         n = add(stepNode("div", "ws-cc-line ws-cc-say", j), el("span", "ws-cc-g", "⏺ "),
                 add(el("div", "ws-cc-md"), markdown(st.md)));

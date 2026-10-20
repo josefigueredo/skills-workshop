@@ -126,7 +126,8 @@
   /* Claude Code tab */
   --ws-cc-accent: #d97757;
   --ws-cc-ok: #3fb950;
-  --ws-cc-user: #9aa0aa;
+  --ws-cc-user: #ffa657;  /* the person's turn, as in the cc-* mockups */
+  --ws-cc-bang: #f778ba;  /* a `!` command the person runs in bash mode */
   --ws-cc-box: #5d6370;
   --ws-cc-gutter: 2ch;    /* width of the ⏺ / ⎿ / > gutter */
 
@@ -370,6 +371,8 @@
 .ws-cc-ask { color: var(--ws-cc-user); }
 .ws-cc-tool .ws-cc-g, .ws-cc-say > .ws-cc-g { color: var(--ws-cc-ok); }
 .ws-cc-out { color: var(--ws-t-mut); padding-left: var(--ws-cc-gutter); }
+.ws-cc-bang-cmd { color: var(--ws-cc-bang); }
+.ws-cc-bang-cmd .ws-cc-g { font-weight: 700; }
 .ws-cc-worked { color: var(--ws-cc-accent); }
 .ws-cc-md p, .ws-cc-md ul, .ws-cc-md h4 { margin: 0 0 var(--ws-pad-xs); font-size: inherit; }
 .ws-cc-md ul { padding-left: var(--ws-pad); }
@@ -952,13 +955,20 @@ var Render = (function () {
                    el("div", "ws-mut", MODEL + " · ~/" + repo));
     var body = scroller("ws-cc-body");
     body.flow.appendChild(head);
-    var input = add(el("div", "ws-cc-input"), el("span", "ws-cc-g", "> "), el("span", "ws-caret", " "));
+    var input = add(el("div", "ws-cc-input"), el("span", "ws-cc-g", "› "), el("span", "ws-caret", " "));
     add(root, termBar("▭ ~/" + repo + " — claude"), body.outer, input);
     var overlays = [];
     chapterSteps(ch, last).forEach(function (st, j) {
       var n;
       if (st.type === "ask") {
-        n = add(stepNode("div", "ws-cc-line ws-cc-ask", j), el("span", "ws-cc-g", "> "), anim(el("span", null, st.text), "type"));
+        n = add(stepNode("div", "ws-cc-line ws-cc-ask", j), el("span", "ws-cc-g", "› "), anim(el("span", null, st.text), "type"));
+      } else if (st.type === "term" && st["in"] === "zsh") {
+        // The person's own `!` command (bash mode): typed by them, not an agent Bash call.
+        n = stepNode("div", "ws-cc-block ws-cc-bang", j);
+        n.appendChild(add(ccLine("! ", "ws-cc-bang-cmd"), anim(el("span", null, st.cmd), "type")));
+        (st.out || []).forEach(function (o, k) {
+          n.appendChild(anim(add(ccLine(k === 0 ? "⎿ " : "", "ws-cc-out"), document.createTextNode(o)), "line"));
+        });
       } else if (st.type === "term") {
         n = stepNode("div", "ws-cc-block", j);
         n.appendChild(anim(add(ccLine("⏺ ", "ws-cc-tool"), document.createTextNode("Bash(" + st.cmd + ")")), "node"));
@@ -967,6 +977,13 @@ var Render = (function () {
         });
       } else if (st.type === "tool") {
         n = add(stepNode("div", "ws-cc-line ws-cc-tool", j, "node"), el("span", "ws-cc-g", "⏺ "), document.createTextNode(st.label));
+        if (/^Skill\(/.test(st.label)) {  // Claude Code confirms every skill it loads
+          var tool = n;
+          n = add(stepNode("div", "ws-cc-block", j, "node"), tool);
+          tool.removeAttribute("data-step");
+          tool.removeAttribute("data-anim");
+          n.appendChild(add(ccLine("⎿ ", "ws-cc-out"), document.createTextNode("Successfully loaded skill")));
+        }
       } else if (st.type === "say") {
         n = add(stepNode("div", "ws-cc-line ws-cc-say", j), el("span", "ws-cc-g", "⏺ "),
                 add(el("div", "ws-cc-md"), markdown(st.md)));

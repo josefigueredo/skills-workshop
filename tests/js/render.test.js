@@ -175,11 +175,34 @@ test("claude-code uses the transcript layout", function () {
   var root = c.querySelector(".ws-claude-code");
   assert(root, "not claude-code");
   var t = root.textContent;
-  assert(t.indexOf("> Hola") >= 0, "ask line");
+  assert(t.indexOf("› Hola") >= 0, "ask line");
   assert(t.indexOf("⏺ Bash(ls)") >= 0, "bash line");
   assert(t.indexOf("⎿ a") >= 0, "output line");
   assert(t.indexOf("⏺ Listo") >= 0 || root.querySelector('[data-step="2"]').textContent.indexOf("⏺") >= 0, "say");
   assert(t.indexOf("✻ Worked for 3s") >= 0, "worked line");
+});
+
+test("claude-code shows a command the person types with ! as bash mode", function () {
+  var ep = fixtureEpisode();
+  ep.chapters[2].steps[1]["in"] = "zsh";
+  var c = render(15, ep);
+  var st = c.querySelector('[data-step="1"]');
+  assert(st.classList.contains("ws-cc-bang"), "bang class: " + st.className);
+  assert(st.textContent.indexOf("! ls") >= 0, "bang line: " + st.textContent);
+  assert(st.textContent.indexOf("Bash(") < 0, "not the agent's Bash call");
+  assertEqual(st.querySelector('[data-anim="type"]').textContent, "ls");
+  assert(st.querySelector('[data-anim="line"]').textContent.indexOf("⎿ a") >= 0, "output under ⎿");
+});
+
+test("claude-code shows a Skill tool as loaded, like Claude Code", function () {
+  var ep = fixtureEpisode();
+  ep.chapters[2].steps.splice(1, 0, {type: "tool", label: "Skill(demo-skill)", source: "inferido"});
+  var c = render(16, ep);
+  var st = c.querySelector('[data-step="1"]');
+  assert(st.textContent.indexOf("⏺ Skill(demo-skill)") >= 0, "skill line: " + st.textContent);
+  assert(st.textContent.indexOf("Successfully loaded skill") >= 0, "loaded line: " + st.textContent);
+  var other = c.querySelector('[data-step="2"]');
+  assert(other.textContent.indexOf("Successfully loaded skill") < 0, "only Skill tools");
 });
 
 test("cursor-agent shows a term as a Ran chip and has Open Tabs", function () {
@@ -228,7 +251,7 @@ test("hooks hold on every screen", function () {
     assertEqual(q(1, "").getAttribute("data-anim"), "node", screen + " worked");
     assertEqual(q(2, "").getAttribute("data-anim"), "node", screen + " tool");
     assert(q(3, ' [data-anim="line"]').textContent.indexOf("baseline: done") >= 0, screen + " term out");
-    if (screen === "cursor-agent" || screen === "claude-code") {
+    if (screen === "cursor-agent") {
       assert(q(3, ' [data-anim="node"]').textContent.indexOf("python3 ia.py status") >= 0, screen + " term node");
     } else {
       assertEqual(q(3, ' [data-anim="type"]').textContent, "python3 ia.py status", screen + " term cmd");

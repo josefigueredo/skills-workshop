@@ -192,6 +192,8 @@
 .ws-cc-ask { color: var(--ws-cc-user); }
 .ws-cc-tool .ws-cc-g, .ws-cc-say > .ws-cc-g { color: var(--ws-cc-ok); }
 .ws-cc-out { color: var(--ws-t-mut); padding-left: var(--ws-cc-gutter); }
+.ws-cc-bang-cmd { color: var(--ws-cc-bang); }
+.ws-cc-bang-cmd .ws-cc-g { font-weight: 700; }
 .ws-cc-worked { color: var(--ws-cc-accent); }
 .ws-cc-md p, .ws-cc-md ul, .ws-cc-md h4 { margin: 0 0 var(--ws-pad-xs); font-size: inherit; }
 .ws-cc-md ul { padding-left: var(--ws-pad); }

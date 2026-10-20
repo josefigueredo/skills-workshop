@@ -113,15 +113,16 @@ def _validate_step(step, prefix, out, screen=None):
         out.append("%s: 'notes' must be a string" % prefix)
     if "pause" in step and not isinstance(step["pause"], bool):
         out.append("%s: 'pause' must be true or false" % prefix)
-    # `in: "zsh"` puts a term step in the cursor-full integrated terminal (a command the
-    # person types); without it the step renders in the chat, as the agent's command.
+    # `in: "zsh"` marks a term step as a command the person types: in cursor-full it goes to the
+    # integrated terminal, in claude-code it is a `!` bash-mode line. Without it the step renders
+    # as the agent's command.
     if "in" in step:
         if stype != "term":
             out.append("%s: 'in' is only valid on a term step" % prefix)
         elif step["in"] != "zsh":
             out.append("%s: 'in' must be \"zsh\"" % prefix)
-        elif screen != "cursor-full":
-            out.append("%s: 'in' \"zsh\" is only valid in a cursor-full chapter" % prefix)
+        elif screen not in ("cursor-full", "claude-code"):
+            out.append("%s: 'in' \"zsh\" is only valid in a cursor-full or claude-code chapter" % prefix)
     # `capture_only: true` steps only advance the demo state during capture; the bundle
     # drops them, so the stage and the control never see them.
     if "capture_only" in step:

@@ -35,7 +35,7 @@ Todo paso lleva `type` y `source` (obligatorios).
 |---|---|---|
 | `term` | `cmd`, `out` (lista de líneas) | Un comando y su salida |
 | `ask` | `text` | Lo que la persona le escribe al agente |
-| `tool` | `label` | Una ficha de herramienta, por ejemplo `Ran · ia.py baseline` |
+| `tool` | `label` | Una ficha de herramienta, por ejemplo `Ran · ia.py baseline`; en `claude-code`, un `label` que empieza con `Skill(` suma la línea «Successfully loaded skill» |
 | `say` | `md` | La respuesta del agente, en markdown mínimo (ver abajo) |
 | `approve` | `title`, `lines` (lista), `button` | La ventana de aprobación de macOS |
 | `worked` | `seconds` | «Worked for Ns» |
@@ -47,7 +47,7 @@ Campos opcionales de cualquier paso:
 
 Opcionales solo de `term`:
 
-- `in: "zsh"`: en `cursor-full`, el comando se muestra tipeado por la persona en la terminal integrada de Cursor. Sin `in`, el comando sale en el chat, como si lo corriera el agente (lo normal en Cursor). **Solo tiene efecto en `cursor-full`**: en las otras pantallas se ignora sin avisar, no esperes verlo.
+- `in: "zsh"`: el comando lo tipea la persona, no el agente. En `cursor-full` sale en la terminal integrada de Cursor; en `claude-code` sale como `! comando` (el modo bash de Claude Code), que es como la persona corre lo que el agente le deja listo, por ejemplo un `--apply`. Sin `in`, el comando sale como si lo corriera el agente. **Solo vale en `cursor-full` y `claude-code`**: en las otras pantallas `validate` lo rechaza.
 - `cwd` (obligatorio si es `real`): carpeta desde donde corre, siempre `~` o `~/algo` (relativa al HOME falso, sin `..`).
 - `capture_only: true` (solo en `term` `real`): el paso corre durante `capture` para avanzar el estado de la demo (por ejemplo crear un archivo que el siguiente paso necesita), pero el `build` lo saca: el escenario y el control nunca lo ven.
 

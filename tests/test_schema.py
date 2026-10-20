@@ -94,15 +94,22 @@ class SchemaTests(unittest.TestCase):
         self.assertIn("step 0: 'in' must be \"zsh\"", msgs[0])
         self.assertIn("step 1: 'in' is only valid on a term step", msgs[1])
 
-    def test_in_zsh_only_in_cursor_full_chapter(self):
-        for screen in ("terminal", "cursor-agent", "claude-code"):
+    def test_in_zsh_only_in_cursor_full_or_claude_code_chapter(self):
+        for screen in ("terminal", "cursor-agent"):
             with self.subTest(screen=screen):
                 ep = minimal_episode()
                 ep["chapters"][0]["screen"] = screen
                 step_of(ep, 0)["in"] = "zsh"
                 msgs = schema.validate(ep, "x.json")
                 self.assertEqual(len(msgs), 1, msgs)
-                self.assertIn("chapter 0 (instalar) step 0: 'in' \"zsh\" is only valid in a cursor-full chapter", msgs[0])
+                self.assertIn("chapter 0 (instalar) step 0: 'in' \"zsh\" is only valid in a cursor-full or "
+                              "claude-code chapter", msgs[0])
+
+    def test_in_zsh_on_claude_code_is_the_persons_bang_command(self):
+        ep = minimal_episode()
+        ep["chapters"][0]["screen"] = "claude-code"
+        step_of(ep, 0)["in"] = "zsh"
+        self.assertEqual(schema.validate(ep, "x.json"), [])
 
     def test_unknown_keys_are_rejected_everywhere(self):
         cases = [
