@@ -15,7 +15,7 @@ STEP_FIELDS = {
     "ask": {"text": str},
     "tool": {"label": str},
     "say": {"md": str},
-    "approve": {"title": str, "lines": list, "button": str},
+    "approve": {"title": str, "button": str},  # plus `lines`, or `src` with the tool's real window page
     "worked": {"seconds": (int, float)},
     "page": {"title": str, "src": str},
 }
@@ -26,7 +26,7 @@ PAGE_SRC_RE = re.compile(r"^pages/[a-z0-9][a-z0-9-]*\.html$")
 # Keys allowed besides the required ones, so a misspelt key fails instead of being ignored.
 # `in` and `capture_only` are accepted on any step so their own, clearer message reports a misplacement.
 STEP_COMMON = ("type", "source", "notes", "pause", "in", "capture_only")
-STEP_EXTRA = {"term": ("cwd",)}
+STEP_EXTRA = {"term": ("cwd",), "approve": ("lines", "src", "window", "width", "height")}
 TOP_KEYS = ("id", "series", "order", "title", "pitch", "skill", "workspace", "chapters")
 CHAPTER_KEYS = ("id", "title", "subtitle", "screen", "faq", "steps")
 PITCH_KEYS = ("ask", "does")
@@ -134,7 +134,9 @@ def _validate_step(step, prefix, out, screen=None):
             out.append("%s: 'capture_only' must be true when present" % prefix)
         elif stype != "term" or source != "real":
             out.append("%s: 'capture_only' is only valid on a real term step" % prefix)
-    if stype == "page" and isinstance(step.get("src"), str) and not PAGE_SRC_RE.match(step["src"]):
+    if stype == "approve":
+        _validate_approve(step, prefix, out)
+    if stype in ("page", "approve") and isinstance(step.get("src"), str) and not PAGE_SRC_RE.match(step["src"]):
         out.append("%s: 'src' must be 'pages/<name>.html' (lowercase, under episodes/)" % prefix)
     if stype == "term" and source == "real":
         cwd = step.get("cwd")
@@ -142,6 +144,23 @@ def _validate_step(step, prefix, out, screen=None):
             out.append("%s: real term step needs 'cwd'" % prefix)
         elif not _home_relative(cwd):
             out.append("%s: 'cwd' must be '~' or '~/<path>' without '..' (relative to the fake HOME)" % prefix)
+
+
+def _validate_approve(step, prefix, out):
+    """An approve step lists `lines`, or shows the tool's real window: `src` (its page, rendered by the tool's own
+    code), `window` (the title bar), `width` and `height` (points, as the tool sizes it)."""
+    if "lines" in step:
+        _check_type(step["lines"], list, "%s: 'lines'" % prefix, out)
+    elif "src" not in step:
+        out.append("%s: missing 'lines' (or 'src' with the tool's window page)" % prefix)
+    if "src" in step:
+        _check_type(step["src"], str, "%s: 'src'" % prefix, out)
+    if "window" in step:
+        _check_type(step["window"], str, "%s: 'window'" % prefix, out)
+    for key in ("width", "height"):
+        if key in step and _check_type(step[key], int, "%s: '%s'" % (prefix, key), out) \
+                and not 100 <= step[key] <= 1200:
+            out.append("%s: '%s' must be from 100 to 1200 points" % (prefix, key))
 
 
 def _validate_chapter(chapter, i, out, where, seen_ids):
@@ -204,10 +223,11 @@ def validate(episode: dict, where: str) -> list:
 
 
 def page_steps(episode):
-    """Every page step of an episode with a usable src, in order."""
+    """Every step that shows a page (a page step, an approve with its window page) with a usable src, in order."""
     for ch in episode.get("chapters") or []:
         for st in (ch.get("steps") or []) if isinstance(ch, dict) else []:
-            if isinstance(st, dict) and st.get("type") == "page" and PAGE_SRC_RE.match(str(st.get("src", ""))):
+            if isinstance(st, dict) and st.get("type") in ("page", "approve") \
+                    and PAGE_SRC_RE.match(str(st.get("src", ""))):
                 yield st
 
 

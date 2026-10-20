@@ -136,15 +136,17 @@ class BundleContent(unittest.TestCase):
         ep = minimal_episode(id="pg")
         ep["chapters"][0]["steps"].append({"type": "page", "title": "vista.html", "src": "pages/v.html",
                                            "source": "real"})
+        ep["chapters"][0]["steps"].append({"type": "approve", "title": "A", "button": "Apruebo 1",
+                                           "src": "pages/v.html", "source": "real"})
         with with_engine(TempTree()) as tree:
             tree.write("cursor", "01-pg.json", ep)
             (tree.root / "episodes" / "pages").mkdir()
             (tree.root / "episodes" / "pages" / "v.html").write_text("<p>Vista</p></script>", encoding="utf-8")
             bundle.build(tree.root)
             text = (tree.root / "dist" / "serie-cursor.html").read_text(encoding="utf-8")
-            page = episodes_in(text)[0]["chapters"][0]["steps"][-1]
-            self.assertEqual(page["html"], "<p>Vista</p></script>")
-            self.assertNotIn("src", page)
+            for page in episodes_in(text)[0]["chapters"][0]["steps"][-2:]:
+                self.assertEqual(page["html"], "<p>Vista</p></script>")
+                self.assertNotIn("src", page)
             self.assertEqual(text.count("</script>"), text.count("<script"), "the page cannot close a script")
 
     def test_episode_key_order_is_kept(self):

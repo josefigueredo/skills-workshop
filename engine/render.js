@@ -217,9 +217,28 @@ var Render = (function () {
     (st.out || []).forEach(function (o) { n.appendChild(anim(el("div", "ws-out", o), "line")); });
     return n;
   }
+  // The tool's own approval window: its title bar, the page its code renders (no script, so sandbox="") and the
+  // two native buttons under it, at the size the tool gives it.
+  function realApproveWin(st) {
+    var win = el("div", "ws-approve-win ws-approve-real");
+    if (st.width) win.style.width = st.width + "px";
+    var bar = add(el("div", "ws-approve-bar"), dots(), el("div", "ws-approve-bar-title", st.window || ""));
+    var frame = el("iframe", "ws-approve-page");
+    frame.setAttribute("sandbox", "");
+    frame.setAttribute("title", st.title);
+    frame.setAttribute("srcdoc", st.html || "");
+    if (st.height) frame.style.height = st.height + "px";
+    var btns = add(el("div", "ws-approve-btns"), el("button", "ws-btn ws-btn-cancel", "Cancelar"),
+                   el("button", "ws-btn ws-btn-ok", st.button));
+    return add(win, bar, frame, btns);
+  }
   function approveOverlay(st, j, current) {
     var ov = stepNode("div", "ws-approve", j, "node");
     if (j !== current) ov.setAttribute("hidden", "");
+    if (st.html !== undefined) {
+      ov.appendChild(realApproveWin(st));
+      return ov;
+    }
     var win = el("div", "ws-approve-win");
     add(win, el("div", "ws-approve-icon"), el("div", "ws-approve-title", st.title));
     var body = el("div", "ws-approve-lines");

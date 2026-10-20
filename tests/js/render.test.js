@@ -184,6 +184,29 @@ test("a page step is a browser window over the screen with the page in a sandbox
   assert(render(11, ep).querySelector(".ws-page").hasAttribute("hidden"), "a past page stays hidden");
 });
 
+test("an approve step with a page is the tool's own window: title bar, the page and two native buttons", function () {
+  var ep = fixtureEpisode();
+  var st = ep.chapters[1].steps[5];
+  delete st.lines;
+  st.html = "<h1>Crear en PLAT</h1>";
+  st.window = "jtk · Jira";
+  st.width = 520;
+  st.height = 300;
+  var ov = render(9, ep).querySelector(".ws-approve");
+  assert(ov && !ov.hasAttribute("hidden"), "current approve must show");
+  var win = ov.querySelector(".ws-approve-win.ws-approve-real");
+  assert(win, "no real window");
+  assertEqual(win.querySelector(".ws-approve-bar-title").textContent, "jtk · Jira");
+  assertEqual(win.style.width, "520px");
+  var frame = win.querySelector("iframe");
+  assertEqual(frame.getAttribute("sandbox"), "");
+  assertEqual(frame.getAttribute("srcdoc"), "<h1>Crear en PLAT</h1>");
+  assertEqual(frame.style.height, "300px");
+  assertEqual(Array.prototype.map.call(win.querySelectorAll(".ws-btn"), function (b) { return b.textContent; }),
+              ["Cancelar", "Apruebo 2"]);
+  assert(win.querySelector(".ws-approve-lines") === null && ov.querySelector("h1") === null, "no invented box");
+});
+
 test("episode text is inserted as text, never as markup", function () {
   var ep = fixtureEpisode();
   ep.chapters[1].steps[0].text = "<script>window.pwned=1</script>";

@@ -56,8 +56,9 @@ def _fill(template: str, slots: Dict[str, str], name: str) -> str:
 
 
 def _page(step: dict, root: Path) -> dict:
-    """A page step with its HTML inlined in place of its path (the stage cannot read files)."""
-    if step.get("type") != "page":
+    """A step that shows a page (page, or approve with its window page) with the HTML inlined in place of its path
+    (the stage cannot read files)."""
+    if step.get("type") not in ("page", "approve") or "src" not in step:
         return step
     out = {k: v for k, v in step.items() if k != "src"}
     out["html"] = _read(Path(root) / "episodes" / step["src"])

@@ -37,11 +37,11 @@ Todo paso lleva `type` y `source` (obligatorios).
 | `ask` | `text` | Lo que la persona le escribe al agente |
 | `tool` | `label` | Una ficha de herramienta, por ejemplo `Ran · ia.py baseline`; en `claude-code`, un `label` que empieza con `Skill(` suma la línea «Successfully loaded skill» |
 | `say` | `md` | La respuesta del agente, en markdown mínimo (ver abajo) |
-| `approve` | `title`, `lines` (lista), `button` | La ventana de aprobación de macOS |
+| `approve` | `title`, `button`, y `lines` (lista) o `src` | La ventana de aprobación. Con `src` (`pages/<nombre>.html`) es la ventana real de la herramienta: la página que dibuja su código, con `window` (el título de la barra), `width` y `height` (los puntos que le da la herramienta) y los botones Cancelar y `button` abajo. Sin `src`, una caja genérica con `lines` |
 | `worked` | `seconds` | «Worked for Ns» |
 | `page` | `title`, `src` | Una página HTML real en una ventana de navegador sobre la pantalla, por ejemplo la vista previa de `jtk create --html`. `src` es `pages/<nombre>.html` dentro de `episodes/`; el `build` la mete en el bundle y el escenario la muestra en un iframe con `sandbox` (corre su propio JS, nunca toca el escenario). `title` va en la barra de direcciones |
 
-La página de jira-team-kit la genera `tools/jtk_vista.py` con el código de jtk del commit que fija el episodio: si cambia el episodio o el commit, se vuelve a correr.
+Las páginas de `episodes/pages/` (la vista previa de jtk y las ventanas de aprobación de jtk, ctk y pbmcp) las genera `python3 tools/real_pages.py` con el código de cada herramienta en el commit que fija su episodio, y escribe el ancho y el alto de cada ventana. Si cambia el episodio o el commit, se vuelve a correr.
 
 Campos opcionales de cualquier paso:
 

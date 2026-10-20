@@ -241,16 +241,37 @@ class TreeTests(unittest.TestCase):
                 self.assertEqual(len(msgs), 1, msgs)
                 self.assertIn("'src' must be 'pages/<name>.html'", msgs[0])
 
+    def test_an_approve_step_shows_lines_or_the_real_window_page(self):
+        def with_approve(**over):
+            ep = minimal_episode()
+            step = {"type": "approve", "title": "Crear en PLAT", "button": "Apruebo 4", "source": "real"}
+            step.update(over)
+            ep["chapters"][0]["steps"].append(step)
+            return schema.validate(ep, "x.json")
+        self.assertEqual(with_approve(src="pages/jtk-crear.html", window="jtk · Jira", width=520, height=300), [])
+        self.assertEqual(with_approve(lines=["a"]), [])
+        self.assertIn("missing 'lines'", with_approve()[0])
+        self.assertIn("'src' must be 'pages/<name>.html'", with_approve(src="x.html")[0])
+        for key, bad in (("window", 3), ("width", "520"), ("height", 0), ("width", 4000)):
+            with self.subTest(key=key):
+                msgs = with_approve(src="pages/v.html", **{key: bad})
+                self.assertEqual(len(msgs), 1, msgs)
+                self.assertIn("'%s'" % key, msgs[0])
+
     def test_a_page_file_that_does_not_exist_is_reported(self):
         with TempTree() as t:
             ep = minimal_episode()
             ep["chapters"][0]["steps"].append({"type": "page", "title": "v", "src": "pages/v.html", "source": "real"})
+            ep["chapters"][0]["steps"].append({"type": "approve", "title": "A", "button": "Apruebo 1",
+                                               "src": "pages/w.html", "source": "real"})
             t.write("cursor", "a.json", ep)
             msgs = schema.check_tree(t.root)
-            self.assertEqual(len(msgs), 1, msgs)
+            self.assertEqual(len(msgs), 2, msgs)
             self.assertIn("episodes/pages/v.html does not exist", msgs[0])
+            self.assertIn("episodes/pages/w.html does not exist", msgs[1])
             (t.root / "episodes" / "pages").mkdir()
             (t.root / "episodes" / "pages" / "v.html").write_text("<p>v</p>", encoding="utf-8")
+            (t.root / "episodes" / "pages" / "w.html").write_text("<p>w</p>", encoding="utf-8")
             self.assertEqual(schema.check_tree(t.root), [])
 
     def test_bad_json_is_reported_not_raised(self):

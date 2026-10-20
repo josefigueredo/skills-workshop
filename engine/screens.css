@@ -244,3 +244,24 @@
   padding: var(--ws-pad-xs) var(--ws-gap); background: var(--ws-a-btn-bg); color: var(--ws-a-btn-fg);
 }
 .ws-btn-ok { background: var(--ws-a-ok-bg); color: var(--ws-a-ok-fg); border-color: var(--ws-a-ok-bg); }
+.ws-approve-real {
+  padding: 0; align-items: stretch; overflow: hidden; background: var(--ws-r-bg); color: var(--ws-r-tx);
+  border-radius: var(--ws-radius);
+}
+.ws-approve-bar {
+  flex: none; height: var(--ws-r-bar); display: flex; align-items: center; gap: var(--ws-gap); padding: 0 var(--ws-gap);
+}
+.ws-approve-bar-title { font-size: var(--ws-r-fs-btn); font-weight: 600; color: var(--ws-r-bar-tx); }
+.ws-approve-page { display: block; width: 100%; border: 0; background: transparent; color-scheme: light dark; }
+.ws-approve-real .ws-approve-btns {
+  flex: none; height: var(--ws-r-foot); align-items: center; justify-content: flex-end; padding: 0 24px;
+}
+.ws-approve-real .ws-btn {
+  flex: none; height: var(--ws-r-btn-h); padding: 0; font-size: var(--ws-r-fs-btn); border-radius: var(--ws-radius-sm);
+  background: var(--ws-r-btn-bg); color: var(--ws-r-tx); border-color: var(--ws-r-btn-line);
+}
+.ws-approve-real .ws-btn-cancel { width: var(--ws-r-btn-cancel); }
+.ws-approve-real .ws-btn-ok { width: var(--ws-r-btn-ok); }
+@media (prefers-color-scheme: dark) {
+  .ws-approve-real { --ws-r-bg: #1e1e1e; --ws-r-tx: #f5f5f7; --ws-r-bar-tx: #c7c7cc; --ws-r-btn-bg: #3a3a3c; --ws-r-btn-line: #3a3a3c; }
+}
