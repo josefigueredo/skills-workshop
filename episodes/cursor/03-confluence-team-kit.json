@@ -1,0 +1,503 @@
+{
+  "id": "confluence-team-kit",
+  "series": "cursor",
+  "order": 3,
+  "title": "confluence-team-kit",
+  "pitch": {
+    "ask": "Mostrame qué publicaría este repo en Confluence",
+    "does": "Calcula el plan de páginas, te muestra qué cambia (y si alguien editó una página en Confluence) y, cuando vos aprobás con un clic en una ventana, publica sin pisar a nadie."
+  },
+  "skill": {
+    "repo": "confluence-team-kit",
+    "commit": "f432c40",
+    "date": "2026-10-19"
+  },
+  "workspace": {
+    "repo": "mi-servicio",
+    "files": [
+      "api",
+      "web",
+      "docs",
+      "README.md",
+      ".confluence.yml"
+    ],
+    "chats": [
+      {
+        "title": "Actualizar el runbook de despliegue",
+        "age": "2h"
+      }
+    ]
+  },
+  "chapters": [
+    {
+      "id": "instalar",
+      "title": "Instalar",
+      "subtitle": "Una vez por máquina: la herramienta, la skill, el MCP y tus credenciales",
+      "screen": "terminal",
+      "faq": [
+        {
+          "q": "¿Puedo pedirle al agente que la instale?",
+          "a": "Casi todo sí. En Cursor decile «Instalá confluence-team-kit: cloná el repo, corré uv sync y dejá ctk en el PATH». Lo que no le pedís es el token de Confluence: eso lo guardás vos, con un editor, y nunca por el chat."
+        },
+        {
+          "q": "¿Qué es uv y por qué hace falta?",
+          "a": "Es el programa que trae el Python que necesita ctk (3.12 o más) y sus dependencias, sin tocar el Python de tu máquina. Si hiciste el episodio 0, ya lo tenés."
+        },
+        {
+          "q": "¿Y qué es el MCP? ¿Es obligatorio?",
+          "a": "Es un enchufe que le da al agente tres herramientas de ctk para leer Confluence y preparar publicaciones. No es obligatorio: sin él, el agente corre los mismos comandos de ctk en la terminal. Con él, las ventanas de aprobación salen igual."
+        },
+        {
+          "q": "¿Por qué el archivo de configuración del MCP lleva el token?",
+          "a": "Porque algunos editores no heredan las variables de tu terminal y hay que pasárselas al servidor. Por eso ese archivo es tan secreto como el token: no se commitea ni se comparte."
+        }
+      ],
+      "steps": [
+        {
+          "type": "term",
+          "cmd": "git clone git@github.com:josefigueredo/confluence-skill-mcp.git skills/confluence-team-kit",
+          "out": [
+            "Cloning into 'skills/confluence-team-kit'..."
+          ],
+          "source": "inferido",
+          "cwd": "~",
+          "notes": "Primero bajamos el repo: trae el comando ctk, la skill y el MCP en un solo lugar. Es un git clone común y necesita acceso por SSH a la organización, porque el repo es privado; el episodio 0 lo dejó listo. Paso inferido: necesita red."
+        },
+        {
+          "type": "term",
+          "cmd": "cd ~/skills/confluence-team-kit && uv sync --extra mcp",
+          "out": [
+            "Using CPython 3.13.7",
+            "Creating virtual environment at: .venv",
+            "Resolved 28 packages in 9ms",
+            "Installed 27 packages in 41ms",
+            " + confluence-team-kit==0.1.0 (from file://~/skills/confluence-team-kit)",
+            " + mcp==2.3.0",
+            " + requests==2.34.2",
+            " + ... (y las demás)"
+          ],
+          "source": "inferido",
+          "cwd": "~",
+          "notes": "Acá entra uv. Pensalo como un ayudante que arma un cuarto aparte, con el Python y las piezas que ctk necesita, sin tocar nada del resto de tu máquina. El extra mcp suma la pieza que habla con el agente. Si uv no está, es brew install uv, como en el episodio 0. Salida inferida: las versiones cambian con el tiempo."
+        },
+        {
+          "type": "term",
+          "cmd": "cd ~/skills/confluence-team-kit && uv tool install .",
+          "out": [
+            "Installed 2 executables: ctk, ctk-mcp"
+          ],
+          "source": "inferido",
+          "cwd": "~",
+          "notes": "Esto deja ctk disponible desde cualquier carpeta. Importa mucho: ctk se corre en la raíz del repo que querés publicar, no dentro de este clon. Sin este paso solo anda con uv run --project y la ruta del clon. Si te avisa que falta una carpeta en el PATH, es la línea del ~/.zshrc de siempre."
+        },
+        {
+          "type": "term",
+          "cmd": "ctk --help",
+          "out": [
+            "usage: ctk [-h] [--root ROOT] {plan,apply,ci,diff,grant,tree,read} ...",
+            "",
+            "positional arguments:",
+            "  {plan,apply,ci,diff,grant,tree,read}",
+            "    plan                compute what would change, write nothing to Confluence",
+            "    apply               apply a plan after a person approves it",
+            "    ci                  plan or publish from GitHub Actions; the merge is the approval",
+            "    diff                show what the source would change on pages edited in Confluence",
+            "    grant               mark an anchor page as owned by a repo (platform)",
+            "    tree                walk the page tree under a page",
+            "    read                show a page with its sync state and owner"
+          ],
+          "source": "inferido",
+          "cwd": "~/mi-servicio",
+          "notes": "La prueba de que quedó andando, y de paso el mapa de todo el episodio. Señalá tres: plan solo lee, apply y grant son los que escriben y piden aprobación, y ci es solo para GitHub Actions: lo mencionamos, nunca lo corremos desde la compu. Inferido porque ctk necesita Python 3.12 y acá no lo hay."
+        },
+        {
+          "type": "term",
+          "cmd": "mkdir -p ~/.cursor/skills",
+          "out": [],
+          "source": "real",
+          "cwd": "~",
+          "notes": "La skill es lo que le enseña al agente cuándo usar ctk y qué reglas seguir. Primero creamos la carpeta donde Cursor busca skills, si todavía no existe."
+        },
+        {
+          "type": "term",
+          "cmd": "ln -s ~/skills/confluence-team-kit/skills/confluence-team-kit ~/.cursor/skills/confluence-team-kit",
+          "out": [],
+          "source": "real",
+          "cwd": "~",
+          "notes": "Un enlace simbólico es un acceso directo: no copia nada, apunta al clon, y así hay una sola versión. Cada vez que actualices el clon, el agente ve la skill nueva."
+        },
+        {
+          "type": "term",
+          "cmd": "readlink ~/.cursor/skills/confluence-team-kit",
+          "out": [
+            "~/skills/confluence-team-kit/skills/confluence-team-kit"
+          ],
+          "source": "real",
+          "cwd": "~",
+          "notes": "Comprobamos que el enlace apunta donde debe. Es la misma comprobación que vas a necesitar si el agente dice que no conoce la skill."
+        },
+        {
+          "type": "term",
+          "cmd": "open -e ~/.zshrc",
+          "out": [],
+          "source": "inferido",
+          "cwd": "~",
+          "notes": "Ahora lo único que no hace el agente: las credenciales. En id.atlassian.com creás un token de API con el botón «Create API token» a secas, no el que dice «with scopes»: ctk entra por la URL de tu sitio y un token con alcance no funciona. Guardás tres variables en este archivo: CONFLUENCE_BASE_URL, sin /wiki y sin barra final, CONFLUENCE_EMAIL y CONFLUENCE_TOKEN. Con un editor, nunca por el chat. Después cerrás Cursor del todo y lo abrís otra vez.",
+          "pause": true
+        },
+        {
+          "type": "term",
+          "cmd": "cat ~/.cursor/mcp.json",
+          "out": [
+            "{",
+            "  \"mcpServers\": {",
+            "    \"confluence\": {",
+            "      \"command\": \"uv\",",
+            "      \"args\": [\"run\", \"--project\", \"/ruta/a/confluence-team-kit\", \"--extra\", \"mcp\", \"ctk-mcp\"],",
+            "      \"env\": {",
+            "        \"CTK_ROOT\": \"/ruta/al/repo/que/publica\",",
+            "        \"CONFLUENCE_BASE_URL\": \"https://tu-sitio.atlassian.net\",",
+            "        \"CONFLUENCE_EMAIL\": \"vos@example.com\",",
+            "        \"CONFLUENCE_TOKEN\": \"<tu-token>\"",
+            "      }",
+            "    }",
+            "  }",
+            "}"
+          ],
+          "source": "inferido",
+          "cwd": "~",
+          "notes": "Último paso de la instalación: conectar el MCP. Es un archivo de configuración donde le decís a Cursor que arranque ctk-mcp con uv. Dos cosas para remarcar. CTK_ROOT es el repo que publica y las herramientas no reciben rutas: el agente no puede apuntar el servidor a otra carpeta, hay un servidor por repo. Y este archivo lleva el token, así que no se commitea. Sin las tres variables, el servidor se niega a arrancar y lo dice."
+        }
+      ]
+    },
+    {
+      "id": "caso-principal",
+      "title": "Caso principal",
+      "subtitle": "Del plan al diff y a la ventana: publicar un cambio del runbook",
+      "screen": "cursor-full",
+      "faq": [
+        {
+          "q": "¿Puede el agente publicar solo?",
+          "a": "No. Planifica y lee todo lo que quiera, pero para escribir lanza ctk apply y se abre una ventana: la aprobación es tu clic, y el agente no puede tocarla."
+        },
+        {
+          "q": "¿Qué pasa si cierro la ventana o no hago nada?",
+          "a": "No se escribe nada. Cancelar, Escape, cerrarla o dejar pasar los 100 segundos termina el comando con código 3, y el agente no reintenta: te pregunta qué querés."
+        },
+        {
+          "q": "¿Y la terminal, no pedía escribir «Apruebo n»?",
+          "a": "Sí: si corrés ctk apply vos en una terminal, escribís esa frase ahí. Cuando lo lanza el agente no hay terminal para vos, entonces sale la ventana. Es la misma regla con otra puerta."
+        },
+        {
+          "q": "¿Hay una forma de publicar sin nadie que apruebe?",
+          "a": "Una sola: ctk ci, en GitHub Actions, donde el merge a la rama por defecto es la aprobación. Corre solo ahí y desde la compu nunca se corre ni se simula."
+        }
+      ],
+      "steps": [
+        {
+          "type": "ask",
+          "text": "Actualicé el runbook. Mostrame qué se publicaría en Confluence, sin escribir nada.",
+          "source": "inferido",
+          "notes": "Un pedido de lo más normal: acabás de editar un documento y querés saber qué cambia. Fijate el chat de la izquierda: veníamos trabajando en el runbook de despliegue. No hay nada que configurar ni comando que recordar."
+        },
+        {
+          "type": "tool",
+          "label": "Read · ~/.cursor/skills/confluence-team-kit/SKILL.md",
+          "source": "inferido",
+          "notes": "Cursor reconoce el pedido y carga la skill. Desde acá el agente sigue las reglas de la skill: Confluence se toca solo con ctk, primero se planifica y para escribir hace falta una persona."
+        },
+        {
+          "type": "tool",
+          "label": "Read · .confluence.yml",
+          "source": "inferido",
+          "notes": "Antes de planificar mira el manifest: el archivo que dice qué carpeta o archivo va bajo qué página ancla de Confluence. Es la receta que ya tiene el repo; el agente no inventa a dónde publicar."
+        },
+        {
+          "type": "term",
+          "cmd": "ctk plan",
+          "out": [
+            "UNCHANGED docs/arquitectura/index.md  'Arquitectura del servicio'",
+            "UNCHANGED docs/arquitectura/componentes.md  'Componentes'",
+            "UNCHANGED docs/arquitectura/decisiones  'Decisiones'",
+            "UNCHANGED docs/arquitectura/decisiones/adr-001.md  'ADR 001: usar colas'",
+            "UPDATE    docs/runbook.md  'Runbook de despliegue'",
+            "1 update, 4 unchanged",
+            "plan written to ctk-plan.json"
+          ],
+          "source": "inferido",
+          "cwd": "~/mi-servicio",
+          "notes": "Este es el comando central. ctk plan lee Confluence, compara con tus archivos y escribe un plan en ctk-plan.json. No escribe nada en Confluence. Cada línea es una acción: UPDATE es una página cuyo origen cambió, UNCHANGED es nada que hacer. Acá una sola página cambia y las otras cuatro siguen igual. Inferido porque lee un Confluence real."
+        },
+        {
+          "type": "term",
+          "cmd": "ctk diff",
+          "out": [
+            "UPDATE docs/runbook.md  'Runbook de despliegue'  (page 5014)",
+            "--- confluence",
+            "+++ local",
+            "@@ -1,2 +1,2 @@",
+            " <h2>Despliegue</h2>",
+            "-<p>Corré el job a mano.</p>",
+            "+<p>Corré el job desde el pipeline.</p>"
+          ],
+          "source": "inferido",
+          "cwd": "~/mi-servicio",
+          "notes": "El diff es el paso que casi nadie conoce y el que da tranquilidad. Muestra el lado de Confluence contra lo que publicaría tu repo: el signo menos es lo que hoy está en Confluence, el más es lo que va a quedar. Se imprime acá y no se guarda en ningún lado. Lo leés como un control de cambios de un documento."
+        },
+        {
+          "type": "say",
+          "md": "Se publicaría **una sola página**: `docs/runbook.md`, que pasa de «Corré el job a mano» a «Corré el job desde el pipeline». Las otras **4 páginas no cambian**.\n\nHasta acá no escribí nada en Confluence. **¿Lo publico?**",
+          "source": "inferido",
+          "notes": "Mirá cómo cierra el agente: resume en una frase, dice qué no tocó y pregunta. La skill exige mostrar las filas y esperar tu visto bueno antes de aplicar. Tu sí en el chat habilita el comando, pero todavía no aprueba nada."
+        },
+        {
+          "type": "ask",
+          "text": "Dale, publicalo.",
+          "source": "inferido",
+          "notes": "Ese es el visto bueno. Recién ahora el agente puede ir al comando que escribe."
+        },
+        {
+          "type": "say",
+          "md": "Voy a correr el comando que **escribe en Confluence**. **Se va a abrir una ventana** con la página que se actualiza y los botones **Cancelar** y **Apruebo 1**.\n\nLa aprobación es tu clic en esa ventana: mi pregunta de recién no cuenta, y yo no puedo tocarla. Si cancelás o la cerrás, no lo vuelvo a correr salvo que me lo pidas.",
+          "source": "inferido",
+          "notes": "Este aviso es parte de la regla de la skill: antes de lanzar ctk apply, el agente avisa que se abre una ventana y qué va a aprobarse. Y que vos tenés que estar adelante de la pantalla. Si no estás, deja el comando listo para que lo corras vos. Remarcá la última frase: si cancelás, no insiste.",
+          "pause": true
+        },
+        {
+          "type": "approve",
+          "title": "Publicar en Confluence",
+          "lines": [
+            "docs/runbook.md · 'Runbook de despliegue' · UPDATE · página 5014, título actual en Confluence: Runbook de despliegue",
+            "Aprobás con un clic en Apruebo 1. Escape, Return o Cancelar no escriben nada. Se cancela sola a los 100 s."
+          ],
+          "button": "Apruebo 1",
+          "source": "inferido",
+          "notes": "La ventana nativa de macOS, con una tarjeta por página: ruta, título y el cambio. Para una página que ya existe, además, muestra su id y su título actual leídos justo antes de abrirla, para que un plan que nombra una página y apunta a otra no pueda pasar como inocente. Es lo que tenés que mirar antes de hacer clic, y recordá que Return no aprueba: solo el clic. Inferida: no se puede capturar sin una persona.",
+          "pause": true
+        },
+        {
+          "type": "term",
+          "cmd": "ctk apply ctk-plan.json",
+          "out": [
+            "UNCHANGED docs/arquitectura/index.md  'Arquitectura del servicio'",
+            "UNCHANGED docs/arquitectura/componentes.md  'Componentes'",
+            "UNCHANGED docs/arquitectura/decisiones  'Decisiones'",
+            "UNCHANGED docs/arquitectura/decisiones/adr-001.md  'ADR 001: usar colas'",
+            "UPDATE    docs/runbook.md  'Runbook de despliegue'",
+            "1 update, 4 unchanged",
+            "done    UPDATE docs/runbook.md"
+          ],
+          "source": "inferido",
+          "cwd": "~/mi-servicio",
+          "notes": "Con tu clic, apply ejecuta exactamente ese plan y dice qué hizo con cada página. Antes de escribir vuelve a comprobar que la página sigue siendo de este repo y que nadie la editó después del plan; si algo cambió, esa acción falla y hay que planificar de nuevo. Inferido: escribe en Confluence."
+        },
+        {
+          "type": "worked",
+          "seconds": 27,
+          "source": "inferido",
+          "notes": "El tiempo del agente, sin contar lo que tardaste vos en revisar y aprobar."
+        },
+        {
+          "type": "say",
+          "md": "Listo: **`docs/runbook.md` ya está actualizado en Confluence**, con el cambio que revisamos.\n\n#### Qué quedó\n- **En Confluence:** la página nueva versión, con el estado de la sincronización guardado en la propia página\n- **En tu repo:** solo `ctk-plan.json`, el plan; conviene ignorarlo en git\n\nPara comprobar, pedime otro plan: tiene que decir **`5 unchanged`**.",
+          "source": "inferido",
+          "notes": "Cerrá con lo que queda y por qué importa: el estado vive en Confluence y no en tu repo, así que no hay archivos de estado que se desincronicen. Y la prueba de que todo cerró es un segundo plan que dice todo igual.",
+          "pause": true
+        }
+      ]
+    },
+    {
+      "id": "otro-caso",
+      "title": "Otro caso",
+      "subtitle": "Alguien editó la página en Confluence: el drift",
+      "screen": "cursor-agent",
+      "faq": [
+        {
+          "q": "¿Qué es el drift?",
+          "a": "Que alguien editó la página directo en Confluence después de tu última publicación, y vos también cambiaste el archivo. Publicar pisaría su edición, así que ctk frena y avisa."
+        },
+        {
+          "q": "¿Qué pasa con on_drift en su valor por defecto?",
+          "a": "Con repo_wins el repo es la fuente de verdad y pisa la edición, pero solo si estás en la última versión de la rama por defecto. Si no, el plan bloquea y dice por qué: la salida es ponerte al día, nunca cambiar on_drift."
+        },
+        {
+          "q": "¿Cómo traigo lo que escribió la otra persona?",
+          "a": "A mano: ctk detecta que la página cambió y muestra el diff, pero no fusiona. Copiás el cambio al .md, planificás de nuevo y recién ahí se publica."
+        },
+        {
+          "q": "¿Y si el plan sale BLOCKED?",
+          "a": "Es que la página ancla no tiene dueño, o es de otro repo. No es un error tuyo: Plataforma tiene que correr ctk grant, que también abre su ventana de aprobación. El agente no lo arregla creando la página por su cuenta."
+        }
+      ],
+      "steps": [
+        {
+          "type": "ask",
+          "text": "Alguien tocó el runbook directo en Confluence. ¿Qué pasa si publico?",
+          "source": "inferido",
+          "notes": "Otro pedido típico, y mucho más delicado: no es publicar, es no pisar a nadie. Es la razón de ser de ctk. Fijate que no le decís qué comando usar; la skill lo sabe."
+        },
+        {
+          "type": "term",
+          "cmd": "ctk plan",
+          "out": [
+            "UNCHANGED docs/arquitectura/index.md  'Arquitectura del servicio'",
+            "UNCHANGED docs/arquitectura/componentes.md  'Componentes'",
+            "UNCHANGED docs/arquitectura/decisiones  'Decisiones'",
+            "UNCHANGED docs/arquitectura/decisiones/adr-001.md  'ADR 001: usar colas'",
+            "DRIFT     docs/runbook.md  'Runbook de despliegue'  -- remote page was edited since the last sync",
+            "1 drift, 4 unchanged",
+            "plan written to ctk-plan.json",
+            "# exit 2"
+          ],
+          "source": "inferido",
+          "cwd": "~/mi-servicio",
+          "notes": "Ahora la fila dice DRIFT y el comando sale con código 2, que significa «mirá esto antes de seguir». En este repo el manifest tiene on_drift: fail, la opción más prudente: no se pisa nunca. Todavía no se escribió nada, y ctk apply tampoco escribiría."
+        },
+        {
+          "type": "term",
+          "cmd": "ctk diff --key docs/runbook.md",
+          "out": [
+            "DRIFT docs/runbook.md  'Runbook de despliegue'  (page 5014)",
+            "--- confluence",
+            "+++ local",
+            "@@ -1,3 +1,3 @@",
+            " <h2>Despliegue</h2>",
+            "-<p>Avisá en el canal antes de correr el job.</p>",
+            "+<p>Corré el job desde el pipeline.</p>",
+            " <p>Revertí con el botón de rollback.</p>"
+          ],
+          "source": "inferido",
+          "cwd": "~/mi-servicio",
+          "notes": "El diff dice exactamente qué pasó. Alguien agregó en Confluence un aviso de «avisá en el canal» que tu archivo no tiene; y vos cambiaste otra línea. Solo lee, imprime acá y no guarda nada. Es lo que la skill pide mirar antes de decidir."
+        },
+        {
+          "type": "say",
+          "md": "La página tiene una línea que **tu archivo no tiene**: alguien agregó «Avisá en el canal antes de correr el job». Si publico, esa línea se pierde.\n\n**¿Qué lado gana?**\n- **Recomendado:** traigo esa línea a `docs/runbook.md`, planifico de nuevo y publicamos juntos\n- **Si gana tu versión:** lo decidís vos; yo **no toco Confluence ni cambio `on_drift`**\n\nHasta que me digas, no publico nada.",
+          "source": "inferido",
+          "notes": "Acá se ve el criterio de la skill. Con on_drift: fail el agente no elige un lado: te pregunta. Y se cuida de dos atajos prohibidos: resolver el drift borrando la página o editando Confluence por su cuenta. La salida segura es siempre traer el cambio al archivo y volver a planificar."
+        },
+        {
+          "type": "ask",
+          "text": "Traé la línea al archivo.",
+          "source": "inferido",
+          "notes": "Una decisión humana, en una frase. El agente edita tu archivo, que es tuyo, y no Confluence."
+        },
+        {
+          "type": "tool",
+          "label": "Edit · docs/runbook.md",
+          "source": "inferido",
+          "notes": "Edita el runbook para sumar la línea de la otra persona. Es un cambio en tu repo que ves en el diff de Cursor y podés deshacer."
+        },
+        {
+          "type": "tool",
+          "label": "Ran · ctk plan",
+          "source": "inferido",
+          "notes": "Planifica de nuevo con el archivo ya fusionado. Solo lectura. Ahora la fila deja de ser DRIFT y pasa a UPDATE, porque lo que publicaría tu repo ya contiene lo que escribió la otra persona."
+        },
+        {
+          "type": "say",
+          "md": "Hecho: el plan ahora marca **1 UPDATE** y ya no hay drift. La línea de la otra persona **quedó en el archivo**.\n\n**¿Lo publico?** Se abre la misma ventana de aprobación que antes.",
+          "source": "inferido",
+          "notes": "Terminó donde terminan todos los casos de escritura: pregunta y espera. Si decís que sí, se repite el aviso previo y la ventana que ya viste. No hace falta mostrarla otra vez.",
+          "pause": true
+        }
+      ]
+    },
+    {
+      "id": "si-algo-falla",
+      "title": "Si algo falla",
+      "subtitle": "Los errores más comunes y cómo salir",
+      "screen": "terminal",
+      "faq": [
+        {
+          "q": "El agente no usa la skill y habla de otra herramienta de Confluence.",
+          "a": "Revisá que el enlace de la skill exista y apunte al clon: el readlink de este capítulo. La skill dice que Confluence se toca solo con ctk, nunca con otro conector."
+        },
+        {
+          "q": "«error: missing environment». ¿Qué falta?",
+          "a": "Las tres variables de Confluence. Si ya las guardaste, casi seguro Cursor se abrió antes de que existieran: cerralo del todo y abrilo de nuevo."
+        },
+        {
+          "q": "Cancelé la ventana sin querer. ¿Cómo sigo?",
+          "a": "Nada se escribió. Pedile al agente que lo vuelva a intentar: no lo hace solo, a propósito, y te va a preguntar."
+        },
+        {
+          "q": "«cannot tell which repo this is».",
+          "a": "El repo no tiene remoto origin. Pasá --repo org/nombre a ctk plan."
+        }
+      ],
+      "steps": [
+        {
+          "type": "term",
+          "cmd": "readlink ~/.cursor/skills/confluence-team-kit",
+          "out": [
+            "~/skills/confluence-team-kit/skills/confluence-team-kit"
+          ],
+          "source": "real",
+          "cwd": "~",
+          "notes": "Si el agente no parece conocer la skill, mirá primero si el enlace está. Acá apunta al clon, o sea que la instalación anduvo: lo que falta es reiniciar Cursor."
+        },
+        {
+          "type": "term",
+          "cmd": "ctk plan",
+          "out": [
+            "error: missing environment: CONFLUENCE_BASE_URL, CONFLUENCE_EMAIL, CONFLUENCE_TOKEN",
+            "# exit 1"
+          ],
+          "source": "inferido",
+          "cwd": "~/mi-servicio",
+          "notes": "El segundo error típico: faltan las credenciales y ctk lo dice con las tres variables que busca. Casi siempre es que Cursor se abrió antes de guardarlas, así que cerralo del todo y abrilo. Inferido: esta captura no puede correr ctk, la salida es la de la documentación."
+        },
+        {
+          "type": "term",
+          "cmd": "ctk plan",
+          "out": [
+            "BLOCKED   docs/arquitectura/  'docs/arquitectura/'  -- anchor 5001 has no owner; ask the platform team to run `ctk grant 5001 --owner tu-empresa/demo-servicio`",
+            "1 blocked",
+            "plan written to ctk-plan.json",
+            "# exit 2"
+          ],
+          "source": "inferido",
+          "cwd": "~/mi-servicio",
+          "notes": "El tercero no es un error tuyo ni del agente: la página ancla todavía no tiene dueño, y ctk no escribe bajo un ancla sin dueño. La salida está en la propia fila: Plataforma corre ctk grant, que también abre una ventana. Lo único que podés hacer vos es pedírselo.",
+          "pause": true
+        }
+      ]
+    },
+    {
+      "id": "cierre",
+      "title": "Cierre",
+      "subtitle": "Lo que te llevás",
+      "screen": "cursor-agent",
+      "faq": [
+        {
+          "q": "¿Tengo que instalar el MCP para usar la skill?",
+          "a": "No. Sin el MCP el agente corre ctk en la terminal; con él, usa tres herramientas (page, publish, anchor) con las mismas reglas y la misma ventana."
+        },
+        {
+          "q": "¿Qué tan seguro es el dueño de una página?",
+          "a": "Es un guardrail ante errores, no una frontera de seguridad: el token de Confluence es compartido, así que cualquiera con él puede escribir sin pasar por ctk."
+        },
+        {
+          "q": "¿Qué sigue?",
+          "a": "El episodio 4: product-brain-mcp, otra herramienta con MCP y con la misma ventana de aprobación."
+        }
+      ],
+      "steps": [
+        {
+          "type": "ask",
+          "text": "¿Qué me llevo de esto?",
+          "source": "inferido",
+          "notes": "Cerrá con las tres ideas; no repitas el episodio."
+        },
+        {
+          "type": "say",
+          "md": "#### Lo que te llevás\n- **Primero el plan, después el diff, después la escritura:** `ctk plan` y `ctk diff` solo leen; publicar es un paso aparte.\n- **Nada se escribe sin tu clic:** el agente avisa que se abre la ventana, vos aprobás, y si cancelás no insiste.\n- **No se pisa a nadie:** si alguien editó la página, hay drift y la salida es traer el cambio al archivo, no sobrescribir.\n\n#### Próximo episodio: product-brain-mcp\nCómo armar una iniciativa completa (el PRD, el RFC y las épicas) desde una conversación y exportarla a Jira, con otro MCP y otra ventana de aprobación.",
+          "source": "inferido",
+          "notes": "Las tres ideas son el producto: plan antes de escribir, tu clic como única puerta, y no pisar a nadie. Anticipá el próximo en una frase: es el mismo patrón, con un MCP, pero para pasar de una conversación a una iniciativa completa.",
+          "pause": true
+        }
+      ]
+    }
+  ]
+}
