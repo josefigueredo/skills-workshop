@@ -1,5 +1,6 @@
-# Names of the skills this workshop teaches. A $WS_LEAK_TERMS hit that lies wholly
-# inside one of these names is not a leak: the episode is about that skill.
+# Names of the skills and products this workshop teaches. A $WS_LEAK_TERMS hit that lies
+# wholly inside one of these names is not a leak: the episode is about that skill or product.
+# This file is always the one in this repo, even with `build.py --root <other>`.
 # One name per line, matched case-insensitively. Generic rules (paths, emails, secrets)
 # are never exempt. Add a name only when an episode needs it and the person agreed.
 product-brain-mcp

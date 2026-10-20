@@ -24,6 +24,7 @@ GENERIC = {
 }
 
 EXCERPT_MAX = 20
+# Always this repo's list, also under `build.py --root <other>`: the names are the ones this workshop teaches.
 ALLOW_FILE = Path(__file__).resolve().parent.parent / "privacy-allow.txt"
 
 
