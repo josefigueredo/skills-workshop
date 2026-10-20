@@ -435,10 +435,36 @@
           "notes": "jira-em: para quien sigue varios boards y un equipo, no para uno mismo. La diferencia con standup es el «mi equipo»."
         },
         {
-          "type": "say",
-          "md": "Con el view **plataforma** miro `jtk team status` y `jtk team stalled`. Los boards necesitan su perfil guardado: qué estado significa «hecho» en cada proyecto. Si falta alguno te lo pregunto, **no lo adivino**.",
+          "type": "tool",
+          "label": "Ran · jtk team status plataforma",
           "source": "inferido",
-          "notes": "Un detalle que muestra el criterio de la skill: los roles de cada estado los decide una persona, una vez por proyecto. El agente los relaya, no los elige."
+          "notes": "jira-em traduce «cómo viene mi equipo» a jtk team status. Cada board necesita su perfil: qué estado es «hecho» o «en curso». Si falta, te lo pregunta; no lo adivina."
+        },
+        {
+          "type": "say",
+          "md": "## Estado del equipo\n**View:** plataforma · **Boards:** PLAT · **Equipo:** grupo team · **Consultado:** 2026-10-20 · **Perfiles:** confirmados\n\n**7 abiertos** (issues del equipo y sin asignar)\n\n### Por board\n| Board | Abiertos | Por hacer | En curso | Bloqueado | Esperando | Sin rol | Sin asignar |\n| ----- | -------- | --------- | -------- | --------- | --------- | ------- | ----------- |\n| PLAT  | 7        | 3         | 3        | 1         | 0         | 0       | 0           |\n\n### Por persona y board\n| Persona            | Board | Abiertos | Por hacer | En curso | Bloqueado | Esperando | Sin rol | WIP | Límite | Veredicto      |\n| ------------------ | ----- | -------- | --------- | -------- | --------- | --------- | ------- | --- | ------ | -------------- |\n| Ana Gómez          | PLAT  | 2        | 0         | 2        | 0         | 0         | 0       | 2   | 3      | espacio para 1 |\n| Beto Ruiz          | PLAT  | 2        | 0         | 1        | 1         | 0         | 0       | 2   | 3      | espacio para 1 |\n| Persona del equipo | PLAT  | 3        | 3         | 0        | 0         | 0         | 0       | 0   | 3      | espacio para 3 |\n\n### Límites\n- «Sin rol» son issues en estados que el perfil todavía no decidió o no conoce.\n- «Sin asignar» cuenta lo abierto sin dueño en esos boards, sea o no del equipo; lo asignado a otras personas no se cuenta.\n- El veredicto de carga sale del límite de WIP de cada perfil (`jtk board limit KEY N`); sin límite, solo números.",
+          "source": "inferido",
+          "pause": true,
+          "notes": "La skill muestra la salida tal cual: ya es Markdown y cierra con «Límites». Formato real de jtk, datos inventados. Los 3 que asignamos recién ya tienen dueño: «Sin asignar» da 0."
+        },
+        {
+          "type": "tool",
+          "label": "Ran · jtk team stalled plataforma",
+          "source": "inferido",
+          "notes": "«Qué está estancado» es jtk team stalled, con los 7 días del view."
+        },
+        {
+          "type": "say",
+          "md": "## Estancados\n**View:** plataforma · **Boards:** PLAT · **Equipo:** grupo team · **Consultado:** 2026-10-20 · **Perfiles:** confirmados\n\n**2 de 3 en curso** llevan 7 días o más en su categoría\n\n| Key      | Título                          | Dueño     | Estado   | Días en la categoría | Días desde la última edición |\n| -------- | ------------------------------- | --------- | -------- | -------------------- | ---------------------------- |\n| PLAT-118 | Migrar el cálculo de envíos     | Ana Gómez | En curso | 15                   | 11                           |\n| PLAT-121 | Reintentos del webhook de pagos | Beto Ruiz | En curso | 11                   | 4                            |\n\n### Límites\n- «Estancado» no es «sin progreso»: la categoría de Jira solo cambia al pasar de una categoría a otra, así que moverse entre dos estados «en curso» no reinicia los días en la categoría.\n- Los días desde la última edición se reinician con cualquier cambio, comentarios incluidos.",
+          "source": "inferido",
+          "pause": true,
+          "notes": "Estancado no es «sin progreso»: moverse entre dos estados «en curso» no reinicia la cuenta. Por eso está la última columna: PLAT-121 se tocó hace 4 días."
+        },
+        {
+          "type": "ask",
+          "text": "¿Y cuáles son las cuatro skills, en resumen?",
+          "source": "inferido",
+          "notes": "Cierre del capítulo: el mapa completo."
         },
         {
           "type": "say",
