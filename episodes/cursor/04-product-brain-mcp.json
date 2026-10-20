@@ -488,7 +488,7 @@
         },
         {
           "q": "¿Qué sigue?",
-          "a": "El episodio 5: auditing-repos, para revisar un repo y convertir los hallazgos en issues y pull requests o en tareas de un tablero."
+          "a": "El episodio 5: auditing-repos, para revisar un repo y convertir los hallazgos en issues y pull requests, con Jira como vínculo opcional."
         }
       ],
       "steps": [
@@ -500,7 +500,7 @@
         },
         {
           "type": "say",
-          "md": "#### Lo que te llevás\n- **Una conversación en vez de cien campos:** el agente arma el documento entero, vos lo revisás en tu editor y los datos que no se saben quedan `{{pendiente}}`, no escondidos.\n- **Nada se escribe sin tu clic:** el agente avisa que se abre la ventana, vos aprobás, y si cancelás no insiste.\n- **El token es tuyo:** lo guardás vos, dura unas 8 horas y nunca pasa por el chat.\n\n#### Próximo episodio: auditing-repos\nCómo pedirle al agente que revise un repo, mida su calidad y su seguridad, y convierta los hallazgos en issues y pull requests, o en tareas de un tablero.",
+          "md": "#### Lo que te llevás\n- **Una conversación en vez de cien campos:** el agente arma el documento entero, vos lo revisás en tu editor y los datos que no se saben quedan `{{pendiente}}`, no escondidos.\n- **Nada se escribe sin tu clic:** el agente avisa que se abre la ventana, vos aprobás, y si cancelás no insiste.\n- **El token es tuyo:** lo guardás vos, dura unas 8 horas y nunca pasa por el chat.\n\n#### Próximo episodio: auditing-repos\nCómo pedirle al agente que revise un repo, mida su calidad y su seguridad, y convierta los hallazgos en issues y pull requests, que podés vincular a un ticket de Jira.",
           "source": "inferido",
           "notes": "Las tres ideas son el producto: una conversación guiada, tu clic como única puerta y un secreto que no sale de tu máquina. Anticipá el próximo en una frase: cambiamos de plano, de armar un documento a mirar un repo que ya existe y ordenar lo que está mal.",
           "pause": true
