@@ -156,6 +156,12 @@ class TestAllowList(Tmp):
         for line in ("(product-brain-mcp)", "`product-brain-mcp`.", "«product-brain-mcp»", "product-brain-mcp"):
             self.assertEqual(self.scan_with("product-brain-mcp\n", line), [], line)
 
+    def test_allowed_name_next_to_a_bundle_escape_is_exempt(self):
+        # The bundle writes < > & inside its JSON as \u003c \u003e \u0026: a page's «>Product Brain<» becomes this.
+        for line in ("\\u003eproduct-brain-mcp\\u003c", "a\\u0026product-brain-mcp"):
+            self.assertEqual(self.scan_with("product-brain-mcp\n", line), [], line)
+        self.assertEqual(len(self.scan_with("product-brain\n", "\\u003emyproduct-brainy", terms="brain\n")), 1)
+
     def test_allow_list_never_hides_generic_rules(self):
         out = self.scan_with("jane.doe@corp.io\n", "mail jane.doe@corp.io")
         self.assertEqual(len(out), 1)

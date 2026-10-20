@@ -68,8 +68,13 @@ def _is_word(c: str) -> bool:
     return c.isalnum() or c == "_"
 
 
+# The bundle's JSON escapes (bundle.episodes_json) stand for < > &: for the word-boundary test they are punctuation.
+# Same length, so every span still points into the original line.
+_BUNDLE_ESCAPE = re.compile(r"\\u00(?:3c|3e|26)", re.IGNORECASE)
+
+
 def _allowed_spans(line: str, names: List[str]) -> List[tuple]:
-    low = line.lower()
+    low = _BUNDLE_ESCAPE.sub(lambda m: "<" * len(m.group(0)), line.lower())
     spans = []
     for name in names:
         n = name.lower()
