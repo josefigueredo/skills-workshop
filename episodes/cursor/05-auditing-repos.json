@@ -47,8 +47,8 @@
           "a": "Sí: con npx skills add, desde tu clon, y necesitás Node. Pero instala una copia: no se actualiza con git pull, hay que repetir el comando. Y si ya la habías enlazado, te cambia el enlace por la copia."
         },
         {
-          "q": "¿Es obligatorio tener gh y Jira?",
-          "a": "No. Sin gh autenticado la skill audita y escribe el informe local, pero no publica. Sin las variables de Jira, Jira se saltea y el resto anda igual."
+          "q": "El clone dice «Permission denied», ¿qué hago?",
+          "a": "Falta acceso a este repo, que es de otra organización. Pedíselo al equipo dueño; la clave SSH del episodio 0 sirve en cuanto te lo den. Y sobre gh y Jira: son opcionales; sin gh la skill solo escribe el informe local, y sin Jira el resto anda igual."
         }
       ],
       "steps": [
@@ -60,7 +60,7 @@
           ],
           "source": "inferido",
           "cwd": "~",
-          "notes": "Primero bajamos el repo del equipo. Ojo: es un repo con varias skills adentro, y la que vamos a usar vive en la carpeta skills/auditing-repos. En <repo> va la dirección que te da tu equipo. Necesita red y acceso por SSH, que dejó listo el episodio 0. Paso inferido."
+          "notes": "Primero bajamos el repo del equipo. Ojo: es un repo con varias skills adentro, y la que vamos a usar vive en la carpeta skills/auditing-repos. En <repo> va la dirección que te da tu equipo. Necesita red y acceso por SSH. La clave SSH sale del episodio 0, pero el acceso a este repo, que es de otra organización, se lo pedís al equipo dueño: si no te lo dieron, git clone responde «Permission denied» y no es un error tuyo. Paso inferido."
         },
         {
           "type": "term",
@@ -108,7 +108,7 @@
           ],
           "source": "inferido",
           "cwd": "~",
-          "notes": "Otra comprobación, con un script que viene con la skill: prueba que el detector de atribución dispara en los casos malos y no se confunde con los legítimos. Tiene que terminar en passed=22 failed=0. Inferido: usa rg, que no está en el entorno de la captura; la salida sale de la documentación de la skill."
+          "notes": "Una comprobación que viene con la skill: prueba que el detector de atribución dispara en los casos malos y no se confunde con los legítimos. Tiene que terminar en passed=22 failed=0. Inferido: usa rg, que no está en el entorno de la captura."
         },
         {
           "type": "term",
@@ -128,7 +128,7 @@
           "out": [],
           "source": "inferido",
           "cwd": "~",
-          "notes": "Jira es opcional. Si lo querés, abrís tu ~/.zshrc con un editor y agregás tres variables: JIRA_BASE_URL, JIRA_EMAIL y JIRA_API_TOKEN, y si querés JIRA_PROJECT_KEY. Son un secreto: nunca las pegues en el chat. Después cerrá Cursor del todo y abrilo. Si falta alguna, Jira se saltea y todo lo demás sigue andando."
+          "notes": "Jira es opcional. Si lo querés, abrís tu ~/.zshrc con un editor y agregás JIRA_BASE_URL, JIRA_EMAIL y JIRA_API_TOKEN. Son un secreto: nunca las pegues en el chat. Después reiniciá Cursor. Si falta alguna, Jira se saltea y todo lo demás sigue andando."
         }
       ]
     },
@@ -166,7 +166,7 @@
           "type": "tool",
           "label": "Read · ~/.agents/skills/auditing-repos/SKILL.md",
           "source": "inferido",
-          "notes": "Cursor reconoce el pedido y carga la skill. Desde acá el agente sigue un orden fijo: preflight, analizar, verificar, informe local, compuerta, publicar, responder la review."
+          "notes": "Cursor reconoce el pedido y carga la skill. Desde acá el agente sigue un orden fijo: preflight, analizar, verificar, informe local, compuerta, publicar, responder la review. También lee dos referencias obligatorias: verificación y atribución."
         },
         {
           "type": "term",
@@ -291,11 +291,11 @@
           "type": "tool",
           "label": "Ran · gh pr create · fix/descuento-sin-tope y fix/paginacion-desde-1",
           "source": "inferido",
-          "notes": "Los PRs se agrupan por cambio que se puede mergear y revertir solo. Acá F-01 y F-02 tocan archivos distintos, así que son dos PRs. Si compartieran archivo, irían juntos."
+          "notes": "Los PRs se agrupan por cambio que se puede mergear y revertir solo. Acá F-01 y F-02 tocan archivos distintos, así que son dos PRs. Si compartieran archivo, irían juntos. Los arreglos van en una rama por PR; no se muestran."
         },
         {
           "type": "say",
-          "md": "#### Listo\n- **Issues:** #21 (F-01) y #22 (F-02), uno por hallazgo.\n- **PRs:** #23 cierra #21 y #24 cierra #22; cada uno abre con `Closes #…` y dice qué archivos comparte con el otro.\n- **F-03** quedó en el informe, sin publicar.\n- Nada de lo que escribí menciona que lo hizo un asistente: todo sale a tu nombre.",
+          "md": "#### Listo\n- **Issues:** #21 (F-01) y #22 (F-02), uno por hallazgo.\n- **PRs:** #23 cierra #21 y #24 cierra #22; cada uno abre con `Closes #…` y nombra los archivos que comparte con el otro, o que no comparte ninguno.\n- **F-03** quedó en el informe, sin publicar.\n- Nada de lo que escribí menciona que lo hizo un asistente: todo sale a tu nombre.",
           "source": "inferido",
           "notes": "Leé el cierre: cuántos issues y PRs, y qué quedó afuera. Remarcá la última línea: la regla de atribución es absoluta; no hay pie de página ni trailer de co-autor en nada. Eso ya está decidido por la skill y no se discute en cada corrida.",
           "pause": true
@@ -330,7 +330,7 @@
           "type": "ask",
           "text": "Voy a pushear: pasá el sweep y chequeá que nada indique que lo hizo un LLM",
           "source": "inferido",
-          "notes": "Dos pedidos en una frase. La skill los resuelve con dos scripts: el sweep y el chequeo de atribución."
+          "notes": "Dos pedidos en una frase. La skill los resuelve con dos scripts: el sweep y el chequeo de atribución. Es un segundo push: ya hay PRs abiertos y la persona vuelve a pedir el chequeo antes de empujar un cambio nuevo."
         },
         {
           "type": "term",
@@ -426,7 +426,7 @@
           "type": "say",
           "md": "Los PRs #23 y #24 ya existen, así que **no renombro sus ramas**: GitHub cierra un PR si se renombra su rama.\n\nLes agrego la clave al final del título: `fix: … (PLAT-123)`.",
           "source": "inferido",
-          "notes": "Esta es la regla que más cuesta aprender a las malas. La rama de un PR abierto no se toca. El título sí, y es no destructivo. Si el ticket ya lo sabías antes de empezar, la clave se pone en el nombre de la rama desde el principio."
+          "notes": "Esta es la regla que más cuesta aprender a las malas. La rama de un PR abierto no se toca. El título sí, y es no destructivo. Si ya sabías el ticket antes de empezar, la clave se pone en el nombre de la rama desde el principio."
         },
         {
           "type": "tool",
@@ -498,7 +498,7 @@
         },
         {
           "type": "term",
-          "cmd": "~/.agents/skills/auditing-repos/scripts/preflight.sh | rg -A3 '^jira auth'",
+          "cmd": "~/.agents/skills/auditing-repos/scripts/preflight.sh | grep -A2 '^jira auth'",
           "out": [
             "jira auth                  HTTP 401 — token expired or revoked, NOT a permissions problem",
             "  note                     an unauthenticated Jira returns 404 for real tickets. Never conclude",
