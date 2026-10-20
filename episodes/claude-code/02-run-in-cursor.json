@@ -46,13 +46,13 @@
       "steps": [
         {
           "type": "term",
-          "cmd": "git clone <repo> ~/skills/run-in-cursor",
+          "cmd": "git clone git@github.com:josefigueredo/run-in-cursor.git ~/skills/run-in-cursor",
           "out": [
             "Cloning into '~/skills/run-in-cursor'..."
           ],
           "source": "inferido",
           "cwd": "~",
-          "notes": "Bajamos la skill; en <repo> va la dirección que te da tu equipo. Es privado y va por SSH: si dice «Permission denied», falta el acceso (la clave sale del episodio 0). Inferido: necesita red."
+          "notes": "Bajamos la skill. Es privado y va por SSH: si dice «Permission denied», falta el acceso (la clave sale del episodio 0). Inferido: necesita red."
         },
         {
           "type": "term",
@@ -285,7 +285,7 @@
       "steps": [
         {
           "type": "ask",
-          "text": "Mandale a Cursor /spec-kit.implement specs/001-devoluciones y que después haga git push. Hacelo sin que haga push.",
+          "text": "Mandale a Cursor /spec-kit.implement specs/001-devoluciones y después git push",
           "source": "inferido",
           "notes": "El pedido trae las dos cosas: lo que querés que haga y, al final, el push. Es el ejemplo de la guía de instalación de la skill. Pero ojo: el agente ya sabe que el push es tuyo."
         },
@@ -297,7 +297,7 @@
         },
         {
           "type": "term",
-          "cmd": "python3 ~/.agents/skills/run-in-cursor/ric.py run --workspace ~/mi-servicio --deny \"git push\" \"/spec-kit.implement specs/001-devoluciones y despues git push\"",
+          "cmd": "python3 ~/.agents/skills/run-in-cursor/ric.py run --workspace ~/mi-servicio --deny \"git push\" \"/spec-kit.implement specs/001-devoluciones y después git push\"",
           "out": [
             "ric: refused: the prompt matches 'git push'; run it in Cursor yourself",
             "# exit 1"
@@ -510,7 +510,7 @@
         },
         {
           "type": "say",
-          "md": "#### Lo que te llevás de run-in-cursor\n- **Cursor, desde acá:** `ric run` abre un `cursor-agent` interactivo dentro de `tmux` y espera el turno: cuenta como uso real, con turnos, modelo y tokens.\n- **Lo tuyo es tuyo:** las decisiones que Cursor pregunta y lo que se publica. `--deny` frena textos, no acciones.\n- **Siempre se cierra:** `ric quit`, para que Cursor mande el fin de la sesión.\n\n#### Lo que te llevás del taller\n- **El agente prepara, vos aprobás:** de la serie de Cursor a la de Claude Code, lo que escribe afuera (Jira, Confluence, un push) lo corrés vos, o lo aprobás en una ventana.\n- **Medir, no especular:** lo que se afirma lleva evidencia, y lo que no se pudo verificar se rotula como tal.\n- **Una vez por máquina:** instalar es enlazar a un clon y comprobar que responde; las herramientas que faltan, como tmux, se instalan una vez.\n\n#### Fin del taller\nGracias por llegar hasta acá. Ahora te toca usarlo en tu repo.",
+          "md": "#### Lo que te llevás de run-in-cursor\n- **Cursor, desde acá:** `ric run` abre un `cursor-agent` interactivo dentro de `tmux` y espera el turno: cuenta como uso real, con turnos, modelo y tokens.\n- **Lo tuyo es tuyo:** las decisiones que Cursor pregunta y lo que se publica. `--deny` frena textos, no acciones.\n- **Siempre se cierra:** `ric quit`, para que Cursor mande el fin de la sesión.\n\n#### Lo que te llevás del taller\n- **El agente prepara, vos aprobás:** de la serie de Cursor a la de Claude Code, lo que escribe afuera (Jira, Confluence, un push) lo corrés vos, lo aprobás en una ventana, o das tu OK explícito en el chat y el agente escribe (local-board, auditing-repos, install-unified-ci).\n- **Medir, no especular:** lo que se afirma lleva evidencia, y lo que no se pudo verificar se rotula como tal.\n- **Una vez por máquina:** instalar es enlazar a un clon y comprobar que responde; las herramientas que faltan, como tmux, se instalan una vez.\n\n#### Fin del taller\nGracias por llegar hasta acá. Ahora te toca usarlo en tu repo.",
           "source": "inferido",
           "notes": "Cerramos el taller con tres ideas que se repitieron en todos los episodios: el agente prepara y la persona aprueba, se mide antes de afirmar, y todo se instala una vez. Y una frase corta de despedida. No hay próximo episodio: es el final de la serie.",
           "pause": true

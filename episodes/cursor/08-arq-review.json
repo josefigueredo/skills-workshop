@@ -54,12 +54,12 @@
       "steps": [
         {
           "type": "term",
-          "cmd": "git clone <repo> ~/skills/arq-review",
+          "cmd": "git clone git@github.com:josefigueredo/arch-review.git ~/skills/arq-review",
           "out": [
             "Cloning into '~/skills/arq-review'..."
           ],
           "source": "inferido",
-          "notes": "Bajamos la herramienta; en <repo> va la dirección que te da tu equipo. Es privado y va por SSH: si dice «Permission denied», falta el acceso (clave del episodio 0). Inferido: necesita red.",
+          "notes": "Bajamos la herramienta. Es privado y va por SSH: si dice «Permission denied», falta el acceso (clave del episodio 0). Inferido: necesita red.",
           "cwd": "~"
         },
         {
@@ -253,7 +253,7 @@
         },
         {
           "type": "say",
-          "md": "#### El comando lo corrés vos\nPara crear la épica y el ticket del requirente (a su nombre, buscándolo por email), corré esto en la terminal de Cursor:\n\n`! set -a && source ~/.config/arq/.env && set +a && arq jira PRY-2026-0042 --apply`\n\nYo no lo corro: el `--apply` es tuyo. Si algo falla a mitad de camino, repetilo tal cual; retoma sin duplicar.",
+          "md": "#### El comando lo corrés vos\nPara crear la épica y el ticket del requirente (a su nombre, buscándolo por email), corré esto en la terminal de Cursor (sin el `!` del principio, que es de Claude Code):\n\n`set -a && source ~/.config/arq/.env && set +a && arq jira PRY-2026-0042 --apply`\n\nYo no lo corro: el `--apply` es tuyo. Si algo falla a mitad de camino, repetilo tal cual; retoma sin duplicar.",
           "source": "inferido",
           "notes": "El momento clave, decilo despacio: el agente nunca corre un --apply. Te lo deja armado, con el .env cargado en la misma línea porque arq lee el entorno, no el archivo. No hay ventana de aprobación: tu control es el dry run que ya viste y que el comando lo corrés vos."
         },
@@ -299,7 +299,7 @@
         },
         {
           "q": "¿Quién le escribe al requirente?",
-          "a": "arq-architect redacta el mensaje desde una plantilla, pero publicarlo le toca a arq-manager, con dry run y un comando con signo de exclamación que corrés vos."
+          "a": "arq-architect redacta el mensaje desde una plantilla, pero publicarlo le toca a arq-manager, con dry run y un comando que corrés vos."
         },
         {
           "q": "¿Y si el requirente no contesta?",
@@ -390,7 +390,7 @@
           "type": "say",
           "md": "#### Pedido de información redactado\nPor cada faltante, una pregunta concreta para este pedido y por qué se pide:\n- **Cuentas y entornos:** ¿qué cuenta de Producto y qué cuenta de Datos, y en qué entornos se hace el corte?\n- **Flujos de datos:** ¿qué datos de facturación mueve el servicio y cómo están clasificados?\n- **Rollback:** ¿cómo se vuelve atrás si falla el corte del 30 de noviembre?\n\nPuse primero lo que bloquea esa fecha. El mensaje está en `reviews/PRY-2026-0042.jsm.md`. Publicarlo le toca a `arq-manager`; el plazo todavía no arrancó (`vence` vacío), pedile que lo fije.",
           "source": "inferido",
-          "notes": "Cada pregunta es específica del pedido, nunca genérica, y van primero las que bloquean la fecha comprometida. El agente avisa que no publica: lo hace arq-manager, con dry run y un comando con ! que corrés vos, igual que el Jira."
+          "notes": "Cada pregunta es específica del pedido, nunca genérica, y van primero las que bloquean la fecha comprometida. El agente avisa que no publica: lo hace arq-manager, con dry run y un comando que corrés vos en la terminal de Cursor, sin el !, igual que el Jira."
         }
       ]
     },
@@ -538,7 +538,7 @@
             "# exit 1"
           ],
           "source": "real",
-          "notes": "Publicar sin firma: el CLI lo rechaza. Firmar es una decisión de una persona, no del agente. Salida real.",
+          "notes": "Publicar sin firma: el CLI lo rechaza. Firmar es una decisión de una persona, no del agente. Salida real. El texto de la herramienta menciona Claude Code y el !; en Cursor el comando se pega en la terminal, sin el !.",
           "cwd": "~/arq-reviews"
         },
         {
@@ -569,7 +569,7 @@
         },
         {
           "q": "¿Dónde veo el recorrido completo, con la firma y el cierre?",
-          "a": "En el showcase de la skill, que muestra cada etapa. En este episodio vimos dos de ellas."
+          "a": "En el showcase de la skill, que muestra cada etapa. En este episodio vimos las primeras etapas."
         }
       ],
       "steps": [
@@ -581,9 +581,9 @@
         },
         {
           "type": "say",
-          "md": "#### Lo que te llevás\n- **Dos skills y un CLI:** `arq-manager` coordina (registro, triage, Jira, plazo, publicación) y `arq-architect` revisa lo técnico. Se instalan juntas y trabajan sobre tu repo de reviews.\n- **El `--apply` es tuyo:** el agente muestra el dry run y te da el comando con `!`. No hay ventana de aprobación: tu control es lo que ves antes.\n- **Decide una persona:** el triage, la firma y el click de Aprobar o Rechazar no son del agente.\n\n#### Fin de la serie de Cursor\nViste ocho herramientas del Harness con las mismas reglas: el agente prepara, vos aprobás.\n\n#### Próxima serie: Claude Code, episodio 1: wayofwork\nSiete skills que te guían para llevar una iniciativa de punta a punta, ahora desde Claude Code.",
+          "md": "#### Lo que te llevás\n- **Dos skills y un CLI:** `arq-manager` coordina (registro, triage, Jira, plazo, publicación) y `arq-architect` revisa lo técnico. Se instalan juntas y trabajan sobre tu repo de reviews.\n- **El `--apply` es tuyo:** el agente muestra el dry run y te da el comando para que lo corras vos. No hay ventana de aprobación: tu control es lo que ves antes.\n- **Decide una persona:** el triage, la firma y el click de Aprobar o Rechazar no son del agente.\n\n#### Fin de la serie de Cursor\nViste ocho herramientas con las mismas reglas: el agente prepara, vos aprobás.\n\n#### Próxima serie: Claude Code, episodio 1: wayofwork\nSiete skills que te guían para llevar una iniciativa de punta a punta, ahora desde Claude Code.",
           "source": "inferido",
-          "notes": "Las tres ideas de hoy. Y el cierre de la serie: en todas las herramientas la regla se repite, el agente prepara y la persona aprueba, aunque cada una lo implementa distinto: con una ventana de macOS, o con un comando tuyo. Anticipá la serie nueva en una frase: es el mismo trabajo, pero desde Claude Code, empezando por WayOfWork, que tiene siete skills.",
+          "notes": "Las tres ideas de hoy. Y el cierre de la serie: en todas las herramientas la regla se repite, el agente prepara y la persona aprueba, aunque cada una lo implementa distinto: con una ventana de macOS, con un comando tuyo, o con tu OK explícito en el chat antes de que el agente escriba. Anticipá la serie nueva en una frase: es el mismo trabajo, pero desde Claude Code, empezando por WayOfWork, que tiene siete skills.",
           "pause": true
         }
       ]

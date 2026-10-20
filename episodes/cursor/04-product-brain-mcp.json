@@ -54,13 +54,13 @@
       "steps": [
         {
           "type": "term",
-          "cmd": "git clone <repo> skills/product-brain-mcp",
+          "cmd": "git clone git@github.com:josefigueredo/product-brain-skill-mcp.git skills/product-brain-mcp",
           "out": [
             "Cloning into 'skills/product-brain-mcp'..."
           ],
           "source": "inferido",
           "cwd": "~",
-          "notes": "Primero bajamos el repo: trae la skill y el servidor juntos. En <repo> va la dirección que te da tu equipo; necesita red y acceso, que dejó listo el episodio 0. Paso inferido."
+          "notes": "Primero bajamos el repo: trae la skill y el servidor juntos. Necesita red y acceso por SSH, que dejó listo el episodio 0. Paso inferido."
         },
         {
           "type": "term",

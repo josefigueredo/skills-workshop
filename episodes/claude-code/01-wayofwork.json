@@ -42,13 +42,13 @@
       "steps": [
         {
           "type": "term",
-          "cmd": "git clone <repo> ~/skills/WayOfWork",
+          "cmd": "git clone git@github.com:josefigueredo/wow.git ~/skills/WayOfWork",
           "out": [
             "Cloning into '~/skills/WayOfWork'..."
           ],
           "source": "inferido",
           "cwd": "~",
-          "notes": "Bajamos WayOfWork; en <repo> va la dirección que te da tu equipo. Es privado y va por SSH: si dice «Permission denied», falta el acceso (clave del episodio 0). Inferido: necesita red."
+          "notes": "Bajamos WayOfWork. Es privado y va por SSH: si dice «Permission denied», falta el acceso (clave del episodio 0). Inferido: necesita red."
         },
         {
           "type": "term",
