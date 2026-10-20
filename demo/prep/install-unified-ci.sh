@@ -2,7 +2,7 @@
 # Demo state for the install-unified-ci episode, on top of demo/setup.sh.
 # Usage: demo/prep/install-unified-ci.sh <home>   (capture runs it after building <home>/mi-servicio)
 #
-# A repo that still carries its own CI: two small custom workflows (test and lint), committed
+# A repo that still carries its own CI (and an api/pyproject.toml so the stack is detectable): two small custom workflows (test and lint), committed
 # on main, so the episode's `real` steps have something to list. Nothing here deploys, pushes
 # or talks to the network; the workflows are plain files that are never executed.
 set -euo pipefail
@@ -15,6 +15,13 @@ export GIT_AUTHOR_NAME=Demo GIT_AUTHOR_EMAIL=demo@example.com
 export GIT_COMMITTER_NAME=Demo GIT_COMMITTER_EMAIL=demo@example.com
 export GIT_AUTHOR_DATE="2026-10-17T11:00:00+00:00" GIT_COMMITTER_DATE="2026-10-17T11:00:00+00:00"
 
+# A root-less Python project: the manifest lives in api/ (what Step 1 of the skill needs).
+cat > api/pyproject.toml <<'P'
+[project]
+name = "mi-servicio"
+version = "0.1.0"
+requires-python = ">=3.11"
+P
 mkdir -p .github/workflows
 cat > .github/workflows/test.yml <<'P'
 name: test

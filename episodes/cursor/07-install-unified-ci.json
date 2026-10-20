@@ -71,7 +71,7 @@
             "scripts"
           ],
           "source": "real",
-          "notes": "Mirá bien lo que hay en esta carpeta: un README, la documentación y un script. No hay SKILL.md. Esta es la particularidad de la skill de hoy: el repo trae solo el instalador, y la skill de verdad vive en otro repo. Por eso no hacemos un enlace nosotros: lo hace el script.",
+          "notes": "Mirá bien lo que hay en esta carpeta: un README, la documentación y un script. No hay SKILL.md. Esta es la particularidad de la skill de hoy: el repo trae solo el instalador, y la skill de verdad vive en otro repo. Por eso no hacemos un enlace nosotros: lo hace el script. Y una aclaración sobre las versiones: la skill sale de la rama main de ese otro repo, y este episodio la sigue tal como estaba el 16 de octubre de 2026; si cambió desde entonces, puede haber diferencias.",
           "cwd": "~"
         },
         {
@@ -119,49 +119,50 @@
     {
       "id": "caso-principal",
       "title": "Caso principal",
-      "subtitle": "Evaluar un repo, revisar la propuesta y aplicarla en una rama",
+      "subtitle": "Pedir la migración: la skill arma la rama, el PR y el resumen",
       "screen": "cursor-full",
       "faq": [
         {
-          "q": "¿Por qué en una rama nueva?",
-          "a": "Porque la skill cambia archivos de tu repo: agrega el ci.yml y borra workflows. En una rama, el cambio es revisable y se deshace tirando la rama."
+          "q": "¿Por qué no me pregunta antes de cambiar nada?",
+          "a": "Porque pedir «adoptá el CI unificado» ya es la confirmación: la skill no hace una pregunta más. Lo que te protege es que trabaja en su propia rama, nunca en la principal, que se frena sola si el repo es incompatible, y que el cambio llega como un PR que revisás vos."
         },
         {
-          "q": "¿Quién hace el push?",
-          "a": "Vos. Pedile al agente que no pushee y revisá el diff antes de commitear. Aceptar el cambio es una decisión tuya, no de la skill."
+          "q": "¿Quién hace el push y el PR?",
+          "a": "La skill, sola: pushea su rama y abre el PR sin pedirte permiso. Vos revisás y mergeás. Por eso conviene pedir la migración solo en un repo donde eso está bien. Si solo querés mirar, pedí una evaluación: no toca nada."
+        },
+        {
+          "q": "¿Y si el CI del PR falla?",
+          "a": "La skill mira el resultado. Si es un error de configuración suyo, lo corrige y vuelve a probar, hasta dos intentos. Si es deuda que ya tenía el repo (tests rotos, un escaneo de seguridad), no la esconde: la anota en el PR."
         },
         {
           "q": "¿Qué stacks entiende?",
-          "a": "Node, Go, Maven, Gradle, Python, Docker, Flutter y Kong, según la referencia de la skill. Lo que cae fuera del catálogo no se migra."
-        },
-        {
-          "q": "¿Y si no estoy de acuerdo con lo que propone?",
-          "a": "Decile que no, o pedile otra cosa. Mientras no contestes que sí, el agente no cambió nada."
+          "a": "Node, Go, Maven, Gradle, Python, Docker, Flutter y Kong. Si el repo mezcla dos lenguajes o no encaja en ninguno, frena y lo dice."
         }
       ],
       "steps": [
         {
-          "type": "term",
-          "cmd": "git switch -c ci/unificado",
-          "out": [
-            "Switched to a new branch 'ci/unificado'"
-          ],
-          "source": "real",
-          "notes": "Antes de pedir nada, creamos una rama nueva: lo hacés vos en la terminal de Cursor. Es el seguro de todo el capítulo, porque la skill va a modificar archivos del repo. Es un comando local, sin red.",
-          "cwd": "~/mi-servicio",
-          "in": "zsh"
-        },
-        {
           "type": "ask",
-          "text": "Adoptá el CI unificado acá. Trabajá en esta rama y no pushees nada.",
+          "text": "Adoptá el CI unificado acá.",
           "source": "inferido",
-          "notes": "El pedido es una frase, como se la dirías a una compañera. Fijate las dos condiciones: la rama y el «no pushees». Son nuestras, la skill no nos las impone, así que conviene decirlas siempre. Es el ejemplo del README: «adoptá el CI unificado», o «migrá este repo a Unified CI»."
+          "notes": "El pedido es una frase, como se la dirías a una compañera. Para la skill es una migración: pediste instalar, no un juicio. Dos cosas para decir en voz alta: el árbol de trabajo tiene que estar limpio fuera de .github/workflows, y en esta modalidad la skill crea la rama, pushea y abre el PR sola. Y una aclaración: la skill escribe ci.yml, y publish.yml solo para librerías de Node, Maven o Gradle; el pitch lo simplifica."
         },
         {
           "type": "tool",
           "label": "Read · ~/.agents/skills/install-unified-ci/SKILL.md",
           "source": "inferido",
-          "notes": "Cursor reconoce el pedido y carga la skill. Desde acá el agente sigue los cinco pasos de la skill: evaluación, auditoría, generación, poda y reporte."
+          "notes": "Cursor reconoce el pedido y carga la skill. Primero clasifica el pedido en un modo: evaluación, migración o fuera de alcance. Después sigue un flujo de ocho pasos: perfilar, auditar, generar, podar, validar, abrir el PR, mirar el CI y reportar."
+        },
+        {
+          "type": "term",
+          "cmd": "ls api",
+          "out": [
+            "mi_servicio",
+            "pyproject.toml",
+            "tests"
+          ],
+          "source": "real",
+          "notes": "Paso 1, perfilar el repo. Mira los manifiestos para reconocer el stack. Acá hay un pyproject.toml dentro de api: sin manifiesto en la raíz, la skill toma esa carpeta como el proyecto Python. Lectura pura.",
+          "cwd": "~/mi-servicio"
         },
         {
           "type": "term",
@@ -171,61 +172,67 @@
             "test.yml"
           ],
           "source": "real",
-          "notes": "Primero mira qué CI tiene el repo hoy: dos workflows propios, uno de tests y otro de lint. Esos son los candidatos a podar. Es lectura pura.",
-          "cwd": "~/mi-servicio"
-        },
-        {
-          "type": "term",
-          "cmd": "ls api",
-          "out": [
-            "mi_servicio",
-            "tests"
-          ],
-          "source": "real",
-          "notes": "Y mira el código para reconocer el stack: acá es una API en Python.",
+          "notes": "Paso 2, auditar el CI que hay hoy: dos workflows propios, uno de tests y otro de lint. Los compara con lo que el CI unificado ya hace. También es lectura pura.",
           "cwd": "~/mi-servicio"
         },
         {
           "type": "say",
-          "md": "Evalué el repo.\n\n- **Stack:** Python, en `api/`. `web/` es solo estáticos.\n- **CI actual:** dos workflows propios, `test.yml` y `lint.yml`.\n- **Compatibilidad:** no encontré deploys directos a la nube, ni matrices multi-OS, ni migraciones de base de datos en el runner.\n\nPropongo generar `.github/workflows/ci.yml` con el flujo unificado y eliminar los dos workflows viejos. **Todavía no toqué nada.** ¿Lo aplico?",
+          "md": "Es un pedido de **migración**.\n\n- **Stack:** Python. Detecté `api/pyproject.toml` y no hay manifiesto en la raíz, así que el proyecto es `api`.\n- **CI actual:** `test.yml` y `lint.yml`. No hay deploys directos a la nube, ni matrices multi-OS, ni migraciones en el runner.\n- **Gate:** **Parcial**. `test.yml` corre la suite unitaria que el CI unificado ya ejecuta; `lint.yml` es un chequeo propio y lo conservo.\n\nSigo con la migración.",
           "source": "inferido",
-          "notes": "Esta es la parte que hay que mirar despacio. El agente separa tres cosas: qué encontró, qué propone y que todavía no cambió nada. Y pregunta. Remarcá el «Todavía no toqué nada»: la evaluación y la auditoría son de solo lectura, y recién con tu sí viene la generación. La respuesta del agente es inferida: la skill canónica vive en otro repo y no la corrimos acá.",
+          "notes": "Esta es la parte que hay que mirar despacio. El agente dice el modo, el stack con la evidencia, y la clasificación del gate: completo, parcial o incompatible. Solo incompatible frena. Acá no pregunta si sigue: dice «sigo». Fijate también que el lint no se borra: la skill borra solo lo que puede demostrar que el unificado ya cubre. Respuesta inferida, con datos ficticios.",
           "pause": true
         },
         {
-          "type": "ask",
-          "text": "Sí, aplicalo en esta rama. Sin push y sin PR.",
+          "type": "tool",
+          "label": "Ran · git switch -C chore/migrate-to-unified-ci origin/main",
           "source": "inferido",
-          "notes": "La decisión es de la persona. Repetimos la condición: sin push y sin PR."
+          "notes": "Paso 3: crea su propia rama desde la principal del remoto. Antes comprobó que el árbol esté limpio y que no haya ya un PR abierto de esa migración. Si hay uno, frena. Todo este tramo es inferido."
         },
         {
           "type": "tool",
           "label": "Wrote · .github/workflows/ci.yml",
           "source": "inferido",
-          "notes": "La generación: el ci.yml canónico para el stack del repo. El contenido lo define la skill en su repo, no lo inventamos nosotros."
+          "notes": "Genera el ci.yml canónico para el stack. Como el repo no despliega, lo escribe sin el deploy a Platform. El contenido lo define la skill en su repo."
         },
         {
           "type": "tool",
-          "label": "Deleted · .github/workflows/test.yml, lint.yml",
+          "label": "Deleted · .github/workflows/test.yml",
           "source": "inferido",
-          "notes": "La poda: los workflows propios que el unificado reemplaza. Por eso dijimos rama: si el borrado no te gusta, descartás la rama."
+          "notes": "Paso 4, podar: borra solo lo que el unificado reemplaza, y solo lo que estaba antes de escribir. El lint queda."
+        },
+        {
+          "type": "tool",
+          "label": "Ran · validación local (YAML, secrets: inherit, sin <PLACEHOLDER>)",
+          "source": "inferido",
+          "notes": "Paso 5: antes de commitear revisa que el YAML sea válido, que tenga secrets: inherit y que no quede ningún campo sin completar."
+        },
+        {
+          "type": "tool",
+          "label": "Ran · git commit, git push -u origin chore/migrate-to-unified-ci, gh pr create",
+          "source": "inferido",
+          "notes": "Paso 6. Remarcalo: acá la skill commitea, pushea y abre el PR, sin preguntarte. Necesita gh instalado y con sesión iniciada. Es el momento que más tiene que ver con tu decisión de pedir la migración."
+        },
+        {
+          "type": "tool",
+          "label": "Ran · gh run watch",
+          "source": "inferido",
+          "notes": "Paso 7: mira la corrida del pull request. Corre tests, Sonar y los escaneos de seguridad; no corre el deploy ni publica nada. Si falla por configuración, corrige y reintenta, hasta dos veces; si es deuda previa del repo, no la esconde."
         },
         {
           "type": "say",
-          "md": "Listo. Cambié tres archivos en esta rama:\n\n- **Nuevo:** `.github/workflows/ci.yml`\n- **Borrados:** `test.yml` y `lint.yml`\n\nNo hice push ni abrí ningún PR. Revisá el diff antes de commitear.",
+          "md": "#### Resumen de la migración\n- **Stack y herramientas:** Python (`api/`, `pyproject.toml`)\n- **Entrypoint:** el workflow reutilizable de Python del CI unificado, llamado desde `ci.yml` con `secrets: inherit`\n- **Parámetros en `with:`:** `python-project-directory: 'api'` y `skip-platform: true`\n- **Borrado:** `test.yml`\n- **Conservado:** `lint.yml`\n- **CI:** `PR checks passed`. `deploy not exercised`: el deploy no corre en esta rama.\n- **Deuda previa:** ninguna detectada\n\nAgregué este resumen a la descripción del PR.",
           "source": "inferido",
-          "notes": "El reporte, el quinto paso. Cierra con una invitación a revisar el diff, y esa revisión es tuya. Nada de lo que viene lo hace el agente."
+          "notes": "Paso 8, el reporte, y es lo que tenés que leer. Fijate en la frase «deploy not exercised»: la skill nunca dice que el deploy «se verificó», porque en el run del PR no corre. Y el resumen también queda en la descripción del PR. Respuesta inferida: los nombres de los parámetros son un ejemplo ilustrativo; los reales salen de la plantilla del stack.",
+          "pause": true
         },
         {
           "type": "term",
-          "cmd": "git status --short",
+          "cmd": "gh pr view --web",
           "out": [
-            " D .github/workflows/lint.yml",
-            " D .github/workflows/test.yml",
-            "?? .github/workflows/ci.yml"
+            "Opening github.com/<org>/mi-servicio/pull/12 in your browser."
           ],
           "source": "inferido",
-          "notes": "Ahora te toca a vos, en la terminal de Cursor: mirás qué cambió. Después abrís el diff, commiteás y pusheás vos, cuando estés conforme. Salida inferida, porque el agente no corrió de verdad.",
+          "notes": "Ahora te toca a vos: abrís el PR, leés el diff y el resumen, y mergeás si estás conforme. El merge es tuyo. Salida inferida; el número del PR es de ejemplo.",
           "cwd": "~/mi-servicio",
           "pause": true,
           "in": "zsh"
@@ -234,21 +241,21 @@
     },
     {
       "id": "frena-con-gaps",
-      "title": "Otro caso: frena con gaps",
-      "subtitle": "Si el repo no entra en el CI unificado, la skill no lo fuerza",
+      "title": "Otro caso: evaluar sin tocar nada",
+      "subtitle": "Una evaluación termina en un reporte, y si hay gaps lo dice",
       "screen": "cursor-agent",
       "faq": [
         {
+          "q": "¿Cuándo es una evaluación y cuándo una migración?",
+          "a": "Si pedís un juicio («¿puede adoptar el CI unificado?», «¿conviene migrar?») es evaluación. Si pedís instalar o migrar, es migración. La skill mira lo que pediste, no las palabras sueltas."
+        },
+        {
           "q": "¿Qué repos no entran?",
-          "a": "Los que despliegan directo a AWS ECS, Lambda o GCP sin pasar por Platform, los que tienen matrices obligatorias en macOS o Windows, y los que hacen migraciones de base de datos directo en el runner. Tampoco los lenguajes fuera del catálogo, como Rust, C++, Ruby o PHP."
+          "a": "Los que despliegan directo a AWS o GCP, los que tienen matrices obligatorias en macOS o Windows, los que hacen migraciones de base de datos en el runner y los que mezclan dos lenguajes. Tampoco los lenguajes fuera del catálogo."
         },
         {
-          "q": "¿Frenar es un error?",
-          "a": "No, es el comportamiento esperado: prefiere decirte los gaps antes que romper el CI del equipo."
-        },
-        {
-          "q": "¿Qué hago con los gaps?",
-          "a": "Es una decisión del equipo: dejar esos workflows como están o rediseñar ese repo. La skill solo te los muestra con exactitud."
+          "q": "¿Una evaluación deja algo cambiado?",
+          "a": "No. Termina con el reporte: no crea rama, no edita archivos y no abre un PR."
         }
       ],
       "steps": [
@@ -256,13 +263,13 @@
           "type": "ask",
           "text": "Revisá si este repo puede usar el CI unificado.",
           "source": "inferido",
-          "notes": "Mismo pedido, pero en otro repo del equipo, uno que despliega directo a la nube. Es el segundo ejemplo del README: «revisá si este repo puede usar el CI unificado»."
+          "notes": "Mismo tema, pero otro pedido: acá no pedís cambiar nada, pedís un juicio. Por eso es una evaluación. Es el segundo ejemplo del README. Lo hacemos en otro repo del equipo, uno que despliega directo a la nube."
         },
         {
           "type": "say",
-          "md": "Frené antes de cambiar nada. Este repo tiene requerimientos que el CI unificado no cubre:\n\n- **Deploy directo a AWS ECS** desde un workflow propio.\n- **Matriz de tests en macOS y Windows.**\n- **Migraciones de base de datos** que corren directo en el runner.\n\nNo toqué ningún archivo. Con estos gaps, migrar rompería el CI. Si querés, repasamos cuáles se pueden resolver primero.",
+          "md": "#### Unified CI evaluation\n- Stack: Python (`pyproject.toml` en la raíz)\n- Gate: Incompatible\n- Blockers: `.github/workflows/deploy-ecs.yml` (deploy directo a AWS ECS); `.github/workflows/test.yml` (matriz con macOS y Windows); `.github/workflows/migrate-db.yml` (migraciones de base de datos en el runner)\n- Would delete: none\n- Would keep: todos los workflows\n- Would write: none",
           "source": "inferido",
-          "notes": "Este es el comportamiento que la gente tiene que recordar: la skill frena y reporta los gaps con exactitud, en vez de romper la integración continua. Es lo que dice el principio de la skill: cero boilerplate, cero roturas. Y no cambió ni un archivo. La respuesta es inferida, con datos ficticios.",
+          "notes": "Este es el formato fijo de la skill para una evaluación: stack, gate, bloqueos con el archivo y la regla, qué borraría, qué conservaría y qué escribiría. Una lista vacía se escribe «none». Y la skill se detiene ahí: no ofrece aplicar. Es el principio «cero roturas»: prefiere decirte los gaps antes que romper el CI. En pantalla el título se ve con dos numerales. Respuesta inferida, con datos ficticios.",
           "pause": true
         }
       ]
@@ -291,7 +298,7 @@
           "type": "ask",
           "text": "Volvé a correr ./skills/install-unified-ci/scripts/install.sh para actualizar la skill.",
           "source": "inferido",
-          "notes": "Actualizar es el mismo comando que instalar: se lo podés pedir al agente. Es el cuarto paso de la guía de instalación."
+          "notes": "Actualizar es el mismo comando que instalar: se lo podés pedir al agente. Es el cuarto paso de la guía de instalación. Ojo: el script borra cosas (rm -rf), así que decidir si se lo dejás correr al agente es tuyo."
         },
         {
           "type": "tool",
@@ -321,6 +328,10 @@
         {
           "q": "¿Cómo recupero una copia mía que se borró?",
           "a": "Desde tu respaldo o tu repo: el script no guarda copia de lo que borra. Por eso conviene leerlo antes y avisarle al agente si tenías una."
+        },
+        {
+          "q": "¿Y si la skill misma se detiene al migrar?",
+          "a": "Tiene dos frenos comunes: el árbol de trabajo tiene cambios fuera de .github/workflows, o ya hay un PR abierto de la migración. En ambos casos no sigue y lo dice. Necesita además gh instalado y con sesión."
         },
         {
           "q": "¿Cómo sé que quedó bien instalada?",
@@ -375,7 +386,11 @@
         },
         {
           "q": "¿Puedo evaluar sin cambiar nada?",
-          "a": "Sí: pedile «revisá si este repo puede usar el CI unificado» y respondé que no cuando proponga aplicar."
+          "a": "Sí: pedí un juicio, por ejemplo «revisá si este repo puede usar el CI unificado». La evaluación termina con el reporte y no crea rama, ni edita archivos, ni abre un PR."
+        },
+        {
+          "q": "¿Sirve para arreglar un ci.yml que ya existe?",
+          "a": "No. Corregir un caller existente o borrar workflows sin instalar el CI unificado queda fuera de alcance: la skill lo dice y se detiene."
         },
         {
           "q": "¿Qué necesito para el próximo episodio?",
@@ -391,9 +406,9 @@
         },
         {
           "type": "say",
-          "md": "#### Lo que te llevás\n- **Dos repos:** este trae el instalador y la skill vive en otro; el script baja la última `main` y enlaza.\n- **Cuidado con el instalador:** borra lo que haya en los destinos y descarta cambios locales de su cache.\n- **Frena antes de romper:** si el repo no entra, reporta los gaps. Y lo que cambia lo revisás vos, en una rama, antes del push.\n\n#### Próximo episodio: arq-review\nCómo se revisa un pedido de proyecto con Arquitectura: se registra, se analiza contra las restricciones, se proponen opciones y se publica el veredicto.",
+          "md": "#### Lo que te llevás\n- **Dos repos:** este trae el instalador y la skill vive en otro; el script baja la última `main` y enlaza, y borra lo que haya en los destinos.\n- **Migrar es pedir el PR:** la skill crea su rama, pushea y abre el PR sola. Vos revisás y mergeás.\n- **Para solo mirar, evaluá:** el reporte no cambia nada. Y si el repo no entra, frena y lista los bloqueos.\n\n#### Próximo episodio: arq-review\nCómo se revisa un pedido de proyecto con Arquitectura: se registra, se analiza contra las restricciones, se proponen opciones y se publica el veredicto.",
           "source": "inferido",
-          "notes": "Las tres ideas: la skill y su instalador viven separados, el instalador borra, y la skill frena antes de romper. Anticipá el próximo en una frase: pasamos del CI de un repo a la revisión de arquitectura de un proyecto entero, con las mismas reglas de aprobación que ya vimos.",
+          "notes": "Las tres ideas: la skill y su instalador viven separados; migrar abre el PR sola y lo revisás vos; evaluar no toca nada. Anticipá el próximo en una frase: pasamos del CI de un repo a la revisión de arquitectura de un proyecto entero, con las mismas reglas de aprobación que ya vimos.",
           "pause": true
         }
       ]
