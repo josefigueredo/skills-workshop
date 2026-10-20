@@ -1,0 +1,402 @@
+{
+  "id": "install-unified-ci",
+  "series": "cursor",
+  "order": 7,
+  "title": "install-unified-ci",
+  "pitch": {
+    "ask": "Adoptá el CI unificado acá",
+    "does": "Evalúa el repo, genera el ci.yml canónico para su stack y poda los workflows viejos. Si el repo tiene requerimientos incompatibles, frena y reporta los gaps en vez de romper el CI del equipo."
+  },
+  "skill": {
+    "repo": "teamwayofwork",
+    "commit": "a0bc150",
+    "date": "2026-10-17"
+  },
+  "workspace": {
+    "repo": "mi-servicio",
+    "files": [
+      "api",
+      "web",
+      "docs",
+      "README.md"
+    ],
+    "chats": [
+      {
+        "title": "Revisar el alcance de devoluciones",
+        "age": "1d"
+      }
+    ]
+  },
+  "chapters": [
+    {
+      "id": "instalar",
+      "title": "Instalar",
+      "subtitle": "Una vez por máquina: clonar y correr el instalador",
+      "screen": "terminal",
+      "faq": [
+        {
+          "q": "¿Por qué hay un instalador y no un simple enlace?",
+          "a": "Porque en este repo no está la skill: solo está el instalador. La skill vive en otro repo del equipo, y el script la baja de ahí y crea los enlaces por vos."
+        },
+        {
+          "q": "¿Qué necesito instalado?",
+          "a": "git y bash. Y poder clonar el repo de la skill por HTTPS: si ese acceso falla, el script corta antes de enlazar nada."
+        },
+        {
+          "q": "¿Puedo hacer los enlaces a mano?",
+          "a": "Sí, si ya tenés clonado el repo de la skill: son dos ln -s, uno para Cursor y otro para Claude Code. A diferencia del script, ln -s no borra nada: si el destino existe, falla."
+        },
+        {
+          "q": "El clone dice «Permission denied», ¿qué hago?",
+          "a": "Falta acceso a este repo, que es de otra organización. Pedíselo al equipo dueño; la clave SSH del episodio 0 sirve en cuanto te lo den."
+        }
+      ],
+      "steps": [
+        {
+          "type": "term",
+          "cmd": "git clone <repo> ~/skills/teamwayofwork",
+          "out": [
+            "Cloning into '~/skills/teamwayofwork'..."
+          ],
+          "source": "inferido",
+          "notes": "Primero bajamos el repo del equipo. En <repo> va la dirección que te da tu equipo. Necesita red y acceso por SSH. La clave SSH sale del episodio 0, pero el acceso a este repo, que es de otra organización, se lo pedís al equipo dueño: si no te lo dieron, git clone responde «Permission denied» y no es un error tuyo. Paso inferido.",
+          "cwd": "~"
+        },
+        {
+          "type": "term",
+          "cmd": "ls ~/skills/teamwayofwork/skills/install-unified-ci",
+          "out": [
+            "README.md",
+            "docs",
+            "scripts"
+          ],
+          "source": "real",
+          "notes": "Mirá bien lo que hay en esta carpeta: un README, la documentación y un script. No hay SKILL.md. Esta es la particularidad de la skill de hoy: el repo trae solo el instalador, y la skill de verdad vive en otro repo. Por eso no hacemos un enlace nosotros: lo hace el script.",
+          "cwd": "~"
+        },
+        {
+          "type": "term",
+          "cmd": "grep -nE 'rm -rf|reset --hard' ~/skills/teamwayofwork/skills/install-unified-ci/scripts/install.sh",
+          "out": [
+            "22:  git -C \"${CACHE_DIR}\" reset --hard FETCH_HEAD",
+            "34:rm -rf \"${TARGET_DIR}\"",
+            "40:rm -rf \"${CLAUDE_DIR}/install-unified-ci\"",
+            "46:  rm -rf \"${HOME}/.omp/skills/install-unified-ci\""
+          ],
+          "source": "real",
+          "notes": "Antes de correr un script que no escribiste, leelo. Acá filtramos las líneas que importan: los rm -rf, uno por cada destino, y el reset --hard. El script borra lo que haya en los destinos antes de enlazar, y descarta cambios locales de su cache. Si tenías una copia tuya de esta skill en esas carpetas, se pierde. Decilo en voz alta: es la advertencia más importante del capítulo.",
+          "cwd": "~"
+        },
+        {
+          "type": "term",
+          "cmd": "cd ~/skills/teamwayofwork && ./skills/install-unified-ci/scripts/install.sh",
+          "out": [
+            "=== Instalador de skill: install-unified-ci ===",
+            "Obteniendo la skill desde https://github.com/<org>/core-architecture-gh-workflows.git (main)...",
+            "✓ Enlazado a ~/.agents/skills/install-unified-ci -> ~/.cache/core-architecture-gh-workflows/skills/install-unified-ci",
+            "✓ Enlazado a ~/.claude/skills/install-unified-ci",
+            "",
+            "✅ Skill install-unified-ci instalada correctamente desde origin/main.",
+            "Probá ejecutar en tu agente: /install-unified-ci o 'revisá si este repo puede usar el CI unificado'."
+          ],
+          "source": "inferido",
+          "notes": "Un solo comando hace todo: baja la skill a una cache en tu carpeta personal y crea los enlaces para Cursor y para Claude Code. Es el mismo comando para instalar y para actualizar. Necesita red, así que el paso es inferido; en tu pantalla la dirección sale completa y las rutas son las tuyas. Fijate que termina con el mensaje de «instalada correctamente»: si no lo ves, algo falló.",
+          "cwd": "~"
+        },
+        {
+          "type": "term",
+          "cmd": "ls -l ~/.agents/skills/install-unified-ci/SKILL.md",
+          "out": [
+            "-rw-r--r--  1 demo  staff  3412 17 oct 11:00 ~/.agents/skills/install-unified-ci/SKILL.md"
+          ],
+          "source": "inferido",
+          "notes": "La comprobación de la instalación: ahora sí aparece el SKILL.md, a través del enlace. Después abrí una sesión nueva del agente: una que estaba abierta antes de instalar no se entera. Salida inferida: el tamaño y la fecha son de ejemplo.",
+          "cwd": "~",
+          "pause": true
+        }
+      ]
+    },
+    {
+      "id": "caso-principal",
+      "title": "Caso principal",
+      "subtitle": "Evaluar un repo, revisar la propuesta y aplicarla en una rama",
+      "screen": "cursor-full",
+      "faq": [
+        {
+          "q": "¿Por qué en una rama nueva?",
+          "a": "Porque la skill cambia archivos de tu repo: agrega el ci.yml y borra workflows. En una rama, el cambio es revisable y se deshace tirando la rama."
+        },
+        {
+          "q": "¿Quién hace el push?",
+          "a": "Vos. Pedile al agente que no pushee y revisá el diff antes de commitear. Aceptar el cambio es una decisión tuya, no de la skill."
+        },
+        {
+          "q": "¿Qué stacks entiende?",
+          "a": "Node, Go, Maven, Gradle, Python, Docker, Flutter y Kong, según la referencia de la skill. Lo que cae fuera del catálogo no se migra."
+        },
+        {
+          "q": "¿Y si no estoy de acuerdo con lo que propone?",
+          "a": "Decile que no, o pedile otra cosa. Mientras no contestes que sí, el agente no cambió nada."
+        }
+      ],
+      "steps": [
+        {
+          "type": "term",
+          "cmd": "git switch -c ci/unificado",
+          "out": [
+            "Switched to a new branch 'ci/unificado'"
+          ],
+          "source": "real",
+          "notes": "Antes de pedir nada, creamos una rama nueva: lo hacés vos en la terminal de Cursor. Es el seguro de todo el capítulo, porque la skill va a modificar archivos del repo. Es un comando local, sin red.",
+          "cwd": "~/mi-servicio",
+          "in": "zsh"
+        },
+        {
+          "type": "ask",
+          "text": "Adoptá el CI unificado acá. Trabajá en esta rama y no pushees nada.",
+          "source": "inferido",
+          "notes": "El pedido es una frase, como se la dirías a una compañera. Fijate las dos condiciones: la rama y el «no pushees». Son nuestras, la skill no nos las impone, así que conviene decirlas siempre. Es el ejemplo del README: «adoptá el CI unificado», o «migrá este repo a Unified CI»."
+        },
+        {
+          "type": "tool",
+          "label": "Read · ~/.agents/skills/install-unified-ci/SKILL.md",
+          "source": "inferido",
+          "notes": "Cursor reconoce el pedido y carga la skill. Desde acá el agente sigue los cinco pasos de la skill: evaluación, auditoría, generación, poda y reporte."
+        },
+        {
+          "type": "term",
+          "cmd": "ls .github/workflows",
+          "out": [
+            "lint.yml",
+            "test.yml"
+          ],
+          "source": "real",
+          "notes": "Primero mira qué CI tiene el repo hoy: dos workflows propios, uno de tests y otro de lint. Esos son los candidatos a podar. Es lectura pura.",
+          "cwd": "~/mi-servicio"
+        },
+        {
+          "type": "term",
+          "cmd": "ls api",
+          "out": [
+            "mi_servicio",
+            "tests"
+          ],
+          "source": "real",
+          "notes": "Y mira el código para reconocer el stack: acá es una API en Python.",
+          "cwd": "~/mi-servicio"
+        },
+        {
+          "type": "say",
+          "md": "Evalué el repo.\n\n- **Stack:** Python, en `api/`. `web/` es solo estáticos.\n- **CI actual:** dos workflows propios, `test.yml` y `lint.yml`.\n- **Compatibilidad:** no encontré deploys directos a la nube, ni matrices multi-OS, ni migraciones de base de datos en el runner.\n\nPropongo generar `.github/workflows/ci.yml` con el flujo unificado y eliminar los dos workflows viejos. **Todavía no toqué nada.** ¿Lo aplico?",
+          "source": "inferido",
+          "notes": "Esta es la parte que hay que mirar despacio. El agente separa tres cosas: qué encontró, qué propone y que todavía no cambió nada. Y pregunta. Remarcá el «Todavía no toqué nada»: la evaluación y la auditoría son de solo lectura, y recién con tu sí viene la generación. La respuesta del agente es inferida: la skill canónica vive en otro repo y no la corrimos acá.",
+          "pause": true
+        },
+        {
+          "type": "ask",
+          "text": "Sí, aplicalo en esta rama. Sin push y sin PR.",
+          "source": "inferido",
+          "notes": "La decisión es de la persona. Repetimos la condición: sin push y sin PR."
+        },
+        {
+          "type": "tool",
+          "label": "Wrote · .github/workflows/ci.yml",
+          "source": "inferido",
+          "notes": "La generación: el ci.yml canónico para el stack del repo. El contenido lo define la skill en su repo, no lo inventamos nosotros."
+        },
+        {
+          "type": "tool",
+          "label": "Deleted · .github/workflows/test.yml, lint.yml",
+          "source": "inferido",
+          "notes": "La poda: los workflows propios que el unificado reemplaza. Por eso dijimos rama: si el borrado no te gusta, descartás la rama."
+        },
+        {
+          "type": "say",
+          "md": "Listo. Cambié tres archivos en esta rama:\n\n- **Nuevo:** `.github/workflows/ci.yml`\n- **Borrados:** `test.yml` y `lint.yml`\n\nNo hice push ni abrí ningún PR. Revisá el diff antes de commitear.",
+          "source": "inferido",
+          "notes": "El reporte, el quinto paso. Cierra con una invitación a revisar el diff, y esa revisión es tuya. Nada de lo que viene lo hace el agente."
+        },
+        {
+          "type": "term",
+          "cmd": "git status --short",
+          "out": [
+            " D .github/workflows/lint.yml",
+            " D .github/workflows/test.yml",
+            "?? .github/workflows/ci.yml"
+          ],
+          "source": "inferido",
+          "notes": "Ahora te toca a vos, en la terminal de Cursor: mirás qué cambió. Después abrís el diff, commiteás y pusheás vos, cuando estés conforme. Salida inferida, porque el agente no corrió de verdad.",
+          "cwd": "~/mi-servicio",
+          "pause": true,
+          "in": "zsh"
+        }
+      ]
+    },
+    {
+      "id": "frena-con-gaps",
+      "title": "Otro caso: frena con gaps",
+      "subtitle": "Si el repo no entra en el CI unificado, la skill no lo fuerza",
+      "screen": "cursor-agent",
+      "faq": [
+        {
+          "q": "¿Qué repos no entran?",
+          "a": "Los que despliegan directo a AWS ECS, Lambda o GCP sin pasar por Platform, los que tienen matrices obligatorias en macOS o Windows, y los que hacen migraciones de base de datos directo en el runner. Tampoco los lenguajes fuera del catálogo, como Rust, C++, Ruby o PHP."
+        },
+        {
+          "q": "¿Frenar es un error?",
+          "a": "No, es el comportamiento esperado: prefiere decirte los gaps antes que romper el CI del equipo."
+        },
+        {
+          "q": "¿Qué hago con los gaps?",
+          "a": "Es una decisión del equipo: dejar esos workflows como están o rediseñar ese repo. La skill solo te los muestra con exactitud."
+        }
+      ],
+      "steps": [
+        {
+          "type": "ask",
+          "text": "Revisá si este repo puede usar el CI unificado.",
+          "source": "inferido",
+          "notes": "Mismo pedido, pero en otro repo del equipo, uno que despliega directo a la nube. Es el segundo ejemplo del README: «revisá si este repo puede usar el CI unificado»."
+        },
+        {
+          "type": "say",
+          "md": "Frené antes de cambiar nada. Este repo tiene requerimientos que el CI unificado no cubre:\n\n- **Deploy directo a AWS ECS** desde un workflow propio.\n- **Matriz de tests en macOS y Windows.**\n- **Migraciones de base de datos** que corren directo en el runner.\n\nNo toqué ningún archivo. Con estos gaps, migrar rompería el CI. Si querés, repasamos cuáles se pueden resolver primero.",
+          "source": "inferido",
+          "notes": "Este es el comportamiento que la gente tiene que recordar: la skill frena y reporta los gaps con exactitud, en vez de romper la integración continua. Es lo que dice el principio de la skill: cero boilerplate, cero roturas. Y no cambió ni un archivo. La respuesta es inferida, con datos ficticios.",
+          "pause": true
+        }
+      ]
+    },
+    {
+      "id": "actualizar",
+      "title": "Otro caso: mantenerla al día",
+      "subtitle": "Volver a correr el instalador, con sus advertencias",
+      "screen": "cursor-agent",
+      "faq": [
+        {
+          "q": "¿Cada cuánto actualizo?",
+          "a": "Cuando el equipo te avise de un cambio, o si algo se comporta distinto. Como siempre baja main, correrlo de nuevo te deja en lo último."
+        },
+        {
+          "q": "¿Puedo fijar una versión?",
+          "a": "No: el script siempre baja la rama main del repo de la skill. Si la skill cambia, cambia para vos sin aviso."
+        },
+        {
+          "q": "¿Pierdo algo si la actualizo?",
+          "a": "Los cambios locales en la cache, sí: el script hace reset --hard. Si editaste algo ahí, copialo antes."
+        }
+      ],
+      "steps": [
+        {
+          "type": "ask",
+          "text": "Volvé a correr ./skills/install-unified-ci/scripts/install.sh para actualizar la skill.",
+          "source": "inferido",
+          "notes": "Actualizar es el mismo comando que instalar: se lo podés pedir al agente. Es el cuarto paso de la guía de instalación."
+        },
+        {
+          "type": "tool",
+          "label": "Ran · ./skills/install-unified-ci/scripts/install.sh",
+          "source": "inferido",
+          "notes": "El script ve que la cache ya existe y toma otro camino: fetch y reset --hard, en lugar de clonar. Después rehace los enlaces."
+        },
+        {
+          "type": "say",
+          "md": "Listo, actualicé la skill: traje lo último de `main` y rehice los enlaces.\n\n- **Ojo:** el script siempre baja `main` y no fija una versión.\n- **Y:** abrí una sesión nueva del agente para que tome la versión nueva.",
+          "source": "inferido",
+          "notes": "Dos cosas para llevarse. Una: sin versión fija, la skill puede cambiar sin avisarte. Dos: sesión nueva. Mensaje del agente inferido.",
+          "pause": true
+        }
+      ]
+    },
+    {
+      "id": "si-algo-falla",
+      "title": "Si algo falla",
+      "subtitle": "Los tres tropiezos más comunes",
+      "screen": "terminal",
+      "faq": [
+        {
+          "q": "¿El script dejó algo a medias?",
+          "a": "Si falla el clon o el fetch, el script corta con set -e antes de enlazar nada. Si lo corrés de nuevo, rehace todo."
+        },
+        {
+          "q": "¿Cómo recupero una copia mía que se borró?",
+          "a": "Desde tu respaldo o tu repo: el script no guarda copia de lo que borra. Por eso conviene leerlo antes y avisarle al agente si tenías una."
+        },
+        {
+          "q": "¿Cómo sé que quedó bien instalada?",
+          "a": "Con el ls -l del SKILL.md. Si aparece, el agente lo va a encontrar en una sesión nueva."
+        }
+      ],
+      "steps": [
+        {
+          "type": "term",
+          "cmd": "cd ~/skills/teamwayofwork && ./skills/install-unified-ci/scripts/install.sh",
+          "out": [
+            "=== Instalador de skill: install-unified-ci ===",
+            "Obteniendo la skill desde https://github.com/<org>/core-architecture-gh-workflows.git (main)..."
+          ],
+          "source": "inferido",
+          "notes": "Primer tropiezo: el script termina sin el mensaje de «instalada correctamente». Pasa cuando falla el clon o el fetch, casi siempre por acceso al repo de la skill. El script usa set -e, así que corta ahí sin enlazar nada. Git imprime su propio error; revisá tu acceso y corrélo de nuevo. Salida inferida.",
+          "cwd": "~"
+        },
+        {
+          "type": "term",
+          "cmd": "cd ~/skills/teamwayofwork && ./skills/install-unified-ci/scripts/install.sh",
+          "out": [
+            "=== Instalador de skill: install-unified-ci ===",
+            "Obteniendo la skill desde https://github.com/<org>/core-architecture-gh-workflows.git (main)...",
+            "❌ Error: no se encontró un SKILL.md válido en ~/.cache/core-architecture-gh-workflows/skills/install-unified-ci."
+          ],
+          "source": "inferido",
+          "notes": "Segundo tropiezo: la descarga llegó pero sin SKILL.md. El script lo valida antes de tocar los enlaces y sale con error: no se enlazó nada. Lo que corresponde es avisarle al equipo dueño del repo de la skill. Salida inferida.",
+          "cwd": "~"
+        },
+        {
+          "type": "term",
+          "cmd": "ls -l ~/.agents/skills/install-unified-ci/SKILL.md",
+          "out": [
+            "ls: ~/.agents/skills/install-unified-ci/SKILL.md: No such file or directory"
+          ],
+          "source": "inferido",
+          "notes": "Tercer tropiezo: el agente no ofrece la skill. Primero comprobá que el archivo exista; si existe, casi seguro abriste la sesión antes de instalar. Cerrá el chat y abrí una nueva. Si no existe, repetí el instalador. Salida inferida.",
+          "cwd": "~"
+        }
+      ]
+    },
+    {
+      "id": "cierre",
+      "title": "Cierre",
+      "subtitle": "Lo que te llevás",
+      "screen": "cursor-agent",
+      "faq": [
+        {
+          "q": "¿Cuándo la uso?",
+          "a": "Al sumar un servicio nuevo, al estandarizar un repo heredado con workflows propios o antes de decidir si un repo puede migrar."
+        },
+        {
+          "q": "¿Puedo evaluar sin cambiar nada?",
+          "a": "Sí: pedile «revisá si este repo puede usar el CI unificado» y respondé que no cuando proponga aplicar."
+        },
+        {
+          "q": "¿Qué necesito para el próximo episodio?",
+          "a": "Lo mismo del episodio 0. Cada episodio empieza instalando su skill."
+        }
+      ],
+      "steps": [
+        {
+          "type": "ask",
+          "text": "¿Qué me llevo de esto?",
+          "source": "inferido",
+          "notes": "Cerrá con las tres ideas; no repitas el episodio."
+        },
+        {
+          "type": "say",
+          "md": "#### Lo que te llevás\n- **Dos repos:** este trae el instalador y la skill vive en otro; el script baja la última `main` y enlaza.\n- **Cuidado con el instalador:** borra lo que haya en los destinos y descarta cambios locales de su cache.\n- **Frena antes de romper:** si el repo no entra, reporta los gaps. Y lo que cambia lo revisás vos, en una rama, antes del push.\n\n#### Próximo episodio: arq-review\nCómo se revisa un pedido de proyecto con Arquitectura: se registra, se analiza contra las restricciones, se proponen opciones y se publica el veredicto.",
+          "source": "inferido",
+          "notes": "Las tres ideas: la skill y su instalador viven separados, el instalador borra, y la skill frena antes de romper. Anticipá el próximo en una frase: pasamos del CI de un repo a la revisión de arquitectura de un proyecto entero, con las mismas reglas de aprobación que ya vimos.",
+          "pause": true
+        }
+      ]
+    }
+  ]
+}
