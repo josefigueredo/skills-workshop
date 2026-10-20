@@ -216,7 +216,15 @@
           "type": "tool",
           "label": "Ran · open ~/scratchpad/vista.html",
           "source": "inferido",
-          "notes": "Abre la vista previa en el navegador: árbol a la izquierda, descripción con por qué, qué y hecho cuando. Revisala. Es el momento de corregir, no después."
+          "notes": "Abre la vista previa en el navegador."
+        },
+        {
+          "type": "page",
+          "title": "~/scratchpad/vista.html",
+          "src": "pages/jira-team-kit-vista.html",
+          "source": "real",
+          "notes": "Esta es la página que genera jtk, tal cual: la sacamos de su código (tools/jtk_vista.py). Árbol a la izquierda, y por issue el por qué, el qué y el hecho cuando. Hacé clic en NUEVO-2: «Vos · en curso». Es el momento de corregir, no después.",
+          "pause": true
         },
         {
           "type": "say",

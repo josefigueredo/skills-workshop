@@ -131,6 +131,12 @@
   --ws-cc-box: #5d6370;
   --ws-cc-gutter: 2ch;    /* width of the ⏺ / ⎿ / > gutter */
 
+  /* browser window of a page step */
+  --ws-p-w: 92%;
+  --ws-p-h: 90%;
+  --ws-p-bg: #ffffff;
+  --ws-p-bar: #f1f1f3;
+
   /* macOS approval window */
   --ws-a-scrim: rgba(0, 0, 0, .28);
   --ws-a-bg: #ececec;
@@ -391,6 +397,21 @@
 /* ---------- macOS approval window ---------- */
 .ws-approve { position: absolute; inset: 0; background: var(--ws-a-scrim); display: flex; align-items: center; justify-content: center; font-family: var(--ws-font-ui); }
 .ws-approve[hidden] { display: none; }
+.ws-page { position: absolute; inset: 0; background: var(--ws-a-scrim); display: flex; align-items: center; justify-content: center; }
+.ws-page[hidden] { display: none; }
+.ws-page-win {
+  width: var(--ws-p-w); height: var(--ws-p-h); display: flex; flex-direction: column; background: var(--ws-p-bg);
+  border-radius: var(--ws-radius); box-shadow: var(--ws-a-shadow); overflow: hidden;
+}
+.ws-page-bar {
+  flex: none; display: flex; align-items: center; gap: var(--ws-gap); padding: var(--ws-pad-sm) var(--ws-gap);
+  background: var(--ws-p-bar); border-bottom: var(--ws-line) solid var(--ws-c-line);
+}
+.ws-page-url {
+  flex: 1; font-family: var(--ws-font-ui); font-size: var(--ws-fs-sm); color: var(--ws-c-faint);
+  background: var(--ws-p-bg); border-radius: var(--ws-radius-sm); padding: var(--ws-pad-xs) var(--ws-gap);
+}
+.ws-page-frame { flex: 1; width: 100%; border: 0; background: var(--ws-p-bg); }
 .ws-approve-win {
   width: var(--ws-a-w); background: var(--ws-a-bg); color: var(--ws-a-tx); border-radius: var(--ws-a-radius);
   box-shadow: var(--ws-a-shadow); padding: var(--ws-pad); display: flex; flex-direction: column; align-items: center;
@@ -731,6 +752,21 @@ var Render = (function () {
     ov.appendChild(win);
     return ov;
   }
+  // A real HTML page (the bundle inlines it) in a browser window over the screen. The frame is
+  // sandboxed with scripts but no same-origin: the page can run its own navigation, never touch the stage.
+  function pageOverlay(st, j, current) {
+    var ov = stepNode("div", "ws-page", j, "node");
+    if (j !== current) ov.setAttribute("hidden", "");
+    var win = el("div", "ws-page-win");
+    var bar = add(el("div", "ws-page-bar"), dots(), el("div", "ws-page-url", st.title));
+    var frame = el("iframe", "ws-page-frame");
+    frame.setAttribute("sandbox", "allow-scripts");
+    frame.setAttribute("title", st.title);
+    frame.setAttribute("srcdoc", st.html || "");
+    add(win, bar, frame);
+    ov.appendChild(win);
+    return ov;
+  }
   function chapterSteps(ch, last) { return (ch.steps || []).slice(0, last + 1); }
 
   // ---- card ----
@@ -851,6 +887,8 @@ var Render = (function () {
         m.flow.appendChild(r);
       } else if (st.type === "approve") {
         overlays.push(approveOverlay(st, j, last));
+      } else if (st.type === "page") {
+        overlays.push(pageOverlay(st, j, last));
       }
     });
     if (full) idlePrompt(right.flow, cwd, repo);
@@ -885,6 +923,8 @@ var Render = (function () {
         body.flow.appendChild(add(stepNode("div", "ws-plain-say", j), markdown(st.md)));
       } else if (st.type === "approve") {
         overlays.push(approveOverlay(st, j, last));
+      } else if (st.type === "page") {
+        overlays.push(pageOverlay(st, j, last));
       }
     });
     idlePrompt(body.flow, cwd, repo);
@@ -940,6 +980,8 @@ var Render = (function () {
                 document.createTextNode(workedText(st)));
       } else if (st.type === "approve") {
         overlays.push(approveOverlay(st, j, last));
+      } else if (st.type === "page") {
+        overlays.push(pageOverlay(st, j, last));
       }
       if (n) body.flow.appendChild(n);
     });
@@ -993,7 +1035,7 @@ var Render = (function () {
 //   type  28 ms per character (code points), the text grows one character per tick
 //   line  120 ms per line / say block
 //   node  250 ms, then the node appears whole (tool, worked, chips)
-//   fade  250 ms for a card and an approve window: opacity 0 until the tick
+//   fade  250 ms for a card, an approve window and a page: opacity 0 until the tick
 //   autoplay delay between steps 900 ms
 // Animate.stepDuration walks the same plan the animation schedules, so the estimate
 // and the playback cannot drift apart.
@@ -1053,7 +1095,7 @@ var Animate = (function () {
       } else if (kind === "line") {
         hide(n);
         plan.push({ms: LINE_MS / speed, fn: function () { show(n); }});
-      } else if (kind === "node" && step.type === "approve" && n === root) {
+      } else if (kind === "node" && (step.type === "approve" || step.type === "page") && n === root) {
         n.style.opacity = "0";
         plan.push({ms: FADE_MS / speed, fn: function () { n.style.opacity = "1"; }});
       } else if (kind === "node") {
@@ -1214,7 +1256,7 @@ var Stage = (function () {
 
     function fades(ep, index) {
       var e = Nav.flatten(ep)[index];
-      return !!e && (e.kind === "card" || e.kind === "approve");
+      return !!e && (e.kind === "card" || e.kind === "approve" || e.kind === "page");
     }
 
     function onShow(msg) {
