@@ -39,6 +39,9 @@ Todo paso lleva `type` y `source` (obligatorios).
 | `say` | `md` | La respuesta del agente, en markdown mínimo (ver abajo) |
 | `approve` | `title`, `lines` (lista), `button` | La ventana de aprobación de macOS |
 | `worked` | `seconds` | «Worked for Ns» |
+| `page` | `title`, `src` | Una página HTML real en una ventana de navegador sobre la pantalla, por ejemplo la vista previa de `jtk create --html`. `src` es `pages/<nombre>.html` dentro de `episodes/`; el `build` la mete en el bundle y el escenario la muestra en un iframe con `sandbox` (corre su propio JS, nunca toca el escenario). `title` va en la barra de direcciones |
+
+La página de jira-team-kit la genera `tools/jtk_vista.py` con el código de jtk del commit que fija el episodio: si cambia el episodio o el commit, se vuelve a correr.
 
 Campos opcionales de cualquier paso:
 

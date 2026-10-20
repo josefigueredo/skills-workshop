@@ -14,7 +14,7 @@ from ws.chrome import chrome_available, chrome_path
 CHROME = chrome_path()
 HARNESS = ROOT / "tests" / "js" / "harness.html"
 HAVE_CHROME = chrome_available()
-RENDER_TESTS = 23  # exact count: a test that silently fails to register must show up
+RENDER_TESTS = 24  # exact count: a test that silently fails to register must show up
 ANIMATE_TESTS = 23
 PROTOCOL_TESTS = 59
 CONTROL_JS = ROOT / "engine" / "control.js"

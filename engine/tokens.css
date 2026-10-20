@@ -121,6 +121,12 @@
   --ws-cc-box: #5d6370;
   --ws-cc-gutter: 2ch;    /* width of the ⏺ / ⎿ / > gutter */
 
+  /* browser window of a page step */
+  --ws-p-w: 92%;
+  --ws-p-h: 90%;
+  --ws-p-bg: #ffffff;
+  --ws-p-bar: #f1f1f3;
+
   /* macOS approval window */
   --ws-a-scrim: rgba(0, 0, 0, .28);
   --ws-a-bg: #ececec;

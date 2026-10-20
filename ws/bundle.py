@@ -55,14 +55,24 @@ def _fill(template: str, slots: Dict[str, str], name: str) -> str:
     return SLOT_RE.sub(lambda m: slots[m.group(1)], template)
 
 
-def for_stage(episode: dict) -> dict:
+def _page(step: dict, root: Path) -> dict:
+    """A page step with its HTML inlined in place of its path (the stage cannot read files)."""
+    if step.get("type") != "page":
+        return step
+    out = {k: v for k, v in step.items() if k != "src"}
+    out["html"] = _read(Path(root) / "episodes" / step["src"])
+    return out
+
+
+def for_stage(episode: dict, root=None) -> dict:
     """The episode as the stage and the control see it: `capture_only` steps removed
-    (they only advance the demo state during capture). The source JSON keeps them."""
+    (they only advance the demo state during capture) and page steps carrying their HTML.
+    The source JSON keeps both as they are."""
     out = dict(episode)
     out["chapters"] = []
     for ch in episode.get("chapters", []):
         ch = dict(ch)
-        ch["steps"] = [s for s in ch.get("steps", []) if not s.get("capture_only")]
+        ch["steps"] = [_page(s, root) for s in ch.get("steps", []) if not s.get("capture_only")]
         out["chapters"].append(ch)
     return out
 
@@ -94,7 +104,7 @@ def render(root) -> Dict[str, str]:
     """Build every dist file in memory: {file name: html}. Writes nothing."""
     root = Path(root)
     engine = root / "engine"
-    episodes = [for_stage(e) for e in schema.load_all(root)]
+    episodes = [for_stage(e, root) for e in schema.load_all(root)]
     css = "<style>\n" + "\n".join(_inline(engine / f, "</style") for f in CSS_FILES) + "\n</style>"
     out: Dict[str, str] = {}
     for name, template, last, series in TARGETS:

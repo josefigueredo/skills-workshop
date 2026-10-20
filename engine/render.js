@@ -230,6 +230,21 @@ var Render = (function () {
     ov.appendChild(win);
     return ov;
   }
+  // A real HTML page (the bundle inlines it) in a browser window over the screen. The frame is
+  // sandboxed with scripts but no same-origin: the page can run its own navigation, never touch the stage.
+  function pageOverlay(st, j, current) {
+    var ov = stepNode("div", "ws-page", j, "node");
+    if (j !== current) ov.setAttribute("hidden", "");
+    var win = el("div", "ws-page-win");
+    var bar = add(el("div", "ws-page-bar"), dots(), el("div", "ws-page-url", st.title));
+    var frame = el("iframe", "ws-page-frame");
+    frame.setAttribute("sandbox", "allow-scripts");
+    frame.setAttribute("title", st.title);
+    frame.setAttribute("srcdoc", st.html || "");
+    add(win, bar, frame);
+    ov.appendChild(win);
+    return ov;
+  }
   function chapterSteps(ch, last) { return (ch.steps || []).slice(0, last + 1); }
 
   // ---- card ----
@@ -350,6 +365,8 @@ var Render = (function () {
         m.flow.appendChild(r);
       } else if (st.type === "approve") {
         overlays.push(approveOverlay(st, j, last));
+      } else if (st.type === "page") {
+        overlays.push(pageOverlay(st, j, last));
       }
     });
     if (full) idlePrompt(right.flow, cwd, repo);
@@ -384,6 +401,8 @@ var Render = (function () {
         body.flow.appendChild(add(stepNode("div", "ws-plain-say", j), markdown(st.md)));
       } else if (st.type === "approve") {
         overlays.push(approveOverlay(st, j, last));
+      } else if (st.type === "page") {
+        overlays.push(pageOverlay(st, j, last));
       }
     });
     idlePrompt(body.flow, cwd, repo);
@@ -439,6 +458,8 @@ var Render = (function () {
                 document.createTextNode(workedText(st)));
       } else if (st.type === "approve") {
         overlays.push(approveOverlay(st, j, last));
+      } else if (st.type === "page") {
+        overlays.push(pageOverlay(st, j, last));
       }
       if (n) body.flow.appendChild(n);
     });

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 SERIES = ("cursor", "claude-code")
@@ -16,7 +17,10 @@ STEP_FIELDS = {
     "say": {"md": str},
     "approve": {"title": str, "lines": list, "button": str},
     "worked": {"seconds": (int, float)},
+    "page": {"title": str, "src": str},
 }
+# A page step shows a real HTML page (episodes/pages/<name>.html) in a browser window; the bundle inlines it.
+PAGE_SRC_RE = re.compile(r"^pages/[a-z0-9][a-z0-9-]*\.html$")
 
 
 # Keys allowed besides the required ones, so a misspelt key fails instead of being ignored.
@@ -130,6 +134,8 @@ def _validate_step(step, prefix, out, screen=None):
             out.append("%s: 'capture_only' must be true when present" % prefix)
         elif stype != "term" or source != "real":
             out.append("%s: 'capture_only' is only valid on a real term step" % prefix)
+    if stype == "page" and isinstance(step.get("src"), str) and not PAGE_SRC_RE.match(step["src"]):
+        out.append("%s: 'src' must be 'pages/<name>.html' (lowercase, under episodes/)" % prefix)
     if stype == "term" and source == "real":
         cwd = step.get("cwd")
         if cwd is None:
@@ -197,6 +203,21 @@ def validate(episode: dict, where: str) -> list:
     return out
 
 
+def page_steps(episode):
+    """Every page step of an episode with a usable src, in order."""
+    for ch in episode.get("chapters") or []:
+        for st in (ch.get("steps") or []) if isinstance(ch, dict) else []:
+            if isinstance(st, dict) and st.get("type") == "page" and PAGE_SRC_RE.match(str(st.get("src", ""))):
+                yield st
+
+
+def _missing_pages(episode, root: Path, where: str) -> list:
+    if not isinstance(episode, dict):
+        return []
+    return ["%s: episodes/%s does not exist" % (where, st["src"])
+            for st in page_steps(episode) if not (root / "episodes" / st["src"]).is_file()]
+
+
 def check_tree(root) -> list:
     """Validate every episode under root/episodes plus cross-file rules."""
     out: list = []
@@ -212,6 +233,7 @@ def check_tree(root) -> list:
         from ws import scaffold  # late: scaffold imports schema
 
         out.extend(scaffold.pending(ep, where))
+        out.extend(_missing_pages(ep, Path(root), where))
         if not isinstance(ep, dict):
             continue
         if ep.get("series") != path.parent.name:

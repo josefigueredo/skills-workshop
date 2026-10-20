@@ -203,6 +203,7 @@ var Control = (function () {
     if (st.type === "term") return trim(st.cmd, 80) || "(prompt vacío)";
     if (st.type === "tool") return trim(st.label, 80);
     if (st.type === "approve") return trim(st.title, 80);
+    if (st.type === "page") return "Página · " + trim(st.title, 70);
     if (st.type === "worked") return "Trabajó " + st.seconds + " s";
     if (st.type === "say") {
       var line = String(st.md || "").split("\n").filter(function (l) { return l.trim(); })[0] || "";

@@ -19,7 +19,7 @@
 //   type  28 ms per character (code points), the text grows one character per tick
 //   line  120 ms per line / say block
 //   node  250 ms, then the node appears whole (tool, worked, chips)
-//   fade  250 ms for a card and an approve window: opacity 0 until the tick
+//   fade  250 ms for a card, an approve window and a page: opacity 0 until the tick
 //   autoplay delay between steps 900 ms
 // Animate.stepDuration walks the same plan the animation schedules, so the estimate
 // and the playback cannot drift apart.
@@ -79,7 +79,7 @@ var Animate = (function () {
       } else if (kind === "line") {
         hide(n);
         plan.push({ms: LINE_MS / speed, fn: function () { show(n); }});
-      } else if (kind === "node" && step.type === "approve" && n === root) {
+      } else if (kind === "node" && (step.type === "approve" || step.type === "page") && n === root) {
         n.style.opacity = "0";
         plan.push({ms: FADE_MS / speed, fn: function () { n.style.opacity = "1"; }});
       } else if (kind === "node") {

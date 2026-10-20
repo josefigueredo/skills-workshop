@@ -229,6 +229,30 @@ class TreeTests(unittest.TestCase):
             self.assertEqual(len(msgs), 1)
             self.assertIn("duplicate episode id 'same'", msgs[0])
 
+    def test_page_step_needs_a_title_and_an_html_file_under_pages(self):
+        def with_page(src):
+            ep = minimal_episode()
+            ep["chapters"][0]["steps"].append({"type": "page", "title": "vista.html", "src": src, "source": "real"})
+            return schema.validate(ep, "x.json")
+        self.assertEqual(with_page("pages/jtk-vista.html"), [])
+        for bad in ("/etc/x.html", "pages/../x.html", "x.html", "pages/v.txt", "pages/sub/v.html"):
+            with self.subTest(src=bad):
+                msgs = with_page(bad)
+                self.assertEqual(len(msgs), 1, msgs)
+                self.assertIn("'src' must be 'pages/<name>.html'", msgs[0])
+
+    def test_a_page_file_that_does_not_exist_is_reported(self):
+        with TempTree() as t:
+            ep = minimal_episode()
+            ep["chapters"][0]["steps"].append({"type": "page", "title": "v", "src": "pages/v.html", "source": "real"})
+            t.write("cursor", "a.json", ep)
+            msgs = schema.check_tree(t.root)
+            self.assertEqual(len(msgs), 1, msgs)
+            self.assertIn("episodes/pages/v.html does not exist", msgs[0])
+            (t.root / "episodes" / "pages").mkdir()
+            (t.root / "episodes" / "pages" / "v.html").write_text("<p>v</p>", encoding="utf-8")
+            self.assertEqual(schema.check_tree(t.root), [])
+
     def test_bad_json_is_reported_not_raised(self):
         with TempTree() as t:
             (t.root / "episodes" / "cursor").mkdir()

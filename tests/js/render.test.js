@@ -169,6 +169,21 @@ test("say markdown renders ## and ### headings and a pipe table with its header 
   assert(say.textContent.indexOf("|") < 0 && say.textContent.indexOf("#") < 0, "markup left: " + say.textContent);
 });
 
+test("a page step is a browser window over the screen with the page in a sandboxed frame", function () {
+  var ep = fixtureEpisode();
+  ep.chapters[1].steps.splice(6, 0, {type: "page", title: "vista.html", html: "<p>Vista</p>", source: "real"});
+  var c = render(10, ep);
+  var ov = c.querySelector(".ws-page");
+  assert(ov && !ov.hasAttribute("hidden"), "current page must show");
+  assertEqual(ov.getAttribute("data-step"), "6");
+  assertEqual(ov.querySelector(".ws-page-url").textContent, "vista.html");
+  var frame = ov.querySelector("iframe");
+  assertEqual(frame.getAttribute("sandbox"), "allow-scripts");
+  assertEqual(frame.getAttribute("srcdoc"), "<p>Vista</p>");
+  assert(c.querySelector(".ws-page p") === null, "the page is never parsed into the stage");
+  assert(render(11, ep).querySelector(".ws-page").hasAttribute("hidden"), "a past page stays hidden");
+});
+
 test("episode text is inserted as text, never as markup", function () {
   var ep = fixtureEpisode();
   ep.chapters[1].steps[0].text = "<script>window.pwned=1</script>";
