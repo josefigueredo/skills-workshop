@@ -5,7 +5,7 @@
   "title": "wayofwork",
   "pitch": {
     "ask": "¿Qué sigue?",
-    "does": "Te muestra los dos flujos, el de Product Brain y el de Spec-Kit, con su porcentaje, los bloqueos y hasta tres próximos pasos. Siete skills y un CLI, wow, llevan una iniciativa de punta a punta, y la única escritura hacia Jira es un comando que corrés vos."
+    "does": "Te muestra los dos flujos, el de Product Brain y el de Spec-Kit, con su porcentaje, los bloqueos y hasta tres próximos pasos. Siete skills y un CLI, wow, llevan una iniciativa de punta a punta, y las escrituras hacia Jira son comandos que corrés vos."
   },
   "skill": {
     "repo": "WayOfWork",
@@ -282,7 +282,7 @@
           "type": "say",
           "md": "Sin bloqueos. El próximo paso es **en Product Brain, y es tuyo**: terminar el chat de E2 (reintegro del pago) pegando el preámbulo y `wow/pb/epic-E2.md`.\n\nCuando termines, copiá el chat y el panel a `wow/pb/chats/` y pedime la auditoría. Al exportar, Product Brain crea la épica en Jira: con esa clave, E2 entra a su propio flujo de Spec-Kit.",
           "source": "inferido",
-          "notes": "Este es el centro del episodio: la clave de Jira es lo único que une los dos flujos. Lo que hace Product Brain es de la persona; el agente audita después, porque «completé el documento» no es evidencia.",
+          "notes": "Este es el centro del episodio: la clave de Jira es lo único que une los dos flujos. Lo que hace Product Brain es de la persona; el agente audita después, porque «completé el documento» no es evidencia. Esta vez no hay opciones para elegir: el único paso es tuyo, en Product Brain, así que la guía no pregunta.",
           "pause": true
         }
       ]
@@ -373,9 +373,9 @@
         },
         {
           "type": "say",
-          "md": "Cursor ratificó `/spec-kit.tasks` y cerré la sesión. Después va `/spec-kit.tasks.shape` para los work units.\n\nCuando las historias estén implementadas, las cierra `/spec-kit.sync-status`, y ese **no lo mando yo**: escribe en Jira, lo corrés vos en Cursor.",
+          "md": "La pantalla de Cursor que devolvió `wow sk run` muestra `/spec-kit.tasks` ratificado, y cerré la sesión. Después va `/spec-kit.tasks.shape` para los work units.\n\nCuando las historias estén implementadas, las cierra `/spec-kit.sync-status`, y ese **no lo mando yo**: escribe en Jira, lo corrés vos en Cursor.",
           "source": "inferido",
-          "notes": "La regla de la serie, otra vez: lo que escribe en Jira es de la persona. Contenido ilustrativo."
+          "notes": "La regla de la serie, otra vez: lo que escribe en Jira es de la persona. Contenido ilustrativo. La pantalla de Cursor no se muestra en la grabación: wow sk run la imprime en la sesión real, y acá no corremos Cursor."
         },
         {
           "type": "ask",
@@ -505,7 +505,7 @@
         },
         {
           "type": "say",
-          "md": "Las fuentes están en pie: cada `fuente: archivo:línea` del pack existe. Creé `metrics.md`, `decisions.md` y `contracts.md` vacíos; si querés, los completo leyendo el código.\n\nPara que otro modelo verifique los hechos: `wow review --set claims --ref facts`.",
+          "md": "Las fuentes están en pie: cada `fuente: archivo:línea` del pack existe. Creé `metrics.md`, `decisions.md` y `contracts.md` vacíos; si querés, los completo leyendo el código.\n\nPara que otro modelo verifique los hechos: `wow review --set claims --ref facts --doc wow/context-pack/facts.md --repo .`.",
           "source": "inferido",
           "notes": "El cierre del ejemplo apunta a wow-review: el autor nunca se revisa a sí mismo. Contenido ilustrativo.",
           "pause": true
