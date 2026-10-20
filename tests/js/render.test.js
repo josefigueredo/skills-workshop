@@ -196,12 +196,17 @@ test("claude-code shows a command the person types with ! as bash mode", functio
 
 test("claude-code shows a Skill tool as loaded, like Claude Code", function () {
   var ep = fixtureEpisode();
-  ep.chapters[2].steps.splice(1, 0, {type: "tool", label: "Skill(demo-skill)", source: "inferido"});
-  var c = render(16, ep);
+  ep.chapters[2].steps.splice(1, 0, {type: "tool", label: "Skill(demo-skill)", source: "inferido"},
+                              {type: "tool", label: "Ran · x", source: "inferido"});
+  var c = render(17, ep);
   var st = c.querySelector('[data-step="1"]');
   assert(st.textContent.indexOf("⏺ Skill(demo-skill)") >= 0, "skill line: " + st.textContent);
   assert(st.textContent.indexOf("Successfully loaded skill") >= 0, "loaded line: " + st.textContent);
+  assertEqual(st.getAttribute("data-anim"), "node", "the wrapper carries the hook");
+  assertEqual(st.querySelectorAll("[data-anim]").length, 0, "no inner hook");
+  assertEqual(st.querySelectorAll("[data-step]").length, 0, "no inner step");
   var other = c.querySelector('[data-step="2"]');
+  assert(other.textContent.indexOf("Ran · x") >= 0, "the other tool: " + other.textContent);
   assert(other.textContent.indexOf("Successfully loaded skill") < 0, "only Skill tools");
 });
 
