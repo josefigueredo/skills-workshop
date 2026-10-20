@@ -1,0 +1,5 @@
+# Names of the skills this workshop teaches. A $WS_LEAK_TERMS hit that lies wholly
+# inside one of these names is not a leak: the episode is about that skill.
+# One name per line, matched case-insensitively. Generic rules (paths, emails, secrets)
+# are never exempt. Add a name only when an episode needs it and the person agreed.
+product-brain-mcp

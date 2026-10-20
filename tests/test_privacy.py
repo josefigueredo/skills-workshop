@@ -123,6 +123,41 @@ class TestLeakTerms(Tmp):
                 privacy.rules()
 
 
+class TestAllowList(Tmp):
+    """privacy-allow.txt: names the workshop teaches, exempt from leak terms only."""
+
+    def scan_with(self, allow_text, line, terms="brain\n"):
+        t = self.put("terms.txt", terms)
+        a = self.put("allow.txt", allow_text) if allow_text is not None else self.root / "none.txt"
+        f = self.put("demo/x.txt", line + "\n")
+        with _env(WS_LEAK_TERMS=str(t)), mock.patch.object(privacy, "ALLOW_FILE", a):
+            return privacy.scan([f])
+
+    def test_allowed_name_hides_a_leak_term_inside_it(self):
+        self.assertEqual(self.scan_with("# skills\nproduct-brain-mcp\n", "next: product-brain-mcp"), [])
+
+    def test_allowed_name_is_case_insensitive(self):
+        self.assertEqual(self.scan_with("product-brain-mcp\n", "Next: Product-Brain-MCP"), [])
+
+    def test_the_term_outside_an_allowed_name_still_hits(self):
+        out = self.scan_with("product-brain-mcp\n", "product-brain-mcp and a brain elsewhere")
+        self.assertEqual(len(out), 1)
+        self.assertIn(": leak-term: ", out[0])
+
+    def test_allow_list_never_hides_generic_rules(self):
+        out = self.scan_with("jane.doe@corp.io\n", "mail jane.doe@corp.io")
+        self.assertEqual(len(out), 1)
+        self.assertIn(": email: ", out[0])
+
+    def test_missing_allow_file_allows_nothing(self):
+        self.assertEqual(len(self.scan_with(None, "product-brain-mcp")), 1)
+
+    def test_repo_allow_file_exists_and_names_the_skill_episodes(self):
+        names = privacy.allowed()
+        self.assertIn("product-brain-mcp", names)
+        self.assertTrue(all(n == n.strip() and n and not n.startswith("#") for n in names))
+
+
 class TestExcerpt(Tmp):
     def test_excerpt_never_prints_full_secret(self):
         secret = "ghp_SUPERSECRETTOKEN1234567890"

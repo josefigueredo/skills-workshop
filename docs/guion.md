@@ -113,6 +113,8 @@ WS_LEAK_TERMS=~/privado/leak-terms.txt python3 build.py check
 
 Corré `check` (o `build`, que lo incluye) con el archivo antes de cada commit. Si no definís la variable, solo corren las reglas genéricas.
 
+Si tu lista marca el nombre de una skill que el taller enseña (por ejemplo, el episodio de esa skill o el «Cierre» que la anuncia), no la cambies: sumá el nombre exacto a `privacy-allow.txt`, en la raíz del repo. Un término de tu lista que cae entero dentro de un nombre permitido, en la misma línea, deja de contar; fuera de ese nombre sigue marcando. Las reglas genéricas (rutas, mails, claves) nunca tienen excepción. Sumá un nombre solo cuando un episodio lo necesita y la persona que organiza el taller está de acuerdo.
+
 ## Cómo sacar un episodio de una skill
 
 1. **Leé la rama publicada**, no la de trabajo: `git -C ../<skill> show publish:README.md` (y `docs/showcase.md`, `docs/instalacion.md` o los nombres equivalentes). Anotá el commit: va en `skill.commit`.

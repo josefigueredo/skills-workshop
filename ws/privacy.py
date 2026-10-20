@@ -1,4 +1,9 @@
-"""Privacy check: generic leak rules plus an optional external terms file."""
+"""Privacy check: generic leak rules plus an optional external terms file.
+
+The external terms file ($WS_LEAK_TERMS) is a list of real-system names from elsewhere;
+some of them are also names of skills this workshop teaches. privacy-allow.txt (repo
+root, one name per line, # comments) lists those names: a leak-term hit that lies wholly
+inside an allowed name on the same line is dropped. Generic rules are never allowed."""
 from __future__ import annotations
 
 import os
@@ -19,6 +24,7 @@ GENERIC = {
 }
 
 EXCERPT_MAX = 20
+ALLOW_FILE = Path(__file__).resolve().parent.parent / "privacy-allow.txt"
 
 
 def rules() -> Dict[str, "re.Pattern"]:
@@ -46,6 +52,27 @@ def rules() -> Dict[str, "re.Pattern"]:
         out["leak-term" if count == 0 else "leak-term#%d" % (count + 1)] = rx
         count += 1
     return out
+
+
+def allowed() -> List[str]:
+    """Names in ALLOW_FILE (missing file: none)."""
+    try:
+        text = ALLOW_FILE.read_text(encoding="utf-8")
+    except OSError:
+        return []
+    return [l.strip() for l in text.splitlines() if l.strip() and not l.strip().startswith("#")]
+
+
+def _allowed_spans(line: str, names: List[str]) -> List[tuple]:
+    low = line.lower()
+    spans = []
+    for name in names:
+        n = name.lower()
+        i = low.find(n)
+        while i >= 0:
+            spans.append((i, i + len(n)))
+            i = low.find(n, i + 1)
+    return spans
 
 
 def _excerpt(line: str, m: "re.Match") -> str:
@@ -78,10 +105,14 @@ def _files(paths: List[Path]):
 def scan_text(text: str, where: str) -> List[str]:
     """Hits in one text as `<where>:<line>: <label>: <excerpt>` (excerpt masked)."""
     rs = rules()
+    names = allowed()
     hits: List[str] = []
     for n, line in enumerate(text.splitlines(), 1):
+        spans = _allowed_spans(line, names) if names else []
         for label, rx in rs.items():
             for m in rx.finditer(line):
+                if label.startswith("leak-term") and any(a <= m.start() and m.end() <= b for a, b in spans):
+                    continue
                 hits.append("%s:%d: %s: %s" % (where, n, label.split("#")[0], _excerpt(line, m)))
     return hits
 
