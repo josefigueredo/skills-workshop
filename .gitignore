@@ -3,3 +3,4 @@
 docs/maquetas/referencias/
 __pycache__/
 *.pyc
+.jira-team-kit/
