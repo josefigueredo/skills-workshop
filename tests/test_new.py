@@ -211,6 +211,17 @@ class NewCommand(unittest.TestCase):
             with self.assertRaises(scaffold.ScaffoldError):
                 scaffold.create(self.tree.root, "mono", id="../x")
 
+    def test_a_mixed_case_repo_keeps_its_name_and_gets_a_lowercase_id(self):
+        with env_without_skills_root(WS_SKILLS_ROOT=str(self.skills)):
+            code, out = run_cli(self.tree.root, "new", "WayOfWork", "--series", "claude-code")
+            self.assertEqual(code, 0, out)
+            p = self.path("claude-code", "01-wayofwork.json")
+            self.assertTrue(p.is_file(), out)
+            ep = json.loads(p.read_text(encoding="utf-8"))
+            self.assertEqual((ep["id"], ep["skill"]["repo"]), ("wayofwork", "WayOfWork"))
+            with self.assertRaises(scaffold.ScaffoldError):
+                scaffold.create(self.tree.root, "Mono", id="Uno")
+
     def test_rejects_unsafe_names_and_bad_series(self):
         for bad in ("../x", "a/b", "A B", "_x", ""):
             self.assertEqual(run_cli(self.tree.root, "new", bad)[0], 1, bad)

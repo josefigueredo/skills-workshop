@@ -12,6 +12,7 @@ from ws import capture, schema
 
 MARK = "COMPLETAR"
 NAME_RE = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
+REPO_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")  # GitHub repo names keep their case (WayOfWork)
 
 
 class ScaffoldError(Exception):
@@ -118,14 +119,14 @@ def skill_commit(root, repo: str) -> str:
 
 def create(root, repo: str, series: str = "cursor", order: Optional[int] = None,
            today: Optional[datetime.date] = None, id: Optional[str] = None) -> Path:
-    """Write episodes/<series>/<NN>-<id>.json (id defaults to repo; a monorepo hosts several ids).
-    Never overwrites; raises ScaffoldError."""
-    id = id or repo
+    """Write episodes/<series>/<NN>-<id>.json (id defaults to the repo name in lowercase; a monorepo hosts
+    several ids). Never overwrites; raises ScaffoldError."""
+    id = id or repo.lower()
     root = Path(root)
     if series not in schema.SERIES:
         raise ScaffoldError("unknown series %r" % series)
-    if not NAME_RE.match(repo):
-        raise ScaffoldError("%r is not a valid skill repo name (lowercase letters, digits, . _ -)" % repo)
+    if not REPO_RE.match(repo):
+        raise ScaffoldError("%r is not a valid skill repo name (letters, digits, . _ -)" % repo)
     if not NAME_RE.match(id):
         raise ScaffoldError("%r is not a valid episode id (lowercase letters, digits, . _ -)" % id)
     if order is not None and order < 0:
