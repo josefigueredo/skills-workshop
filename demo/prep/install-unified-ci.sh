@@ -22,6 +22,8 @@ name = "mi-servicio"
 version = "0.1.0"
 requires-python = ">=3.11"
 P
+# pip needs requirements.txt (the python stack guide treats pyproject.toml alone as an incompatible gap).
+printf '# no runtime dependencies yet\n' > api/requirements.txt
 mkdir -p .github/workflows
 cat > .github/workflows/test.yml <<'P'
 name: test

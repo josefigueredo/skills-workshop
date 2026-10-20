@@ -158,10 +158,11 @@
           "out": [
             "mi_servicio",
             "pyproject.toml",
+            "requirements.txt",
             "tests"
           ],
           "source": "real",
-          "notes": "Paso 1, perfilar el repo. Mira los manifiestos para reconocer el stack. Acá hay un pyproject.toml dentro de api: sin manifiesto en la raíz, la skill toma esa carpeta como el proyecto Python. Lectura pura.",
+          "notes": "Paso 1, perfilar el repo. Mira los manifiestos para reconocer el stack. Acá hay un requirements.txt y un pyproject.toml dentro de api: sin manifiesto en la raíz, la skill toma esa carpeta como el proyecto Python, y con pip el requirements.txt es obligatorio. Lectura pura.",
           "cwd": "~/mi-servicio"
         },
         {
@@ -177,7 +178,7 @@
         },
         {
           "type": "say",
-          "md": "Es un pedido de **migración**.\n\n- **Stack:** Python. Detecté `api/pyproject.toml` y no hay manifiesto en la raíz, así que el proyecto es `api`.\n- **CI actual:** `test.yml` y `lint.yml`. No hay deploys directos a la nube, ni matrices multi-OS, ni migraciones en el runner.\n- **Gate:** **Parcial**. `test.yml` corre la suite unitaria que el CI unificado ya ejecuta; `lint.yml` es un chequeo propio y lo conservo.\n\nSigo con la migración.",
+          "md": "Es un pedido de **migración**.\n\n- **Stack:** Python. Detecté `api/requirements.txt` y `api/pyproject.toml`, y no hay manifiesto en la raíz: el proyecto es `api` y el gestor es `pip`.\n- **CI actual:** `test.yml` y `lint.yml`. No hay deploys directos a la nube, ni matrices multi-OS, ni migraciones en el runner.\n- **Gate:** **Parcial**. `test.yml` corre la suite unitaria que el CI unificado ya ejecuta; `lint.yml` es un chequeo propio y lo conservo.\n\nSigo con la migración.",
           "source": "inferido",
           "notes": "Esta es la parte que hay que mirar despacio. El agente dice el modo, el stack con la evidencia, y la clasificación del gate: completo, parcial o incompatible. Solo incompatible frena. Acá no pregunta si sigue: dice «sigo». Fijate también que el lint no se borra: la skill borra solo lo que puede demostrar que el unificado ya cubre. Respuesta inferida, con datos ficticios.",
           "pause": true
@@ -220,9 +221,9 @@
         },
         {
           "type": "say",
-          "md": "#### Resumen de la migración\n- **Stack y herramientas:** Python (`api/`, `pyproject.toml`)\n- **Entrypoint:** el workflow reutilizable de Python del CI unificado, llamado desde `ci.yml` con `secrets: inherit`\n- **Parámetros en `with:`:** `python-project-directory: 'api'` y `skip-platform: true`\n- **Borrado:** `test.yml`\n- **Conservado:** `lint.yml`\n- **CI:** `PR checks passed`. `deploy not exercised`: el deploy no corre en esta rama.\n- **Deuda previa:** ninguna detectada\n\nAgregué este resumen a la descripción del PR.",
+          "md": "#### Resumen de la migración\n- **Stack y herramientas:** Python con `pip` (`api/requirements.txt`)\n- **Entrypoint:** el workflow reutilizable de Python del CI unificado, llamado desde `ci.yml` con `secrets: inherit`\n- **Parámetros en `with:`:** `package-manager: pip`, `python-version: '3.11'`, `python-project-directory: 'api'` y `skip-platform: true`\n- **Borrado:** `test.yml`\n- **Conservado:** `lint.yml`\n- **CI:** `PR checks passed`. `deploy not exercised`: el deploy no corre en esta rama.\n- **Deuda previa:** ninguna detectada\n\nAgregué este resumen a la descripción del PR.",
           "source": "inferido",
-          "notes": "Paso 8, el reporte, y es lo que tenés que leer. Fijate en la frase «deploy not exercised»: la skill nunca dice que el deploy «se verificó», porque en el run del PR no corre. Y el resumen también queda en la descripción del PR. Respuesta inferida: los nombres de los parámetros son un ejemplo ilustrativo; los reales salen de la plantilla del stack.",
+          "notes": "Paso 8, el reporte, y es lo que tenés que leer. Fijate en la frase «deploy not exercised»: la skill nunca dice que el deploy «se verificó», porque en el run del PR no corre. Y el resumen también queda en la descripción del PR. Los parámetros salen de la plantilla de Python: gestor, versión y carpeta del proyecto, más el que apaga el deploy porque este repo no despliega. Respuesta inferida.",
           "pause": true
         },
         {
