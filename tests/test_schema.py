@@ -260,3 +260,49 @@ class CliTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CierreChainTests(unittest.TestCase):
+    """The last `say` of each episode's last chapter (the «Cierre») must name the next episode.
+
+    Cursor 00 (Antes de empezar, order 0) IS part of the chain: its Cierre
+    already announces episode 1 (inherited-audit), so a reorder would break it.
+    """
+
+    @staticmethod
+    def closing_say(ep):
+        steps = [s for s in ep["chapters"][-1]["steps"] if s.get("type") == "say"]
+        return steps[-1]["md"]
+
+    @classmethod
+    def by_series(cls):
+        out = {}
+        for ep in schema.load_all(ROOT):
+            out.setdefault(ep["series"], []).append(ep)
+        return out
+
+    def test_each_cierre_names_the_next_episode(self):
+        for series, eps in self.by_series().items():
+            for ep, nxt in zip(eps, eps[1:]):
+                md = self.closing_say(ep)
+                self.assertIn(nxt["id"], md, "%s/%s: Cierre does not name %s" % (series, ep["id"], nxt["id"]))
+                for other in eps:
+                    if other["id"] not in (nxt["id"],) and other is not ep:
+                        self.assertNotIn("Próximo episodio: " + other["id"], md)
+
+    def test_last_cursor_episode_names_the_claude_code_series(self):
+        last = self.by_series()["cursor"][-1]
+        self.assertIn("Claude Code", self.closing_say(last))
+        first_cc = self.by_series()["claude-code"][0]
+        self.assertIn(first_cc["id"], self.closing_say(last))
+
+    def test_last_claude_code_episode_names_no_next_episode(self):
+        series = self.by_series()
+        last = series["claude-code"][-1]
+        md = self.closing_say(last)
+        self.assertNotIn("Próximo episodio", md)
+        self.assertNotIn("Próxima serie", md)
+        for eps in series.values():
+            for ep in eps:
+                if ep is not last:
+                    self.assertNotIn("Próximo episodio: " + ep["id"], md)
