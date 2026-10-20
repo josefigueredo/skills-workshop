@@ -5,7 +5,7 @@
   "title": "local-board-skill",
   "pitch": {
     "ask": "Armame un board local para este proyecto",
-    "does": "Crea un board de épicas, historias y tareas en archivos Markdown, lo traza contra los commits de Git y lo sincroniza con Jira solo después de que revisás un plan guardado: sin plan aprobado no se escribe nada."
+    "does": "Crea un board de épicas, historias y tareas en archivos Markdown, lo traza contra los commits de Git y lo sincroniza con Jira solo después de que revisás un plan guardado: solo se escribe con un plan guardado que revisaste (o con --apply, en la limpieza de links)."
   },
   "skill": {
     "repo": "teamwayofwork",
@@ -103,12 +103,12 @@
           "type": "term",
           "cmd": "python3 -m unittest discover -s ~/.agents/skills/local-board-skill/tests -p 'test*.py' 2>&1 | grep -E '^(Ran |OK$|FAILED)'",
           "out": [
-            "Ran 39 tests in 0.172s",
+            "Ran 39 tests in 0.143s",
             "OK"
           ],
           "source": "real",
           "cwd": "~",
-          "notes": "La comprobación que trae la skill: sus tests. Corren sin red y sin Jira, con Jira falso adentro. Tiene que terminar en OK. Si ves FAILED, frená acá y no sigas: lo que venga después se apoya en esto. Las credenciales de Jira no se piden ahora: el archivo donde van lo crea la skill junto con el board, y lo vemos en el caso principal.",
+          "notes": "La comprobación que trae la skill: sus tests. Corren sin red y sin Jira, con Jira falso adentro. Tiene que terminar en OK. El número de tests puede cambiar entre versiones: lo que importa es el OK. Si ves FAILED, frená acá y no sigas: lo que venga después se apoya en esto. Las credenciales de Jira no se piden ahora: el archivo donde van lo crea la skill junto con el board, y lo vemos en el caso principal.",
           "pause": true
         }
       ]
@@ -272,9 +272,15 @@
         },
         {
           "type": "tool",
+          "label": "Edit · board/sync/relations.json",
+          "source": "inferido",
+          "notes": "Acá se ve el trabajo del agente: escribe en el grafo una relación de evidencia y dos exclusiones con su razón."
+        },
+        {
+          "type": "tool",
           "label": "Ran · validate_relations.py",
           "source": "inferido",
-          "notes": "Segunda validación, con las relaciones cargadas: sale limpia o frena."
+          "notes": "Segunda validación, con las relaciones cargadas."
         },
         {
           "type": "ask",
@@ -371,8 +377,8 @@
           "a": "La fecha que la skill guarda en sync/state.json cada vez que aplicás un plan. De ahí sale desde cuándo mirar los commits nuevos."
         },
         {
-          "q": "¿Y si el board es nuevo?",
-          "a": "No hay fecha guardada. En ese caso el agente te pregunta desde cuándo mirar, en vez de inventar un corte."
+          "q": "¿Y si no hay fecha guardada?",
+          "a": "La skill dice que el corte no se adivina. Lo prudente, y lo que se espera del agente, es frenar y preguntarte desde cuándo mirar."
         },
         {
           "q": "¿Crea una tarea por cada commit?",
@@ -382,25 +388,31 @@
       "steps": [
         {
           "type": "ask",
-          "text": "¿Qué commits hay desde el último sync?",
+          "text": "Pasaron unos días: ¿qué commits hay desde el último sync?",
           "source": "inferido",
-          "notes": "El segundo modo de la skill. Es el uso de todos los días: pasaron dos semanas, hubo commits, y querés saber qué cambió y a qué tarea pertenece."
+          "notes": "El segundo modo de la skill y el uso de todos los días: pasaron unos días desde que aplicamos el plan y querés saber qué cambió y a qué tarea pertenece."
         },
         {
           "type": "term",
           "cmd": "python3 -c \"import json; print(json.load(open('board/sync/state.json'))['last_run'])\"",
           "out": [
-            "None"
+            "2026-10-19T14:32:07.512340+00:00"
           ],
-          "source": "real",
+          "source": "inferido",
           "cwd": "~/mi-servicio",
-          "notes": "El primer paso del agente es leer la fecha de corte del archivo de estado. En nuestro board de demo todavía no se guardó ninguna: no hay valor, Python imprime None. La skill es tajante: no se adivina el corte."
+          "notes": "El primer paso del agente es leer la fecha de corte del archivo de estado, y la skill es tajante: no se adivina. La fecha la dejó la aplicación del plan del caso anterior: cada --apply-plan la guarda. Inferido: la captura no aplicó ningún plan; la fecha es ilustrativa."
+        },
+        {
+          "type": "tool",
+          "label": "Ran · inventory_git.py --since 2026-10-19T14:32:07+00:00",
+          "source": "inferido",
+          "notes": "Con el corte leído, el inventario mira solo lo posterior. Si no hay una fecha guardada, no se inventa: el agente la pide, que es la lectura prudente del «no adivinar» (inferencia, el SKILL.md no detalla ese caso)."
         },
         {
           "type": "say",
-          "md": "El estado del board no tiene un último sync guardado (`last_run` sin valor), así que **no voy a adivinar el corte**. ¿Desde qué fecha miro los commits?\n\nCon la fecha, el camino es el de siempre:\n- Inventario desde ese corte, leyendo **cada diff**.\n- Reutilizo la tarea que ya representa la capacidad; solo creo una nueva si el resultado no encaja en ninguna.\n- Nuevos nodos y relaciones al grafo, validación y un plan nuevo para que lo revises.",
+          "md": "El último sync fue el **2026-10-19**. Desde esa fecha no hay commits nuevos en `mi-servicio`: el inventario vuelve vacío y no hay nada que relacionar.\n\nCuando los haya, el camino es el de siempre:\n- Leo **cada diff**, no solo el título.\n- Reutilizo la tarea que ya representa la capacidad; solo creo una nueva si el resultado no encaja en ninguna.\n- Nuevos nodos y relaciones al grafo, validación y un plan nuevo para que lo revises.",
           "source": "inferido",
-          "notes": "Fijate que el agente frena y pregunta. Un corte equivocado significa commits que se cuentan dos veces o se pierden. Cuando sí hay fecha guardada, la lee de state.json y sigue solo. Y el modo tres, la reconciliación histórica, usa las mismas piezas pero para commits viejos que nunca se vincularon en Jira.",
+          "notes": "Con la fecha guardada el agente sigue solo.",
           "pause": true
         }
       ]
@@ -429,14 +441,14 @@
           "type": "ask",
           "text": "Limpiá los links remotos con .git",
           "source": "inferido",
-          "notes": "Este pedido tiene una trampa linda: dice «limpiá», pero la skill empieza siempre por mirar."
+          "notes": "Este pedido tiene una trampa linda: dice «limpiá», pero el script, sin --apply, solo mira."
         },
         {
           "type": "term",
           "cmd": "python3 ~/.agents/skills/local-board-skill/scripts/purge_bad_remote_links.py --board-dir board --workers 12",
           "out": [
-            "would delete PLAT-123 remote link 101: https://git.example.com/demo/repo.git/commit/abc123",
-            "Scanned 3 remote links across 2 issues; would delete 1 bad URLs",
+            "would delete PLAT-102 remote link 101: https://git.example.com/demo/repo.git/commit/abc123",
+            "Scanned 3 remote links across 3 issues; would delete 1 bad URLs",
             "Dry run: nothing was changed. Re-run with --apply to delete these links."
           ],
           "source": "inferido",
@@ -445,27 +457,27 @@
         },
         {
           "type": "say",
-          "md": "Encontré **1 link mal formado** de 3 que revisé, en **PLAT-123**: una URL de commit que contiene `.git/`.\n\n**No borré nada.** Con `--apply` borra enseguida y no se puede deshacer. Si la lista te parece bien, pedímelo.",
+          "md": "Encontré **1 link mal formado** de 3 que revisé, en **PLAT-102**: una URL de commit que contiene `.git/`.\n\n**No borré nada.** Con `--apply` borra enseguida y no se puede deshacer. Si la lista te parece bien, pedímelo.",
           "source": "inferido",
-          "notes": "El agente se frena en la lista. La skill dice que primero se lista y que se borra solo si vos lo pedís. Leé la lista: es la única protección que hay antes del borrado."
+          "notes": "El agente se frena en la lista. El showcase de la skill indica correr primero el plan y borrar solo si se lo pedís. Leé la lista: es la única protección que hay antes del borrado."
         },
         {
           "type": "ask",
           "text": "Sí, borralo",
           "source": "inferido",
-          "notes": "Un pedido explícito, después de haber visto la lista. Eso es lo que habilita el --apply."
+          "notes": "Un pedido explícito, después de ver la lista: eso habilita el --apply."
         },
         {
           "type": "tool",
           "label": "Ran · purge_bad_remote_links.py --apply",
           "source": "inferido",
-          "notes": "Recién ahora aparece la bandera. Borra el link y termina. Inferido: escribe en Jira y no se corre en la captura."
+          "notes": "Recién ahora aparece la bandera. Inferido: escribe en Jira."
         },
         {
           "type": "say",
-          "md": "Borré **1 link** de PLAT-123. Para comprobarlo, corro de nuevo el modo sin `--apply`: no debería listar nada.",
+          "md": "Borré **1 link** de PLAT-102. Para comprobarlo, corro de nuevo el modo sin `--apply`: no debería listar nada.",
           "source": "inferido",
-          "notes": "Verificar con el mismo comando sin la bandera es barato y cierra el caso.",
+          "notes": "Verificar sin la bandera es barato y cierra el caso.",
           "pause": true
         }
       ]
