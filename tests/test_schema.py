@@ -258,10 +258,6 @@ class CliTests(unittest.TestCase):
         self.assertEqual(self.run_cli().returncode, 2)
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class CierreChainTests(unittest.TestCase):
     """The last `say` of each episode's last chapter (the «Cierre») must name the next episode.
 
@@ -306,3 +302,7 @@ class CierreChainTests(unittest.TestCase):
             for ep in eps:
                 if ep is not last:
                     self.assertNotIn("Próximo episodio: " + ep["id"], md)
+
+
+if __name__ == "__main__":
+    unittest.main()
