@@ -406,9 +406,9 @@
         },
         {
           "type": "say",
-          "md": "#### Lo que te llevás\n- **Dos repos:** este trae el instalador y la skill vive en otro; el script baja la última `main` y enlaza, y borra lo que haya en los destinos.\n- **Migrar es pedir el PR:** la skill crea su rama, pushea y abre el PR sola. Vos revisás y mergeás.\n- **Para solo mirar, evaluá:** el reporte no cambia nada. Y si el repo no entra, frena y lista los bloqueos.\n\n#### Próximo episodio: arq-review\nCómo se revisa un pedido de proyecto con Arquitectura: se registra, se analiza contra las restricciones, se proponen opciones y se publica el veredicto.",
+          "md": "#### Lo que te llevás\n- **Dos repos:** este trae el instalador y la skill vive en otro; el script baja la última `main` y enlaza, y borra lo que haya en los destinos.\n- **Migrar es pedir el PR:** la skill crea su rama, pushea y abre el PR sola. Vos revisás y mergeás.\n- **Para solo mirar, evaluá:** el reporte no cambia nada. Y si el repo no entra, frena y lista los bloqueos.\n\n#### Próximo episodio: arq-review\nCómo se revisa un pedido de proyecto con Arquitectura: se registra, se analiza contra las restricciones, se proponen opciones y queda un veredicto propuesto que firma una persona.",
           "source": "inferido",
-          "notes": "Las tres ideas: la skill y su instalador viven separados; migrar abre el PR sola y lo revisás vos; evaluar no toca nada. Anticipá el próximo en una frase: pasamos del CI de un repo a la revisión de arquitectura de un proyecto entero, con las mismas reglas de aprobación que ya vimos.",
+          "notes": "Las tres ideas: la skill y su instalador viven separados; migrar abre el PR sola y lo revisás vos; evaluar no toca nada. Anticipá el próximo en una frase: pasamos del CI de un repo a la revisión de arquitectura de un proyecto entero, donde el agente prepara y los comandos que escriben en Jira los corrés vos, sin ventana de aprobación.",
           "pause": true
         }
       ]

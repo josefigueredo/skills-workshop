@@ -1,0 +1,592 @@
+{
+  "id": "arq-review",
+  "series": "cursor",
+  "order": 8,
+  "title": "arq-review",
+  "pitch": {
+    "ask": "Registrá el PRY-2026-0042 y hacé el triage.",
+    "does": "Lleva la revisión de Arquitectura de un pedido de proyecto de punta a punta: lo registra tal cual, te propone el triage para que lo confirmes vos, arma la épica y el ticket del requirente en Jira, analiza con opciones y deja un veredicto propuesto. Escribe en Jira solo con un comando que corrés vos."
+  },
+  "skill": {
+    "repo": "arq-review",
+    "commit": "acd5d98",
+    "date": "2026-10-12"
+  },
+  "workspace": {
+    "repo": "mi-servicio",
+    "files": [
+      "api",
+      "web",
+      "docs",
+      "README.md"
+    ],
+    "chats": [
+      {
+        "title": "Revisar el alcance de devoluciones",
+        "age": "1d"
+      }
+    ]
+  },
+  "chapters": [
+    {
+      "id": "instalar",
+      "title": "Instalar",
+      "subtitle": "Una vez por máquina: clonar, instalar y preparar el repo de reviews",
+      "screen": "terminal",
+      "faq": [
+        {
+          "q": "¿Qué necesito instalado?",
+          "a": "python3 3.9 o más y git. arq usa solo la biblioteca estándar: no hay nada que bajar con pip. Y acceso por SSH al repo de la herramienta, que es privado: la clave sale del episodio 0."
+        },
+        {
+          "q": "¿Qué pasa si ya tengo una skill con el mismo nombre?",
+          "a": "El instalador no pisa nada que no sea un enlace: avisa cuál es y termina con error. Lo movés de lugar y lo corrés de nuevo. Repetirlo, en cambio, es seguro."
+        },
+        {
+          "q": "¿Por qué hay dos repos, el de la herramienta y el de reviews?",
+          "a": "Porque arq trabaja sobre la carpeta donde estás parado. La herramienta no guarda reviews: los guarda el repo de reviews de tu equipo, junto con el registro de todo lo que se escribió en Jira."
+        },
+        {
+          "q": "¿Y las credenciales de Jira?",
+          "a": "Solo hacen falta para los comandos con --apply y para arq ver. Creás un token de API sin alcance, lo guardás con un editor en un archivo .env fuera del repo de reviews y nunca lo pegás en el chat."
+        }
+      ],
+      "steps": [
+        {
+          "type": "term",
+          "cmd": "git clone <repo> ~/skills/arq-review",
+          "out": [
+            "Cloning into '~/skills/arq-review'..."
+          ],
+          "source": "inferido",
+          "notes": "Bajamos la herramienta; en <repo> va la dirección que te da tu equipo. Es privado y va por SSH: si dice «Permission denied», falta el acceso (clave del episodio 0). Inferido: necesita red.",
+          "cwd": "~"
+        },
+        {
+          "type": "term",
+          "cmd": "cd ~/skills/arq-review && ./install.sh",
+          "out": [
+            "note: add ~/.local/bin to PATH to use arq",
+            "skills: arq-manager, arq-architect (Claude Code, Codex, Cursor) -> ~/skills/arq-review/skills",
+            "cli: arq -> ~/skills/arq-review/arq.py"
+          ],
+          "source": "real",
+          "notes": "Un comando deja las dos skills y el comando arq, con enlaces a tu clon: nada se copia. Fijate en el aviso: si ~/.local/bin no está en el PATH, arq no se encuentra. Es el fallo más común; se arregla agregándolo a tu ~/.zshrc y abriendo una terminal nueva.",
+          "cwd": "~"
+        },
+        {
+          "type": "term",
+          "cmd": "~/.local/bin/arq --help | head -2",
+          "out": [
+            "usage: arq [-h]",
+            "           {init,path,new,show,triage,set,state,timebox,lint,jira,jsm,seguimiento,ver,link,eval} ..."
+          ],
+          "source": "real",
+          "notes": "Comprobamos que arq responde. Aclaración: acá va la ruta completa porque la terminal de la grabación no tiene esa carpeta en el PATH; en tu máquina alcanza con arq. Lo mismo vale para el resto del episodio.",
+          "cwd": "~"
+        },
+        {
+          "type": "term",
+          "cmd": "ls ~/.agents/skills",
+          "out": [
+            "arq-architect",
+            "arq-manager"
+          ],
+          "source": "real",
+          "notes": "Las dos skills quedaron donde Cursor las lee: arq-manager coordina y arq-architect revisa lo técnico. No se llaman entre sí: cada una mira el estado del pedido y sabe si le toca. Abrí una sesión nueva del agente.",
+          "cwd": "~"
+        },
+        {
+          "type": "term",
+          "cmd": "git clone <repo-de-reviews> ~/arq-reviews",
+          "out": [
+            "Cloning into '~/arq-reviews'..."
+          ],
+          "source": "inferido",
+          "notes": "Ahora el repo de reviews de tu equipo: ahí vas a trabajar de acá en adelante. Se commitea, por eso el token no puede vivir adentro. Inferido: necesita red.",
+          "cwd": "~"
+        },
+        {
+          "type": "term",
+          "cmd": "~/.local/bin/arq init",
+          "out": [
+            "creado .arq/config.json",
+            "creado reviews/"
+          ],
+          "source": "real",
+          "notes": "arq init crea la configuración y la carpeta de reviews; si ya existen, no los toca. Después se completa el canal del requirente en el config.json, un help desk de Software o Jira Service Management. Se lo pedís al agente en una frase.",
+          "cwd": "~/arq-reviews"
+        },
+        {
+          "type": "term",
+          "cmd": "ls -l ~/.config/arq",
+          "out": [
+            "total 8",
+            "-rw-------  1 persona  staff  138 19 oct 09:00 .env"
+          ],
+          "source": "inferido",
+          "notes": "Las tres variables de Jira (URL, email y token) viven en un .env fuera del repo de reviews. El token se crea con «Create API token» a secas, no «with scopes». Lo escribís vos con un editor, nunca por el chat. Salida inferida; los permisos 600 son una buena práctica nuestra.",
+          "cwd": "~",
+          "pause": true
+        }
+      ]
+    },
+    {
+      "id": "caso-principal",
+      "title": "Caso principal",
+      "subtitle": "De un pedido que llegó al Jira armado",
+      "screen": "cursor-full",
+      "faq": [
+        {
+          "q": "¿Por qué el agente no corre el --apply?",
+          "a": "Porque la skill lo prohíbe: lo que escribe en Jira siempre te lo da armado con un signo de exclamación para que lo corras vos. Tu control es el dry run que viste antes. Fijate que acá no aparece ninguna ventana de aprobación: es una diferencia con otras herramientas del taller."
+        },
+        {
+          "q": "¿Quién contesta el triage?",
+          "a": "La persona que coordina, no el modelo. El agente propone sí o no citando la frase del pedido, y espera tu confirmación. Ante la duda, sí. Un solo sí da nivel complejo."
+        },
+        {
+          "q": "¿Y si me equivoqué en el triage?",
+          "a": "Se puede repetir mientras no exista la épica. Con la épica creada, arq se niega, porque el nivel decide la estructura de Jira."
+        },
+        {
+          "q": "¿Y si el Jira se corta a la mitad?",
+          "a": "Repetís el mismo comando. Cada issue lleva un ID estable, así que retoma sin duplicar, y renombrar algo a mano en Jira no rompe nada."
+        }
+      ],
+      "steps": [
+        {
+          "type": "ask",
+          "text": "Registrá el PRY-2026-0042. El pedido está en pedido.txt; contacto contacto@example.com y head head@example.com",
+          "source": "inferido",
+          "notes": "El pedido es una frase: el número, el texto y los dos mails. El contacto es el requirente y el head queda de participante. Datos inventados. En un caso real el pedido se transcribe tal cual: es evidencia."
+        },
+        {
+          "type": "tool",
+          "label": "Read · ~/.agents/skills/arq-manager/SKILL.md",
+          "source": "inferido",
+          "notes": "Cursor carga arq-manager, la que coordina. Esta skill no emite juicio técnico, ni siquiera un «parece razonable»: eso es de la otra."
+        },
+        {
+          "type": "term",
+          "cmd": "~/.local/bin/arq show PRY-2026-0042",
+          "out": [
+            "error: no existe ~/arq-reviews/reviews/PRY-2026-0042.md: correr `arq new PRY-2026-0042` primero",
+            "# exit 1"
+          ],
+          "source": "real",
+          "notes": "Primero mirar si el review ya existe. No existe: el error es la respuesta correcta. El «exit 1» lo agrega la captura. Salida real.",
+          "cwd": "~/arq-reviews"
+        },
+        {
+          "type": "term",
+          "cmd": "~/.local/bin/arq new PRY-2026-0042 --nombre \"Migración del servicio de reportes\" --pedido pedido.txt --contacto contacto@example.com --head head@example.com",
+          "out": [
+            "creado reviews/PRY-2026-0042.md (estado: recibido)"
+          ],
+          "source": "real",
+          "notes": "Se crea el review en «recibido», con el pedido copiado entero. Todo queda en un archivo del repo de reviews: git es la fuente de verdad.",
+          "cwd": "~/arq-reviews"
+        },
+        {
+          "type": "say",
+          "md": "#### Registrado. Triage: mi propuesta\nLeí `contract/triage.md`. Cada sí o no lleva la frase del pedido que lo justifica:\n- `multi_cuenta`: **sí**, «pasar a la cuenta de Datos» desde la de Producto\n- `migracion`: **sí**, «mover la base de reportes»\n- `fecha_comprometida`: **sí**, «comprometido con el cliente»\n- `otros_equipos`: **sí**, «Finanzas y Soporte consumen los reportes»\n- `datos_sensibles_o_ia`: **sí**, «incluye facturación de clientes»\n- `larga_o_productiva`: **sí**, «queda productivo»\n\nLas respuestas las confirmás vos, no yo. ¿Las dejo así?",
+          "source": "inferido",
+          "notes": "Cada propuesta cita el pedido: es evidencia, no opinión del modelo. Y termina en una pregunta: el agente se frena y espera a la persona que coordina. Contenido ilustrativo."
+        },
+        {
+          "type": "ask",
+          "text": "Casi todo bien. En otros_equipos es no: Finanzas y Soporte solo leen los reportes, no participan.",
+          "source": "inferido",
+          "notes": "La persona corrige al agente, y eso es lo esperado. Con un solo sí el nivel ya es complejo."
+        },
+        {
+          "type": "term",
+          "cmd": "~/.local/bin/arq triage PRY-2026-0042 --answers \"multi_cuenta=si,migracion=si,fecha_comprometida=si,otros_equipos=no,datos_sensibles_o_ia=si,larga_o_productiva=si\"",
+          "out": [
+            "nivel: complejo"
+          ],
+          "source": "real",
+          "notes": "Con las respuestas confirmadas, el nivel queda fijado. Se puede repetir mientras no exista la épica. Salida real.",
+          "cwd": "~/arq-reviews"
+        },
+        {
+          "type": "ask",
+          "text": "Armá el Jira del PRY-2026-0042",
+          "source": "inferido",
+          "notes": "Segundo pedido, el que más se usa: abrir la épica de la revisión y el ticket donde conversa el requirente."
+        },
+        {
+          "type": "term",
+          "cmd": "~/.local/bin/arq jira PRY-2026-0042 --html ~/PRY-2026-0042.html",
+          "out": [
+            "épica     [PRY-2026-0042] Migración del servicio de reportes  [pry:2026-0042 nivel:complejo]",
+            "  story   Intake y triage",
+            "    sub-task Normalizar pedido  [track:coordinacion]",
+            "    sub-task Triage  [track:coordinacion]",
+            "    sub-task Abrir ticket del requirente y plazo  [track:coordinacion]",
+            "  story   Análisis y opciones",
+            "    sub-task Gap check de input mínimo  [track:tecnica]",
+            "    sub-task Análisis vs constraints  [track:tecnica]",
+            "    sub-task Opciones y recomendación  [track:tecnica]",
+            "  story   Decisión y comunicación",
+            "    sub-task Revisión y firma  [track:tecnica]",
+            "    sub-task Publicar devolución  [track:coordinacion]",
+            "vista previa: ~/PRY-2026-0042.html",
+            "dry run: no se escribió nada. Para ejecutarlo, el usuario corre el mismo comando con --apply (en Claude Code, con !)."
+          ],
+          "source": "real",
+          "notes": "Es el dry run: muestra el árbol de lo que se crearía y deja una vista previa. No necesita red ni credenciales. Fijate en la última línea: no se escribió nada. Salida real.",
+          "cwd": "~/arq-reviews"
+        },
+        {
+          "type": "say",
+          "md": "#### Esto es lo que se crearía\nNo escribí nada en Jira. Una **épica**, **tres historias** (intake y triage, análisis y opciones, decisión y comunicación) y **ocho sub-tasks**. Abrí `PRY-2026-0042.html` para verlo con su descripción.\n\nComo el nivel es `complejo`, te pregunto: ¿hace falta la historia opcional de **validación técnica**?",
+          "source": "inferido",
+          "notes": "El agente muestra y pregunta. Como es complejo, ofrece una cuarta historia opcional. No sigue sin un sí explícito."
+        },
+        {
+          "type": "ask",
+          "text": "No hace falta. Seguí.",
+          "source": "inferido",
+          "notes": "El sí explícito que la skill espera antes de pasar a escribir."
+        },
+        {
+          "type": "say",
+          "md": "#### El comando lo corrés vos\nPara crear la épica y el ticket del requirente (a su nombre, buscándolo por email), corré esto en la terminal de Cursor:\n\n`! set -a && source ~/.config/arq/.env && set +a && arq jira PRY-2026-0042 --apply`\n\nYo no lo corro: el `--apply` es tuyo. Si algo falla a mitad de camino, repetilo tal cual; retoma sin duplicar.",
+          "source": "inferido",
+          "notes": "El momento clave, decilo despacio: el agente nunca corre un --apply. Te lo deja armado, con el .env cargado en la misma línea porque arq lee el entorno, no el archivo. No hay ventana de aprobación: tu control es el dry run que ya viste y que el comando lo corrés vos."
+        },
+        {
+          "type": "term",
+          "cmd": "set -a && source ~/.config/arq/.env && set +a && arq jira PRY-2026-0042 --apply",
+          "out": [
+            "épica: PLAT-123 (creados 12, existentes 0; descripciones actualizadas: 0; tareas movidas a Done: 2, a En curso: 1)",
+            "jsm: PLATHD-7 (creado; labels, participantes y link al día)"
+          ],
+          "source": "inferido",
+          "notes": "La persona lo corre en la terminal de Cursor y escribe en Jira: inferido, nunca lo ejecutamos. Claves y números inventados; el formato sale del código. Se verifica el conteo «creados» y el ticket.",
+          "pause": true,
+          "in": "zsh"
+        },
+        {
+          "type": "tool",
+          "label": "Ran · git commit -m \"feat: PRY-2026-0042 registrado, triado y con Jira\"",
+          "source": "inferido",
+          "notes": "La skill commitea el repo de reviews tras cada paso que cambia el review o escribe en Jira. Es local; el push es de la persona."
+        },
+        {
+          "type": "say",
+          "md": "#### Listo\nVerifiqué la salida: la épica **PLAT-123** con 12 issues creados y el ticket del requirente **PLATHD-7**. El review está `triado`, nivel `complejo`.\n\nCada vez que el review cambie (gap check, análisis, firma, cierre) te voy a volver a dar este mismo comando: así Jira muestra lo mismo que git. Las descripciones no se editan a mano en Jira, se pisan; las notas van en comentarios.\n\nSiguiente: la revisión técnica la hace `arq-architect`.",
+          "source": "inferido",
+          "notes": "Idea del ciclo: cada cambio del review vuelve a Jira con el mismo comando. Y ahora le toca a la otra skill. Los números son de ejemplo."
+        }
+      ]
+    },
+    {
+      "id": "gap-check",
+      "title": "Otro caso: el gap check",
+      "subtitle": "Qué falta del pedido, y cómo se lo pedimos al requirente",
+      "screen": "cursor-agent",
+      "faq": [
+        {
+          "q": "¿Cómo decide qué falta?",
+          "a": "Contrasta el pedido contra el input mínimo del nivel. El test es simple: cada afirmación tiene que apuntar a un número, un componente, un diagrama o una métrica. Si no, es prosa y cuenta como faltante."
+        },
+        {
+          "q": "¿Por qué no da un veredicto todavía?",
+          "a": "Porque con input faltante el CLI se niega a registrarlo. Primero hay que pedir la información; recién con el input completo hay análisis y veredicto."
+        },
+        {
+          "q": "¿Quién le escribe al requirente?",
+          "a": "arq-architect redacta el mensaje desde una plantilla, pero publicarlo le toca a arq-manager, con dry run y un comando con signo de exclamación que corrés vos."
+        },
+        {
+          "q": "¿Y si el requirente no contesta?",
+          "a": "El plazo es de 10 días hábiles por defecto. Si vence en esperando-info, el camino es la propuesta de rechazo: el pedido se cierra como rechazado, pero el click en la plataforma lo hace una persona."
+        }
+      ],
+      "steps": [
+        {
+          "type": "ask",
+          "text": "Hacé el gap check del PRY-2026-0042",
+          "source": "inferido",
+          "notes": "Un pedido corto que se resuelve con otra skill. Fijate que no mencionamos a arq-architect: el pedido y el estado del review deciden qué skill actúa."
+        },
+        {
+          "type": "tool",
+          "label": "Read · ~/.agents/skills/arq-architect/SKILL.md",
+          "source": "inferido",
+          "notes": "Se carga la skill técnica. Su regla de arranque: trabaja solo en triado, esperando-info o en-analisis. En otro estado lo dice y no avanza."
+        },
+        {
+          "type": "term",
+          "cmd": "~/.local/bin/arq show PRY-2026-0042 | head -6",
+          "out": [
+            "pry: PRY-2026-0042",
+            "nombre: Migración del servicio de reportes",
+            "contacto: contacto@example.com",
+            "head: head@example.com",
+            "estado: triado",
+            "nivel: complejo"
+          ],
+          "source": "real",
+          "notes": "Primero el estado: triado, nivel complejo. Es el estado donde le toca a la revisión técnica. Cortamos la salida a seis líneas, con lo que importa acá. Salida real.",
+          "cwd": "~/arq-reviews"
+        },
+        {
+          "type": "term",
+          "cmd": "~/.local/bin/arq lint",
+          "out": [
+            "ok: ~/skills/arq-review/contract/constraints.md"
+          ],
+          "source": "real",
+          "notes": "Antes de revisar, la skill se asegura de que el contrato de constraints sea válido. Esas constraints son las reglas de Arquitectura contra las que se analiza. El contrato lo mantiene Arquitectura: arq lo lee, nunca lo reescribe. Salida real.",
+          "cwd": "~/arq-reviews"
+        },
+        {
+          "type": "say",
+          "md": "#### Gap check\nLeí el pedido, los documentos adjuntos y `minimum-input.md` del nivel `complejo`. **Faltan tres datos**:\n- `cuentas_entornos`: el pedido dice «Producto» y «Datos», pero no qué cuentas y entornos son\n- `flujos_datos`: no hay flujos ni clasificación de la facturación de clientes\n- `rollback`: no hay plan de vuelta atrás ni criterio para activarlo\n\nLo anoto y paso el review a `esperando-info`.",
+          "source": "inferido",
+          "notes": "Esto es juicio técnico, y por eso lo hace esta skill y no la que coordina. Cada faltante sale del input mínimo, con su ID. Contenido ilustrativo: depende del pedido."
+        },
+        {
+          "type": "term",
+          "cmd": "~/.local/bin/arq set PRY-2026-0042 faltantes=cuentas_entornos,flujos_datos,rollback",
+          "out": [
+            "actualizado: faltantes"
+          ],
+          "source": "real",
+          "notes": "Solo acepta IDs que existen en el nivel: uno inventado se rechaza y lista los válidos.",
+          "cwd": "~/arq-reviews"
+        },
+        {
+          "type": "term",
+          "cmd": "~/.local/bin/arq state PRY-2026-0042 --to esperando-info",
+          "out": [
+            "estado: esperando-info"
+          ],
+          "source": "real",
+          "notes": "El CLI controla las transiciones: no se puede saltear un estado. Este paso es válido desde triado.",
+          "cwd": "~/arq-reviews"
+        },
+        {
+          "type": "term",
+          "cmd": "~/.local/bin/arq set PRY-2026-0042 componente_debil=datos senales=seguridad,cloud",
+          "out": [
+            "actualizado: componente_debil, senales"
+          ],
+          "source": "real",
+          "notes": "Queda un análisis preliminar, sin veredicto: el componente más débil y las señales para otros sectores. Señales, no veredictos: sobre Cloud, Seguridad o FinOps esta skill nunca opina.",
+          "cwd": "~/arq-reviews"
+        },
+        {
+          "type": "tool",
+          "label": "Write · reviews/PRY-2026-0042.jsm.md",
+          "source": "inferido",
+          "notes": "Redacta el mensaje para el requirente desde la plantilla jsm-pedido-info, completando solo los placeholders. Si toca el texto fijo, el CLI lo rechaza al publicar."
+        },
+        {
+          "type": "say",
+          "md": "#### Pedido de información redactado\nPor cada faltante, una pregunta concreta para este pedido y por qué se pide:\n- **Cuentas y entornos:** ¿qué cuenta de Producto y qué cuenta de Datos, y en qué entornos se hace el corte?\n- **Flujos de datos:** ¿qué datos de facturación mueve el servicio y cómo están clasificados?\n- **Rollback:** ¿cómo se vuelve atrás si falla el corte del 30 de noviembre?\n\nPuse primero lo que bloquea esa fecha. El mensaje está en `reviews/PRY-2026-0042.jsm.md`. Publicarlo le toca a `arq-manager`; el plazo todavía no arrancó (`vence` vacío), pedile que lo fije.",
+          "source": "inferido",
+          "notes": "Cada pregunta es específica del pedido, nunca genérica, y van primero las que bloquean la fecha comprometida. El agente avisa que no publica: lo hace arq-manager, con dry run y un comando con ! que corrés vos, igual que el Jira."
+        }
+      ]
+    },
+    {
+      "id": "analisis",
+      "title": "Otro caso: el análisis",
+      "subtitle": "Con el input completo: opciones, señales y veredicto propuesto",
+      "screen": "cursor-agent",
+      "faq": [
+        {
+          "q": "¿Por qué solo dos opciones y solo para un componente?",
+          "a": "Porque si el original es viable, la Opción 0 es el original y las dos alternativas son solo para el componente más débil. No se reescribe todo el pedido. Si el original no es viable, sí hay dos alternativas completas."
+        },
+        {
+          "q": "¿Puede el agente aprobar o rechazar?",
+          "a": "No. Propone un veredicto: aprobar, aprobar con condiciones o rechazar. Lo firma una persona, y el click de Aprobar o Rechazar en la plataforma también."
+        },
+        {
+          "q": "¿Qué son las señales?",
+          "a": "Avisos para Cloud, Seguridad y FinOps, del estilo «FinOps podría observar tal cosa, porque tal otra». Nunca un veredicto sobre esos sectores."
+        },
+        {
+          "q": "¿Y si quien firma pide cambios?",
+          "a": "El review vuelve a en-analisis, la firma se anula y hay que firmar de nuevo. El veredicto solo se puede cambiar desde en-analisis."
+        }
+      ],
+      "steps": [
+        {
+          "type": "ask",
+          "text": "El requirente respondió en su ticket con los tres datos. Revisá de nuevo y analizá el PRY-2026-0042",
+          "source": "inferido",
+          "notes": "Pasaron unos días. El requirente contestó en su ticket, y el agente retoma desde esperando-info, un estado desde el que la skill puede trabajar."
+        },
+        {
+          "type": "term",
+          "cmd": "~/.local/bin/arq state PRY-2026-0042 --to en-analisis",
+          "out": [
+            "estado: en-analisis"
+          ],
+          "source": "real",
+          "notes": "Con el input completo, el review pasa a en-analisis. Salida real.",
+          "cwd": "~/arq-reviews"
+        },
+        {
+          "type": "term",
+          "cmd": "~/.local/bin/arq set PRY-2026-0042 faltantes=",
+          "out": [
+            "actualizado: faltantes"
+          ],
+          "source": "real",
+          "notes": "Se deja la lista de faltantes vacía: ya no falta nada. Sin esto, el CLI no deja pasar a firma.",
+          "cwd": "~/arq-reviews"
+        },
+        {
+          "type": "tool",
+          "label": "Edit · reviews/PRY-2026-0042.md",
+          "source": "inferido",
+          "notes": "Acá se escribe el análisis, siguiendo la plantilla de la skill. Es un archivo de texto del repo de reviews, y se puede leer completo antes de firmar."
+        },
+        {
+          "type": "say",
+          "md": "#### Análisis completo\nSeguí el método de la skill. El original es **viable**: ninguna constraint bloqueante queda sin solución.\n- **Componente más débil:** `datos`. El cruce entre cuentas exige un rol asumible [C-IAM-02] y declarar la clasificación de la facturación [C-DAT-01]\n- **Opción 0:** el original, con corte en una ventana el 30 de noviembre\n- **Opción 1:** replicación continua hasta el corte, con ventana mínima y mayor costo\n- **Opción 2:** instantánea cifrada compartida entre cuentas, con ventana más larga y menos esfuerzo\n- **Recomendación:** Opción 1, con condiciones verificables\n- **Señales:** seguridad, cloud y finops, sin veredicto\n\nVeredicto propuesto: **aprobar con condiciones**.",
+          "source": "inferido",
+          "notes": "Cada afirmación del review lleva una etiqueta: [pedido], [C-XXX-NN] de la constraint, [supuesto] o [verificar]; ningún número sin etiqueta. Es la regla de evidencia de la skill. Contenido ilustrativo: el análisis real depende del pedido. Lo que sí es real es el método."
+        },
+        {
+          "type": "term",
+          "cmd": "~/.local/bin/arq set PRY-2026-0042 componente_debil=datos senales=seguridad,cloud,finops veredicto=aprobar-con-condiciones",
+          "out": [
+            "actualizado: componente_debil, senales, veredicto"
+          ],
+          "source": "real",
+          "notes": "Se registran el componente más débil, las señales y el veredicto propuesto. Si quedara input faltante, el CLI rechazaría el veredicto. Salida real.",
+          "cwd": "~/arq-reviews"
+        },
+        {
+          "type": "term",
+          "cmd": "~/.local/bin/arq state PRY-2026-0042 --to en-firma",
+          "out": [
+            "estado: en-firma"
+          ],
+          "source": "real",
+          "notes": "Pasa a firma. El CLI exige veredicto y nada faltante. Nótese que acá termina el trabajo del agente: no firma.",
+          "cwd": "~/arq-reviews"
+        },
+        {
+          "type": "say",
+          "md": "#### Listo para firma\nEl review quedó en `en-firma`. Quien firma el nivel `complejo` (el Sr Expert) lo lee completo en `reviews/PRY-2026-0042.md`. Redacté también el mensaje de devolución y el comentario corto para pegar en la plataforma PRY.\n\nLas condiciones están en el review, una por bullet: `arq-manager` crea una sub-task de seguimiento por cada una.",
+          "source": "inferido",
+          "notes": "Cerrá con el límite: el agente prepara, una persona firma y una persona hace el click en la plataforma. Después, arq-manager publica la devolución con el mismo patrón de dry run y comando tuyo, y crea los seguimientos de las condiciones. No lo mostramos acá; está en el showcase de la skill."
+        }
+      ]
+    },
+    {
+      "id": "si-algo-falla",
+      "title": "Si algo falla",
+      "subtitle": "Las guardas de arq: errores que te protegen",
+      "screen": "terminal",
+      "faq": [
+        {
+          "q": "El agente dice que arq no existe, ¿qué hago?",
+          "a": "Es el PATH: ~/.local/bin no está. Pedile que lo agregue a tu ~/.zshrc y abrí una terminal nueva."
+        },
+        {
+          "q": "Creé el token y no entra, ¿por qué?",
+          "a": "Casi seguro lo creaste con alcance. Creá otro con el botón «Create API token» a secas."
+        },
+        {
+          "q": "Me dice «el help desk no tiene notas internas»",
+          "a": "Estás en el canal software: ahí todo comentario lo ve el requirente. El debate técnico va en la épica, no en el ticket."
+        },
+        {
+          "q": "¿Puedo saltearme un estado para ir más rápido?",
+          "a": "No: la máquina de estados no lo permite, y es a propósito. El mensaje te lista las transiciones válidas."
+        }
+      ],
+      "steps": [
+        {
+          "type": "term",
+          "cmd": "~/.local/bin/arq show PRY-2026-0042",
+          "out": [
+            "error: no existe ~/reviews/PRY-2026-0042.md: correr `arq new PRY-2026-0042` primero",
+            "# exit 1"
+          ],
+          "source": "real",
+          "notes": "El error más común: estás parado en otra carpeta. arq trabaja sobre la carpeta actual y busca ahí la carpeta de reviews. Se arregla parándote en el repo de reviews, o abriendo Cursor ahí. Salida real.",
+          "cwd": "~"
+        },
+        {
+          "type": "term",
+          "cmd": "~/.local/bin/arq state PRY-2026-0042 --to cerrado --resultado aprobado",
+          "out": [
+            "error: transición inválida: en-firma → cerrado; válidas: en-analisis, publicado",
+            "# exit 1"
+          ],
+          "source": "real",
+          "notes": "Saltearse un estado: del estado en que está el review no se puede cerrar. El mensaje lista las transiciones válidas. Pedile al agente arq show para que te diga en cuál está y qué sigue. Salida real.",
+          "cwd": "~/arq-reviews"
+        },
+        {
+          "type": "term",
+          "cmd": "~/.local/bin/arq state PRY-2026-0042 --to publicado",
+          "out": [
+            "error: no se puede publicar sin firmante: una persona tiene que firmar la revisión",
+            "# exit 1"
+          ],
+          "source": "real",
+          "notes": "Publicar sin firma: el CLI lo rechaza. Firmar es una decisión de una persona, no del agente. Salida real.",
+          "cwd": "~/arq-reviews"
+        },
+        {
+          "type": "term",
+          "cmd": "set -a && source ~/.config/arq/.env && set +a && arq jira PRY-2026-0042 --apply",
+          "out": [
+            "error: faltan variables de entorno: JIRA_BASE_URL, JIRA_EMAIL, JIRA_API_TOKEN"
+          ],
+          "source": "inferido",
+          "notes": "Si falta alguna credencial, el comando no escribe nada y lo dice. Que existan las tres no prueba que entren: la prueba real es arq ver, que es de solo lectura, o el primer --apply. Salida inferida, tomada de la guía de instalación de la herramienta.",
+          "cwd": "~/arq-reviews"
+        }
+      ]
+    },
+    {
+      "id": "cierre",
+      "title": "Cierre",
+      "subtitle": "Lo que te llevás y lo que sigue",
+      "screen": "cursor-agent",
+      "faq": [
+        {
+          "q": "¿Esto reemplaza a la plataforma PRY?",
+          "a": "No. La plataforma sigue siendo el lugar donde una persona aprueba o rechaza. arq-review lleva la revisión y deja todo en git y en Jira."
+        },
+        {
+          "q": "¿Qué pasa con las skills que me quedaron de la serie?",
+          "a": "Siguen instaladas. La serie de Claude Code usa las mismas ideas, pero con otro cliente: lo vemos en el próximo episodio."
+        },
+        {
+          "q": "¿Dónde veo el recorrido completo, con la firma y el cierre?",
+          "a": "En el showcase de la skill, que muestra cada etapa. En este episodio vimos dos de ellas."
+        }
+      ],
+      "steps": [
+        {
+          "type": "ask",
+          "text": "¿Qué me llevo de arq-review y qué sigue?",
+          "source": "inferido",
+          "notes": "Cerramos la serie de Cursor. Es un cierre doble: el de este episodio y el de toda la serie."
+        },
+        {
+          "type": "say",
+          "md": "#### Lo que te llevás\n- **Dos skills y un CLI:** `arq-manager` coordina (registro, triage, Jira, plazo, publicación) y `arq-architect` revisa lo técnico. Se instalan juntas y trabajan sobre tu repo de reviews.\n- **El `--apply` es tuyo:** el agente muestra el dry run y te da el comando con `!`. No hay ventana de aprobación: tu control es lo que ves antes.\n- **Decide una persona:** el triage, la firma y el click de Aprobar o Rechazar no son del agente.\n\n#### Fin de la serie de Cursor\nViste ocho herramientas del Harness con las mismas reglas: el agente prepara, vos aprobás.\n\n#### Próxima serie: Claude Code, episodio 1: wayofwork\nSiete skills que te guían para llevar una iniciativa de punta a punta, ahora desde Claude Code.",
+          "source": "inferido",
+          "notes": "Las tres ideas de hoy. Y el cierre de la serie: en todas las herramientas la regla se repite, el agente prepara y la persona aprueba, aunque cada una lo implementa distinto: con una ventana de macOS, o con un comando tuyo. Anticipá la serie nueva en una frase: es el mismo trabajo, pero desde Claude Code, empezando por WayOfWork, que tiene siete skills.",
+          "pause": true
+        }
+      ]
+    }
+  ]
+}
