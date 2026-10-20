@@ -42,19 +42,19 @@ Serie Cursor:
 |---|---|---|
 | 0 | Antes de empezar | listo |
 | 1 | inherited-audit | listo |
-| 2 | jira-team-kit | en revisión |
-| 3 | confluence-team-kit | en revisión |
-| 4 | product-brain-mcp | en revisión |
-| 5 | auditing-repos | en revisión |
-| 6 | local-board-skill | en revisión |
-| 7 | install-unified-ci | en revisión |
-| 8 | arq-review | en revisión |
+| 2 | jira-team-kit | listo |
+| 3 | confluence-team-kit | listo |
+| 4 | product-brain-mcp | listo |
+| 5 | auditing-repos | listo |
+| 6 | local-board-skill | listo |
+| 7 | install-unified-ci | listo |
+| 8 | arq-review | listo |
 
 Serie Claude Code:
 
 | # | Episodio | Estado |
 |---|---|---|
-| 1 | wayofwork (7 skills `wow-*`) | en revisión |
-| 2 | run-in-cursor | en revisión |
+| 1 | wayofwork (7 skills `wow-*`) | listo |
+| 2 | run-in-cursor | listo |
 
 El «Cierre» de cada episodio nombra al siguiente; el último de Cursor nombra la serie de Claude Code y el último de Claude Code cierra el taller. Lo comprueba `CierreChainTests` en `tests/test_schema.py`.
