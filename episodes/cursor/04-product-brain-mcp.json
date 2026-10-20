@@ -1,0 +1,511 @@
+{
+  "id": "product-brain-mcp",
+  "series": "cursor",
+  "order": 4,
+  "title": "product-brain-mcp",
+  "pitch": {
+    "ask": "Quiero armar la iniciativa «Autogestión de devoluciones», con su PRD, su RFC y sus épicas",
+    "does": "Te hace las preguntas de a una, redacta el documento entero, lo abre en tu editor para que lo revises y, con tu «listo» y un clic tuyo, lo escribe. Después exporta las épicas a Jira con tu aprobación."
+  },
+  "skill": {
+    "repo": "product-brain-mcp",
+    "commit": "64d7721",
+    "date": "2026-10-20"
+  },
+  "workspace": {
+    "repo": "mi-servicio",
+    "files": [
+      "api",
+      "web",
+      "docs",
+      "README.md"
+    ],
+    "chats": [
+      {
+        "title": "Revisar el alcance de devoluciones",
+        "age": "1d"
+      }
+    ]
+  },
+  "chapters": [
+    {
+      "id": "instalar",
+      "title": "Instalar",
+      "subtitle": "Una vez por máquina: la herramienta, el MCP, la configuración y tu token",
+      "screen": "terminal",
+      "faq": [
+        {
+          "q": "¿Por qué pide Python 3.12 y yo no lo tengo?",
+          "a": "No tenés que instalarlo vos. uv, el ayudante que usamos, trae el Python 3.12 que la herramienta necesita y lo guarda aparte, sin tocar el Python de tu máquina. Lo que sí necesitás es uv: si hiciste el episodio 0, ya lo tenés."
+        },
+        {
+          "q": "¿Qué es el MCP y por qué aparece un archivo mcp.json?",
+          "a": "Es el enchufe que le da al agente seis herramientas para hablar con tu espacio de trabajo. El mcp.json es la lista de enchufes que Cursor arranca: ahí le decís qué programa correr. Lo escribe el instalador y no lleva ningún secreto."
+        },
+        {
+          "q": "¿Puedo pedirle al agente que instale todo?",
+          "a": "Casi: «Instalá product-brain-mcp: cloná el repo y corré ./install.sh». Lo que no le pedís es el token: es tu sesión, lo copiás y lo guardás vos, y nunca pasa por el chat."
+        },
+        {
+          "q": "¿Funciona en Windows o Linux?",
+          "a": "No. Cada escritura se aprueba en una ventana nativa de macOS, y sin ella el servidor se niega a escribir."
+        }
+      ],
+      "steps": [
+        {
+          "type": "term",
+          "cmd": "git clone <repo> skills/product-brain-mcp",
+          "out": [
+            "Cloning into 'skills/product-brain-mcp'..."
+          ],
+          "source": "inferido",
+          "cwd": "~",
+          "notes": "Primero bajamos el repo: trae la skill y el servidor juntos. En <repo> va la dirección que te da tu equipo; necesita red y acceso, que dejó listo el episodio 0. Paso inferido."
+        },
+        {
+          "type": "term",
+          "cmd": "uv --version",
+          "out": [
+            "uv 0.5.0"
+          ],
+          "source": "inferido",
+          "cwd": "~",
+          "notes": "Acá aparece uv, lo único que tenés que tener antes. Pensalo como un ayudante que arma un cuarto aparte con el Python 3.12 y las piezas que hacen falta, sin tocar nada del resto de tu máquina. Si no existe, brew install uv, como en el episodio 0. Salida inferida."
+        },
+        {
+          "type": "term",
+          "cmd": "cd ~/skills/product-brain-mcp && ./install.sh",
+          "out": [
+            "skill: product-brain -> ~/skills/product-brain-mcp/skill/product-brain (Claude Code, Codex, Cursor)",
+            "MCP server product-brain: Claude Code: skipped (claude is not on PATH); Cursor: registered",
+            "next: put base_url in ~/.config/product-brain/config.toml, copy the token and run: uv run --project ~/skills/product-brain-mcp pbmcp token paste"
+          ],
+          "source": "inferido",
+          "cwd": "~",
+          "notes": "Un solo comando hace dos cosas. Enlaza la skill, que le enseña al agente cuándo y cómo usar las herramientas, y escribe el servidor en el mcp.json de Cursor. No copia nada: son accesos directos a tu clon. Si tenés Claude Code también lo registra; acá no estaba y por eso dice skipped. Correrlo de nuevo es seguro. La última línea te dice qué falta. Inferido: corre uv sync, que necesita red."
+        },
+        {
+          "type": "term",
+          "cmd": "cat ~/.cursor/mcp.json",
+          "out": [
+            "{",
+            "  \"mcpServers\": {",
+            "    \"product-brain\": {",
+            "      \"command\": \"uv\",",
+            "      \"args\": [\"run\", \"--project\", \"/RUTA/A/product-brain-mcp\", \"pbmcp\"]",
+            "    }",
+            "  }",
+            "}"
+          ],
+          "source": "inferido",
+          "cwd": "~",
+          "notes": "Esto dejó el instalador: le dice a Cursor que arranque el servidor con uv desde tu clon. Remarcá dos cosas. La ruta de --project es la de tu clon: si lo movés, el instalador no actualiza una entrada que ya existe y hay que corregirla a mano; es la causa más común de un servidor con error. Y este archivo no tiene ningún secreto. En Cursor Settings, en MCP, el servidor tiene que aparecer encendido con sus seis herramientas; si no, cerrá Cursor del todo y abrilo."
+        },
+        {
+          "type": "term",
+          "cmd": "mkdir -p ~/.config/product-brain",
+          "out": [],
+          "source": "real",
+          "cwd": "~",
+          "notes": "Ahora la configuración. Todo vive en una carpeta tuya, fuera del repo. Primero la creamos, si no existe."
+        },
+        {
+          "type": "term",
+          "cmd": "printf 'base_url = \"https://<el backend de tu equipo>\"\\ndeletes_enabled = false\\n' > ~/.config/product-brain/config.toml",
+          "out": [],
+          "source": "real",
+          "cwd": "~",
+          "notes": "Paso que solo prepara la demo.",
+          "capture_only": true
+        },
+        {
+          "type": "term",
+          "cmd": "cat ~/.config/product-brain/config.toml",
+          "out": [
+            "base_url = \"https://<el backend de tu equipo>\"",
+            "deletes_enabled = false"
+          ],
+          "source": "real",
+          "cwd": "~",
+          "notes": "La configuración no tiene nada secreto: es la dirección del backend de tu equipo, y una línea que hoy no hace nada. Esto sí se lo podés pedir al agente. Sin este archivo, cualquier herramienta falla con config_missing y te dice qué ruta falta."
+        },
+        {
+          "type": "term",
+          "cmd": "uv run --project ~/skills/product-brain-mcp pbmcp token paste",
+          "out": [
+            "saved 107 characters to ~/.config/product-brain/token"
+          ],
+          "source": "inferido",
+          "cwd": "~",
+          "notes": "Esto es lo único que no hace el agente, a propósito. El token es tu sesión: lo que hace que los cambios queden a tu nombre. Con tu sesión iniciada en el navegador, abrís las herramientas de desarrollo, buscás okta-token-storage en Local Storage y copiás accessToken.accessToken. Con eso en el portapapeles, corrés este comando: lo guarda con permisos solo tuyos e imprime cuántos caracteres guardó. Nunca lo pegues en el chat. Dura unas 8 horas. Inferido: necesita uv y tu sesión real.",
+          "pause": true
+        },
+        {
+          "type": "term",
+          "cmd": "uv run --project ~/skills/product-brain-mcp pbmcp token status",
+          "out": [
+            "{'present': True, 'valid': True, 'minutes_left': 464, 'warn': False, 'error': None}"
+          ],
+          "source": "inferido",
+          "cwd": "~",
+          "notes": "La prueba de que quedó bien, sin salir a la red. Mirá minutes_left; con menos de 30, warn pasa a True y el agente te avisa. Una cosa más a mano: allowed_projects, la lista de proyectos donde se puede escribir. Los que creás desde la skill se suman solos; uno que ya existía lo sumás vos con un editor. Es una barrera y no se le pide al agente que la amplíe."
+        }
+      ]
+    },
+    {
+      "id": "caso-principal",
+      "title": "Caso principal",
+      "subtitle": "De una idea a la iniciativa y su PRD, con una ventana de aprobación por cada escritura",
+      "screen": "cursor-full",
+      "faq": [
+        {
+          "q": "¿Escribe algo antes de que yo diga «listo»?",
+          "a": "No. El borrador es un archivo privado en tu máquina que se abre en el editor. Recién con tu «listo» el agente pide escribirlo, y ahí se abre la ventana."
+        },
+        {
+          "q": "¿Qué es el {{pendiente}}?",
+          "a": "Es la marca de un dato que nadie dio, o que no cumple las metas del documento anterior. El sistema lo cuenta como campo vacío, así que el hueco se ve. Si el agente escribiera «a definir», contaría como completo y escondería el problema."
+        },
+        {
+          "q": "¿Y si cancelo la ventana o no hago nada?",
+          "a": "No se escribe nada. Cancelar, Escape, cerrarla o dejar pasar 100 segundos es un rechazo, y el agente te pregunta qué cambiar. Editás el mismo borrador y decís «listo» otra vez."
+        },
+        {
+          "q": "¿Cuándo uso workflow y cuándo documentos sueltos?",
+          "a": "Lo decide un número que el agente cuenta con vos: cuántos equipos entregan. Con uno, workflow: PRD, RFC y una épica encadenados. Con dos o más, una épica por equipo, sueltas."
+        }
+      ],
+      "steps": [
+        {
+          "type": "ask",
+          "text": "Quiero armar la iniciativa «Autogestión de devoluciones» con su PRD, su RFC y sus épicas. Hoy las devoluciones las resuelve soporte a mano y tardan 9 días. La meta es bajar a 3 días para el 01/03. Las hace un solo equipo, en dos entregas: 15/01 y 27/02. Afuera queda el reembolso a otros medios de pago.",
+          "source": "inferido",
+          "notes": "Un pedido normal, con mucho contexto de entrada, a propósito: cuanto más le contás en un solo mensaje, menos preguntas te hace. Fijate lo que dice: el problema con su número, la meta, el plazo, cuántos equipos entregan y qué queda afuera. No hay comandos ni nombres de herramientas: la skill sabe qué hacer."
+        },
+        {
+          "type": "tool",
+          "label": "Read · ~/.cursor/skills/product-brain/SKILL.md",
+          "source": "inferido",
+          "notes": "Cursor reconoce el pedido y carga la skill. Desde acá el agente sigue sus reglas: preguntar de a una cosa, armar el documento entero, chequear contra las metas y escribir solo con tu clic."
+        },
+        {
+          "type": "tool",
+          "label": "Ran · session(action=\"token_status\")",
+          "source": "inferido",
+          "notes": "Lo primero que hace siempre: mirar que tu token valga y cuánto le queda. Es solo lectura y no sale a la red."
+        },
+        {
+          "type": "tool",
+          "label": "Ran · session(action=\"whoami\")",
+          "source": "inferido",
+          "notes": "Segunda lectura: quién sos en el sistema, para saludarte y para que todo quede a tu nombre."
+        },
+        {
+          "type": "tool",
+          "label": "Ran · project(action=\"list\")",
+          "source": "inferido",
+          "notes": "Mira qué proyectos hay para elegir uno, o crear uno nuevo. Otra lectura."
+        },
+        {
+          "type": "say",
+          "md": "Hola, **Persona del equipo**. Tu token vale por **464 minutos** más.\n\n#### Resumen a aprobar\n- **Problema:** las devoluciones se resuelven a mano en soporte y tardan **9 días**\n- **Usuarios:** clientes que devuelven y el equipo de soporte\n- **Éxito:** bajar a **3 días** para el **01/03**\n- **Afuera:** reembolso a otros medios de pago\n- **Restricciones:** un solo equipo, dos entregas (**15/01** y **27/02**)\n\n¿Está bien? Con tu sí creo el proyecto, y **se abre una ventana** con lo que se va a crear: **Cancelar** y **Aprobar**. La aprobación es tu clic, no mi pregunta.",
+          "source": "inferido",
+          "notes": "Mirá cómo cierra el agente: resume en cinco líneas lo decidido, que es el contrato de lo que sigue. Y avisa que se abre una ventana antes de lanzar el comando que escribe. Es una regla de la skill, y que vos estés frente a la pantalla es lo que hace valer la aprobación. Si no estás, no lo corre."
+        },
+        {
+          "type": "ask",
+          "text": "Sí, creá el proyecto.",
+          "source": "inferido",
+          "notes": "El visto bueno del resumen. Todavía no es la aprobación de la escritura: esa es la que viene.",
+          "pause": true
+        },
+        {
+          "type": "approve",
+          "title": "Crear proyecto",
+          "lines": [
+            "Proyecto nuevo: «Autogestión de devoluciones»",
+            "Se agrega a tus proyectos permitidos para que la herramienta pueda escribir en él.",
+            "Aprobás con un clic en Aprobar. Cancelar, Escape o cerrar la ventana no escriben nada. Se cancela sola a los 100 s."
+          ],
+          "button": "Aprobar",
+          "source": "inferido",
+          "notes": "La primera ventana nativa de macOS, el único camino para escribir. Muestra el plan en claro, qué se va a crear, no un resumen del agente. Crear un proyecto lo suma además a la lista de proyectos permitidos. Si cancelás, cerrás o esperás, no pasa nada. Inferida: no se puede capturar sin una persona.",
+          "pause": true
+        },
+        {
+          "type": "say",
+          "md": "Proyecto creado y habilitado.\n\nAntes de escribir, el modo. **Equipos que entregan: 1 → workflow**: el PRD, el RFC y **una** épica encadenados, con las dos entregas como historias en orden. Con dos equipos o más serían épicas sueltas.\n\n¿Vamos con workflow?",
+          "source": "inferido",
+          "notes": "Acá se ve la regla de decisión de la skill, en una línea: cuenta los equipos que entregan y recomienda. Una entrega o varias en secuencia no cambia la cuenta. Lo que cambia es cuántos equipos. Y en los dos modos se escribe una iniciativa, un PRD y un RFC."
+        },
+        {
+          "type": "ask",
+          "text": "Dale, workflow.",
+          "source": "inferido",
+          "notes": "Una decisión humana, en dos palabras."
+        },
+        {
+          "type": "tool",
+          "label": "Ran · workflow(action=\"steps\")",
+          "source": "inferido",
+          "notes": "Lee los pasos del workflow en orden y los recorre así, nunca de memoria. En modo workflow, la primera aprobación arranca el workflow y escribe el primer documento en una sola ventana."
+        },
+        {
+          "type": "tool",
+          "label": "Ran · template(action=\"get\")",
+          "source": "inferido",
+          "notes": "Lee los campos del PRD, que son más de cien. Por eso no te pregunta sección por sección: arma el documento entero con lo que ya sabe."
+        },
+        {
+          "type": "say",
+          "md": "Armé el PRD entero y lo abrí en tu editor. Todavía **no escribí nada**.\n\n#### Metas del PRD\n- Resolver en **3 días** para el **01/03**\n- Entregas 15/01 y 27/02 ≤ plazo 01/03 ✓\n- Solo la web, sin la app → objetivo «web y app» ✗\n\nPor el ✗ dejé **`{{pendiente}}`** en ese campo, aunque lo hayas propuesto: proponerlo no es aceptarlo. ¿Alcanza con la web en la primera entrega?\n\n**Completitud prevista: 88%.** Quedan parciales los riesgos y las dependencias.\n\nEditá el borrador, guardalo y decime **listo**.",
+          "source": "inferido",
+          "notes": "Esta es la parte que distingue a la skill. Cada valor que propusiste se compara con las metas, y lo que no cumple, o no se sabe, queda pendiente y no como un texto que parezca completo. El porcentaje sale de la misma fórmula del sistema, antes de escribir. Ahora el trabajo es tuyo: editás el documento en tu editor, y el agente espera sin llamar a nada más.",
+          "pause": true
+        },
+        {
+          "type": "ask",
+          "text": "Listo. Dejé la app para la segunda entrega.",
+          "source": "inferido",
+          "notes": "Tu «listo» es el que habilita el siguiente paso, y acá además contás un cambio que hiciste."
+        },
+        {
+          "type": "tool",
+          "label": "Ran · session(action=\"token_status\")",
+          "source": "inferido",
+          "notes": "Vuelve a mirar el token, porque mientras editabas pudo vencer. Si venció, pide uno nuevo y sigue desde el mismo borrador."
+        },
+        {
+          "type": "say",
+          "md": "Voy a correr el comando que **escribe**: arranca el workflow y crea el PRD. **Se va a abrir una ventana** con tus cambios y los botones **Cancelar** y **Aprobar**.\n\nSi cancelás o la cerrás, no lo reintento: te pregunto qué cambiar.",
+          "source": "inferido",
+          "notes": "El mismo aviso de antes, y a propósito: antes de cada escritura el agente dice que se abre una ventana y qué va a aprobarse. Remarcá la última frase: si cancelás, no insiste y no vuelve a intentarlo tal cual.",
+          "pause": true
+        },
+        {
+          "type": "approve",
+          "title": "Crear documento",
+          "lines": [
+            "PRD · «Autogestión de devoluciones» · se arranca el workflow y se escribe el primer paso",
+            "Tus cambios sobre el borrador: objetivo web y app → web en la 1.ª entrega, app en la 2.ª",
+            "Aprobás con un clic en Aprobar. Cancelar, Escape o cerrar la ventana no escriben nada. Se cancela sola a los 100 s."
+          ],
+          "button": "Aprobar",
+          "source": "inferido",
+          "notes": "Esta ventana muestra lo que cambiaste vos, no el documento entero: es lo que tenés que mirar antes del clic. Una sola aprobación hace las dos cosas, arrancar el workflow y escribir el primer documento. Inferida: no se puede capturar sin una persona.",
+          "pause": true
+        },
+        {
+          "type": "tool",
+          "label": "Ran · document(action=\"create\")",
+          "source": "inferido",
+          "notes": "Con tu clic, el servidor escribe. Un borrador se usa una sola vez: después deja de valer, así que reintentar no escribe dos veces."
+        },
+        {
+          "type": "worked",
+          "seconds": 41,
+          "source": "inferido",
+          "notes": "El tiempo del agente, sin contar lo que tardaste vos en editar y aprobar."
+        },
+        {
+          "type": "say",
+          "md": "Listo: el **PRD está escrito** y el workflow arrancó.\n\n#### Qué quedó\n- **Completitud:** **91%**, con un hueco en el campo `{{pendiente}}` que falta resolver\n- **Siguiente paso:** el RFC, con el mismo camino: borrador, tu «listo» y tu clic\n- **Después:** una épica con las dos entregas como historias\n\n¿Seguimos con el RFC?",
+          "source": "inferido",
+          "notes": "Cerrá con lo que queda: el documento escrito, su completitud y lo que falta. El RFC y la épica siguen el mismo camino, así que no hace falta mostrarlos.",
+          "pause": true
+        }
+      ]
+    },
+    {
+      "id": "otro-caso",
+      "title": "Otro caso",
+      "subtitle": "Exportar una épica a Jira, con el chequeo previo y la ventana",
+      "screen": "cursor-agent",
+      "faq": [
+        {
+          "q": "¿Qué hace falta para exportar?",
+          "a": "Que la integración de Atlassian esté conectada en los ajustes de integraciones de la plataforma. Eso lo hacés vos ahí, no el agente."
+        },
+        {
+          "q": "¿Qué es el aviso de la ventana?",
+          "a": "Si un campo quedó como {{pendiente}}, a Jira ese texto llega literal. La ventana te dice cuántos issues lo llevarían. Avisa, no bloquea: cancelás vos y completás el campo antes."
+        },
+        {
+          "q": "¿Se puede deshacer una exportación?",
+          "a": "No. La herramienta no tiene acciones para borrar ni deshacer: lo que se crea en Jira se crea de verdad. Por eso el chequeo previo y la ventana."
+        },
+        {
+          "q": "¿Y si solo quiero saber cómo viene la iniciativa?",
+          "a": "Pedilo así: «¿Cómo viene la iniciativa?». Una sola lectura arma una tabla con cada documento, su completitud y lo que le falta, sin escribir nada."
+        }
+      ],
+      "steps": [
+        {
+          "type": "ask",
+          "text": "Exportá la épica «Portal de devoluciones» a Jira, proyecto PLAT.",
+          "source": "inferido",
+          "notes": "Otro pedido típico, y mucho más delicado: acá se crean issues de verdad. Fijate que no le decís cómo ni con qué."
+        },
+        {
+          "type": "tool",
+          "label": "Ran · jira(action=\"status\")",
+          "source": "inferido",
+          "notes": "Primero mira que Atlassian esté conectado. Es solo lectura. Si no lo está, te manda a las integraciones y no sigue."
+        },
+        {
+          "type": "tool",
+          "label": "Ran · jira(action=\"preflight\")",
+          "source": "inferido",
+          "notes": "El chequeo previo: qué le falta a la épica para exportarse bien, como componentes, prioridades o campos obligatorios. Solo lectura. Es la regla de la skill: nunca exporta sin mostrarte esto y resolverlo con vos."
+        },
+        {
+          "type": "say",
+          "md": "A la épica le falta el **componente** de dos historias. Te propongo **Backend** y **Web**. ¿Va?\n\nCon tu sí corro la exportación: **se abre una ventana** con los issues que se crearían, y los botones **Cancelar** y **Aprobar**. Yo no puedo hacer ese clic.",
+          "source": "inferido",
+          "notes": "Dos cosas en un mensaje: el hueco concreto con una propuesta, para que respondas con un sí, y el aviso de que se abre una ventana. Las dos vienen antes de tocar nada."
+        },
+        {
+          "type": "ask",
+          "text": "Va.",
+          "source": "inferido",
+          "notes": "Una respuesta corta que habilita el export, y todavía no aprueba nada.",
+          "pause": true
+        },
+        {
+          "type": "tool",
+          "label": "Ran · jira(action=\"preview\")",
+          "source": "inferido",
+          "notes": "Pide la vista previa de lo que se crearía. Todavía no escribe: el export vuelve a pedir una vista fresca justo antes de abrir la ventana, para que lo que ves sea lo que se crea."
+        },
+        {
+          "type": "approve",
+          "title": "Exportar a Jira",
+          "lines": [
+            "Épica «Portal de devoluciones» · proyecto PLAT",
+            "Se crearían 4 issues: 1 épica y 3 historias, con sus tareas",
+            "Sin avisos: ningún campo quedó como {{pendiente}}",
+            "Aprobás con un clic en Aprobar. Cancelar, Escape o cerrar la ventana no escriben nada. Se cancela sola a los 100 s."
+          ],
+          "button": "Aprobar",
+          "source": "inferido",
+          "notes": "La ventana del export muestra los issues que se crearían, no un resumen. Mirá la línea de avisos: si un campo quedó pendiente, dice cuántos issues llevarían ese texto a Jira, y lo sano es cancelar y completarlo. Inferida.",
+          "pause": true
+        },
+        {
+          "type": "tool",
+          "label": "Ran · jira(action=\"export\")",
+          "source": "inferido",
+          "notes": "Con tu clic se crean los issues, a través del servidor product-brain-mcp y con tu usuario. Si cancelás, no se exporta nada y el agente te pregunta."
+        },
+        {
+          "type": "say",
+          "md": "Listo: se crearon **4 issues** en el proyecto **PLAT**.\n\n#### Qué quedó\n- **Épica:** `PLAT-123`\n- **Historias:** `PLAT-124`, `PLAT-125` y `PLAT-126`\n\nTodo quedó a tu nombre. No hay forma de deshacerlo desde acá: si algo no va, se corrige en Jira.",
+          "source": "inferido",
+          "notes": "Cerrá con lo que se creó y con una advertencia honesta: no hay deshacer. Las claves son inventadas para la demo. Es la razón de tanto chequeo antes.",
+          "pause": true
+        }
+      ]
+    },
+    {
+      "id": "si-algo-falla",
+      "title": "Si algo falla",
+      "subtitle": "Los errores más comunes y cómo salir",
+      "screen": "terminal",
+      "faq": [
+        {
+          "q": "El servidor aparece con error en Cursor.",
+          "a": "Casi siempre es la ruta de --project en el mcp.json: si moviste o volviste a clonar el repo, quedó vieja y el instalador no la actualiza. Corregila a mano, o probá el comando en una terminal."
+        },
+        {
+          "q": "La ventana de aprobación no aparece.",
+          "a": "Es una ventana nativa de macOS: sin macOS o sin sesión gráfica no hay forma de aprobar, y el servidor no escribe. Es una barrera, no un error."
+        },
+        {
+          "q": "«declined». ¿Qué pasó?",
+          "a": "No aprobaste: cancelaste, cerraste la ventana o pasaron 100 segundos. No se escribió nada. Pedile al agente que siga: no reintenta solo."
+        },
+        {
+          "q": "«duplicate». ¿Se escribió dos veces?",
+          "a": "No: el documento ya existe, porque una llamada cortada pudo haberlo escrito. El agente lo lee en vez de crearlo otra vez."
+        }
+      ],
+      "steps": [
+        {
+          "type": "term",
+          "cmd": "uv run --project ~/skills/product-brain-mcp pbmcp token status",
+          "out": [
+            "{'present': True, 'valid': False, 'minutes_left': None, 'warn': True, 'error': 'token_permissions: ~/.config/product-brain/token must be readable only by you: chmod 600 ~/.config/product-brain/token'}"
+          ],
+          "source": "inferido",
+          "cwd": "~",
+          "notes": "El primer error típico: el archivo del token tiene permisos de más y la herramienta lo rechaza a propósito, porque un secreto no tiene que poder leerlo otra persona. La salida dice el comando: chmod 600. Inferido: necesita uv y un token."
+        },
+        {
+          "type": "term",
+          "cmd": "uv run --project ~/skills/product-brain-mcp pbmcp token status",
+          "out": [
+            "{'present': False, 'valid': False, 'minutes_left': None, 'warn': True, 'error': 'token_missing: no token at ~/.config/product-brain/token; copy the token and run: pbmcp token paste'}"
+          ],
+          "source": "inferido",
+          "cwd": "~",
+          "notes": "El segundo: no hay token o venció, y dura unas 8 horas. Se repite el paso de copiarlo del navegador y pegarlo con token paste. No hay forma de renovarlo desde el agente, y es a propósito. Si el error dice token_expired es lo mismo. Inferido."
+        },
+        {
+          "type": "term",
+          "cmd": "printf 'proj-demo-0001\\n' > ~/.config/product-brain/allowed_projects",
+          "out": [],
+          "source": "real",
+          "cwd": "~",
+          "notes": "Paso que solo prepara la demo.",
+          "capture_only": true
+        },
+        {
+          "type": "term",
+          "cmd": "cat ~/.config/product-brain/allowed_projects",
+          "out": [
+            "proj-demo-0001"
+          ],
+          "source": "real",
+          "cwd": "~",
+          "notes": "El tercero es not_allowed: el proyecto no está en esta lista, un id por línea, y el error dice qué id agregar. Lo agregás vos con un editor; no se le pide al agente.",
+          "pause": true
+        }
+      ]
+    },
+    {
+      "id": "cierre",
+      "title": "Cierre",
+      "subtitle": "Lo que te llevás",
+      "screen": "cursor-agent",
+      "faq": [
+        {
+          "q": "¿Tengo que instalar la skill y el servidor por separado?",
+          "a": "No: el mismo ./install.sh deja las dos piezas. Y solo andan juntas: la skill no escribe por sí sola, usa las herramientas del servidor."
+        },
+        {
+          "q": "¿Qué tan seguro es esto?",
+          "a": "La ventana frena al agente, pero no es una frontera de seguridad total: el token sirve para todo lo que tu usuario puede hacer. Lo que sí limita la herramienta es dónde escribe, con la lista de proyectos permitidos."
+        },
+        {
+          "q": "¿Qué sigue?",
+          "a": "El episodio 5: auditing-repos, para revisar un repo y convertir los hallazgos en issues y pull requests o en tareas de un tablero."
+        }
+      ],
+      "steps": [
+        {
+          "type": "ask",
+          "text": "¿Qué me llevo de esto?",
+          "source": "inferido",
+          "notes": "Cerrá con las tres ideas; no repitas el episodio."
+        },
+        {
+          "type": "say",
+          "md": "#### Lo que te llevás\n- **Una conversación en vez de cien campos:** el agente arma el documento entero, vos lo revisás en tu editor y los datos que no se saben quedan `{{pendiente}}`, no escondidos.\n- **Nada se escribe sin tu clic:** el agente avisa que se abre la ventana, vos aprobás, y si cancelás no insiste.\n- **El token es tuyo:** lo guardás vos, dura unas 8 horas y nunca pasa por el chat.\n\n#### Próximo episodio: auditing-repos\nCómo pedirle al agente que revise un repo, mida su calidad y su seguridad, y convierta los hallazgos en issues y pull requests, o en tareas de un tablero.",
+          "source": "inferido",
+          "notes": "Las tres ideas son el producto: una conversación guiada, tu clic como única puerta y un secreto que no sale de tu máquina. Anticipá el próximo en una frase: cambiamos de plano, de armar un documento a mirar un repo que ya existe y ordenar lo que está mal.",
+          "pause": true
+        }
+      ]
+    }
+  ]
+}
