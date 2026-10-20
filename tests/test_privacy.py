@@ -144,6 +144,18 @@ class TestAllowList(Tmp):
         self.assertEqual(len(out), 1)
         self.assertIn(": leak-term: ", out[0])
 
+    def test_a_term_crossing_the_edge_of_an_allowed_name_still_hits(self):
+        out = self.scan_with("product-brain-mcp\n", "product-brain-mcp-acme", terms="mcp-acme\n")
+        self.assertEqual(len(out), 1)
+
+    def test_allowed_name_inside_a_longer_word_is_not_exempt(self):
+        out = self.scan_with("product-brain\n", "see myproduct-brainy here", terms="brain\n")
+        self.assertEqual(len(out), 1)
+
+    def test_allowed_name_next_to_punctuation_is_exempt(self):
+        for line in ("(product-brain-mcp)", "`product-brain-mcp`.", "«product-brain-mcp»", "product-brain-mcp"):
+            self.assertEqual(self.scan_with("product-brain-mcp\n", line), [], line)
+
     def test_allow_list_never_hides_generic_rules(self):
         out = self.scan_with("jane.doe@corp.io\n", "mail jane.doe@corp.io")
         self.assertEqual(len(out), 1)

@@ -63,6 +63,10 @@ def allowed() -> List[str]:
     return [l.strip() for l in text.splitlines() if l.strip() and not l.strip().startswith("#")]
 
 
+def _is_word(c: str) -> bool:
+    return c.isalnum() or c == "_"
+
+
 def _allowed_spans(line: str, names: List[str]) -> List[tuple]:
     low = line.lower()
     spans = []
@@ -70,7 +74,10 @@ def _allowed_spans(line: str, names: List[str]) -> List[tuple]:
         n = name.lower()
         i = low.find(n)
         while i >= 0:
-            spans.append((i, i + len(n)))
+            j = i + len(n)
+            # whole identifiers only: `myproduct-brainy` must not be exempt
+            if not (i > 0 and _is_word(low[i - 1])) and not (j < len(low) and _is_word(low[j])):
+                spans.append((i, j))
             i = low.find(n, i + 1)
     return spans
 
