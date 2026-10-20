@@ -1,0 +1,50 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+:root{color-scheme:light dark;--fg:#1d1d1f;--muted:#6e6e73;--card:rgba(0,0,0,.045);--line:rgba(0,0,0,.08);
+ --chip-bg:rgba(0,0,0,.07);--to-bg:rgba(0,113,227,.12);--to-fg:#0058b0;--out:#9a5b00;--out-bg:rgba(255,159,10,.14)}
+@media (prefers-color-scheme:dark){:root{--fg:#f5f5f7;--muted:#a1a1a6;--card:rgba(255,255,255,.07);--line:rgba(255,255,255,.1);
+ --chip-bg:rgba(255,255,255,.12);--to-bg:rgba(10,132,255,.22);--to-fg:#6cb4ff;--out:#ffb340;--out-bg:rgba(255,159,10,.16)}}
+*{box-sizing:border-box}
+html,body{margin:0;background:transparent;color:var(--fg);font:13px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;
+ -webkit-font-smoothing:antialiased;cursor:default;-webkit-user-select:none}
+body{padding:22px 24px 8px}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:19px;line-height:1.25;font-weight:650;margin:4px 0 16px}
+.cards{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.card{background:var(--card);border-radius:10px;padding:10px 12px;display:grid;gap:6px}
+.top{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
+.key{flex:0 1 auto;min-width:0;overflow-wrap:anywhere;font:600 11.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--chip-bg);border-radius:5px;padding:1px 6px}
+.key[class*=" k-"]{display:inline-flex;align-items:center;gap:5px}
+.key[class*=" k-"]::before{content:"";flex:none;width:9px;height:9px;border-radius:2px;background:var(--k)}
+.k-epic{--k:#904EE2;background:rgba(144,78,226,.18)}
+.k-story{--k:#63BA3C;background:rgba(99,186,60,.2)}
+.k-task,.k-subtask{--k:#4BADE8;background:rgba(75,173,232,.2)}
+.name{font-weight:500;overflow-wrap:anywhere}
+a.name{color:var(--to-fg);text-decoration:none;cursor:pointer}a.name:hover{text-decoration:underline}
+a.name::after{content:" 🔗";font-size:11px}
+.chg{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;overflow-wrap:anywhere}
+.from{color:var(--muted)}
+.arrow{color:var(--muted)}
+.to{background:var(--to-bg);color:var(--to-fg);border-radius:999px;padding:1px 9px;font-weight:600}
+.plain{color:var(--muted)}
+.out-h{margin:18px 0 6px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--out)}
+.out{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.out li{background:var(--out-bg);border-radius:10px;padding:8px 12px;display:flex;gap:8px;align-items:baseline}
+.out .why{color:var(--muted);font-size:12px}
+.foot{margin:16px 0 0;color:var(--muted);font-size:11.5px}
+.lines{display:grid;grid-template-columns:max-content 1fr;column-gap:12px;row-gap:2px;width:100%}
+.lbl{color:var(--muted)}
+.val{overflow-wrap:anywhere}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin:-8px 0 14px}
+.badge{font-size:11.5px;font-weight:600;border-radius:999px;padding:2px 9px;background:var(--chip-bg);color:var(--muted)}
+.badge.state{background:var(--out-bg);color:var(--out)}
+.badge.danger{background:rgba(255,59,48,.13);color:#d70015}
+@media (prefers-color-scheme:dark){.badge.danger{background:rgba(255,69,58,.2);color:#ff6961}}
+</style></head><body>
+<h1>Reasignar</h1>
+<div class="badges"><span class="badge">3 issues</span></div>
+<ul class="cards">
+<li class="card"><div class="top"><span class="key">PLAT-131</span><a class="name" href="https://example.atlassian.net/browse/PLAT-131" target="_blank">Ordenar por fecha en el listado</a></div><div class="chg"><span class="from">unassigned</span><span class="arrow">→</span><span class="to">Persona del equipo</span></div></li>
+<li class="card"><div class="top"><span class="key">PLAT-134</span><a class="name" href="https://example.atlassian.net/browse/PLAT-134" target="_blank">Mensaje de error del cupón</a></div><div class="chg"><span class="from">unassigned</span><span class="arrow">→</span><span class="to">Persona del equipo</span></div></li>
+<li class="card"><div class="top"><span class="key">PLAT-140</span><a class="name" href="https://example.atlassian.net/browse/PLAT-140" target="_blank">Paginar el historial</a></div><div class="chg"><span class="from">unassigned</span><span class="arrow">→</span><span class="to">Persona del equipo</span></div></li>
+</ul>
+<p class="foot">Escape cancela · se cancela sola a los 100 s</p></body></html>

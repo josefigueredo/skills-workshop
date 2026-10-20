@@ -155,6 +155,18 @@
   --ws-a-fs-title: 17px;
   --ws-a-fs: 14px;
   --ws-a-lh: 1.45;
+  /* the tool's own approval panel (alert.js): light or dark like macOS, because its page follows the system too */
+  --ws-r-bg: #ececec;
+  --ws-r-tx: #1d1d1f;
+  --ws-r-bar-tx: #4a4a4c;
+  --ws-r-btn-bg: #ffffff;
+  --ws-r-btn-line: #c8c8c8;
+  --ws-r-bar: 28px;         /* title bar */
+  --ws-r-foot: 58px;        /* the button bar under the page (alert.js `bar`) */
+  --ws-r-btn-h: 28px;
+  --ws-r-btn-cancel: 90px;
+  --ws-r-btn-ok: 130px;
+  --ws-r-fs-btn: 13px;
 
   /* chapter card */
   --ws-k-grad: linear-gradient(135deg, #2d6cdf, #7a4fe0);
@@ -429,6 +441,27 @@
   padding: var(--ws-pad-xs) var(--ws-gap); background: var(--ws-a-btn-bg); color: var(--ws-a-btn-fg);
 }
 .ws-btn-ok { background: var(--ws-a-ok-bg); color: var(--ws-a-ok-fg); border-color: var(--ws-a-ok-bg); }
+.ws-approve-real {
+  padding: 0; align-items: stretch; overflow: hidden; background: var(--ws-r-bg); color: var(--ws-r-tx);
+  border-radius: var(--ws-radius);
+}
+.ws-approve-bar {
+  flex: none; height: var(--ws-r-bar); display: flex; align-items: center; gap: var(--ws-gap); padding: 0 var(--ws-gap);
+}
+.ws-approve-bar-title { font-size: var(--ws-r-fs-btn); font-weight: 600; color: var(--ws-r-bar-tx); }
+.ws-approve-page { display: block; width: 100%; border: 0; background: transparent; color-scheme: light dark; }
+.ws-approve-real .ws-approve-btns {
+  flex: none; height: var(--ws-r-foot); align-items: center; justify-content: flex-end; padding: 0 24px;
+}
+.ws-approve-real .ws-btn {
+  flex: none; height: var(--ws-r-btn-h); padding: 0; font-size: var(--ws-r-fs-btn); border-radius: var(--ws-radius-sm);
+  background: var(--ws-r-btn-bg); color: var(--ws-r-tx); border-color: var(--ws-r-btn-line);
+}
+.ws-approve-real .ws-btn-cancel { width: var(--ws-r-btn-cancel); }
+.ws-approve-real .ws-btn-ok { width: var(--ws-r-btn-ok); }
+@media (prefers-color-scheme: dark) {
+  .ws-approve-real { --ws-r-bg: #1e1e1e; --ws-r-tx: #f5f5f7; --ws-r-bar-tx: #c7c7cc; --ws-r-btn-bg: #3a3a3c; --ws-r-btn-line: #3a3a3c; }
+}
 
 </style>
 <style>
@@ -739,9 +772,28 @@ var Render = (function () {
     (st.out || []).forEach(function (o) { n.appendChild(anim(el("div", "ws-out", o), "line")); });
     return n;
   }
+  // The tool's own approval window: its title bar, the page its code renders (no script, so sandbox="") and the
+  // two native buttons under it, at the size the tool gives it.
+  function realApproveWin(st) {
+    var win = el("div", "ws-approve-win ws-approve-real");
+    if (st.width) win.style.width = st.width + "px";
+    var bar = add(el("div", "ws-approve-bar"), dots(), el("div", "ws-approve-bar-title", st.window || ""));
+    var frame = el("iframe", "ws-approve-page");
+    frame.setAttribute("sandbox", "");
+    frame.setAttribute("title", st.title);
+    frame.setAttribute("srcdoc", st.html || "");
+    if (st.height) frame.style.height = st.height + "px";
+    var btns = add(el("div", "ws-approve-btns"), el("button", "ws-btn ws-btn-cancel", "Cancelar"),
+                   el("button", "ws-btn ws-btn-ok", st.button));
+    return add(win, bar, frame, btns);
+  }
   function approveOverlay(st, j, current) {
     var ov = stepNode("div", "ws-approve", j, "node");
     if (j !== current) ov.setAttribute("hidden", "");
+    if (st.html !== undefined) {
+      ov.appendChild(realApproveWin(st));
+      return ov;
+    }
     var win = el("div", "ws-approve-win");
     add(win, el("div", "ws-approve-icon"), el("div", "ws-approve-title", st.title));
     var body = el("div", "ws-approve-lines");

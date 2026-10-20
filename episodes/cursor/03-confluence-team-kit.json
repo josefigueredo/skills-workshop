@@ -266,14 +266,14 @@
         {
           "type": "approve",
           "title": "Publicar en Confluence",
-          "lines": [
-            "docs/runbook.md · 'Runbook de despliegue' · UPDATE · página 5014, título actual en Confluence: Runbook de despliegue",
-            "Aprobás con un clic en Apruebo 1. Escape, Return o Cancelar no escriben nada. Se cancela sola a los 100 s."
-          ],
           "button": "Apruebo 1",
           "source": "inferido",
-          "notes": "La ventana nativa de macOS, con una tarjeta por página: ruta, título y el cambio. Para una página que ya existe, además, muestra su id y su título actual leídos justo antes de abrirla, para que un plan que nombra una página y apunta a otra no pueda pasar como inocente. Es lo que tenés que mirar antes de hacer clic, y recordá que Return no aprueba: solo el clic. Inferida: no se puede capturar sin una persona.",
-          "pause": true
+          "notes": "La ventana de ctk: de qué repo sale, cuántas páginas cambian y una tarjeta por página con el archivo y la página de destino, con su id y su título leídos justo antes de abrirla. Así un plan que nombra una página y apunta a otra no pasa como inocente. Solo el clic aprueba. Formato real, datos de ejemplo.",
+          "pause": true,
+          "src": "pages/confluence-team-kit-publicar.html",
+          "window": "ctk · Confluence",
+          "width": 520,
+          "height": 258
         },
         {
           "type": "term",

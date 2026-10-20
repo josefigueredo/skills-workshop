@@ -228,15 +228,14 @@
         {
           "type": "approve",
           "title": "Crear proyecto",
-          "lines": [
-            "Proyecto nuevo: «Autogestión de devoluciones»",
-            "Se agrega a tus proyectos permitidos para que la herramienta pueda escribir en él.",
-            "Aprobás con un clic en Aprobar. Cancelar, Escape o cerrar la ventana no escriben nada. Se cancela sola a los 100 s."
-          ],
           "button": "Aprobar",
           "source": "inferido",
-          "notes": "La primera ventana nativa de macOS, el único camino para escribir. Muestra el plan en claro, qué se va a crear, no un resumen del agente. Crear un proyecto lo suma además a la lista de proyectos permitidos. Si cancelás, cerrás o esperás, no pasa nada.",
-          "pause": true
+          "notes": "La primera ventana nativa de macOS, el único camino para escribir. Muestra el plan en claro, qué se va a crear, no un resumen del agente. Crear un proyecto lo suma además a la lista de proyectos permitidos. Si cancelás, cerrás o esperás, no pasa nada. Formato real, datos de ejemplo.",
+          "pause": true,
+          "src": "pages/product-brain-mcp-proyecto.html",
+          "window": "Product Brain (pbmcp)",
+          "width": 600,
+          "height": 301
         },
         {
           "type": "tool",
@@ -303,15 +302,14 @@
         {
           "type": "approve",
           "title": "Crear documento",
-          "lines": [
-            "PRD · «Autogestión de devoluciones» · se arranca el workflow y se escribe el primer paso",
-            "Tus cambios sobre el borrador: objetivo web y app → web en la 1.ª entrega, app en la 2.ª",
-            "Aprobás con un clic en Aprobar. Cancelar, Escape o cerrar la ventana no escriben nada. Se cancela sola a los 100 s."
-          ],
           "button": "Aprobar",
           "source": "inferido",
-          "notes": "Esta ventana muestra lo que cambiaste vos, no el documento entero: es lo que tenés que mirar antes del clic. Una sola aprobación hace las dos cosas, arrancar el workflow y escribir el primer documento. Inferida: no se puede capturar sin una persona.",
-          "pause": true
+          "notes": "Esta ventana muestra lo que cambiaste vos, no el documento entero: es lo que tenés que mirar antes del clic. Una sola aprobación hace las dos cosas, arrancar el workflow y escribir el primer documento. Formato real, datos de ejemplo.",
+          "pause": true,
+          "src": "pages/product-brain-mcp-documento.html",
+          "window": "Product Brain (pbmcp)",
+          "width": 600,
+          "height": 387
         },
         {
           "type": "tool",
@@ -410,16 +408,14 @@
         {
           "type": "approve",
           "title": "Exportar a Jira",
-          "lines": [
-            "Épica «Portal de devoluciones» · proyecto PLAT",
-            "Se crearían 4 issues: 1 épica y 3 historias",
-            "Sin avisos: ningún campo quedó como {{pendiente}}",
-            "Aprobás con un clic en Aprobar. Cancelar, Escape o cerrar la ventana no escriben nada. Se cancela sola a los 100 s."
-          ],
           "button": "Aprobar",
           "source": "inferido",
-          "notes": "La ventana del export muestra los issues que se crearían, no un resumen. Mirá la línea de avisos: si un campo quedó pendiente, dice cuántos issues llevarían ese texto a Jira, y lo sano es cancelar y completarlo. Inferida.",
-          "pause": true
+          "notes": "La ventana del export muestra los issues que se crearían, no un resumen. Mirá la línea de avisos: si un campo quedó pendiente, dice cuántos issues llevarían ese texto a Jira, y lo sano es cancelar y completarlo. Formato real, datos de ejemplo.",
+          "pause": true,
+          "src": "pages/product-brain-mcp-exportar.html",
+          "window": "Product Brain (pbmcp)",
+          "width": 600,
+          "height": 349
         },
         {
           "type": "tool",

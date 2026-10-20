@@ -249,17 +249,14 @@
         {
           "type": "approve",
           "title": "Crear en PLAT",
-          "lines": [
-            "Epic · Tope de descuento · Crear · Asignado a: Persona del equipo",
-            "Tarea · [BE] Acotar el descuento · Crear y mover a En progreso · Asignado a: Persona del equipo",
-            "Subtarea · Test del tope · Crear · Asignado a: Persona del equipo",
-            "Tarea · [BE] Documentar el tope · Crear · Asignado a: Persona del equipo",
-            "Aprobás con un clic en Apruebo 4. Escape o Cancelar no escriben nada. Se cancela sola a los 100 s."
-          ],
           "button": "Apruebo 4",
           "source": "inferido",
-          "notes": "La ventana nativa de macOS, con una tarjeta por issue: qué se hace y a quién queda. Mirá la tarea del tope: «Crear y mover a En progreso». Crear y mover son dos escrituras, y las dos figuran antes de aprobar. El número del botón es la cantidad de issues. Return no aprueba. Acá la persona hace el clic; el agente espera. Ventana inferida: la captura no tiene Jira ni macOS de verdad.",
-          "pause": true
+          "notes": "La ventana de jtk, tal cual la dibuja su código: arriba, cuántos issues, a quién quedan y «⇄ 1 cambio de estado»; abajo, una tarjeta por issue. La tarea del tope lleva «En progreso»: se crea y se mueve, y las dos escrituras se aprueban acá. El botón dice cuántos. Escape cancela; ninguna tecla aprueba, solo el clic. El agente espera. Formato real, datos de ejemplo.",
+          "pause": true,
+          "src": "pages/jira-team-kit-crear.html",
+          "window": "jtk · Jira",
+          "width": 520,
+          "height": 462
         },
         {
           "type": "term",
@@ -366,16 +363,14 @@
         {
           "type": "approve",
           "title": "Aplicar el plan 3f9a1c07b2de",
-          "lines": [
-            "PLAT-131 · Sin asignar → Persona del equipo",
-            "PLAT-134 · Sin asignar → Persona del equipo",
-            "PLAT-140 · Sin asignar → Persona del equipo",
-            "Aprobás con un clic en Apruebo 3. Escape o Cancelar no escriben nada."
-          ],
           "button": "Apruebo 3",
           "source": "inferido",
-          "notes": "Misma ventana, otro contenido: una fila por ticket, con el cambio de cada uno. Inferida, igual que la anterior.",
-          "pause": true
+          "notes": "Misma ventana, otro plan: «Reasignar», una tarjeta por ticket con de dónde viene y adónde va. Cada título es un link para abrir el ticket antes de aprobar. Formato real, datos de ejemplo.",
+          "pause": true,
+          "src": "pages/jira-team-kit-aplicar.html",
+          "window": "jtk · Jira",
+          "width": 520,
+          "height": 388
         },
         {
           "type": "term",

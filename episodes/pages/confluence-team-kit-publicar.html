@@ -1,0 +1,39 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+:root{color-scheme:light dark;--fg:#1d1d1f;--muted:#6e6e73;--card:rgba(0,0,0,.045);--chip-bg:rgba(0,0,0,.07);
+ --to-bg:rgba(0,113,227,.12);--to-fg:#0058b0}
+@media (prefers-color-scheme:dark){:root{--fg:#f5f5f7;--muted:#a1a1a6;--card:rgba(255,255,255,.07);
+ --chip-bg:rgba(255,255,255,.12);--to-bg:rgba(10,132,255,.22);--to-fg:#6cb4ff}}
+*{box-sizing:border-box}
+html,body{margin:0;background:transparent;color:var(--fg);font:13px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;
+ -webkit-font-smoothing:antialiased;cursor:default;-webkit-user-select:none}
+body{padding:22px 24px 8px}
+h1{font-size:19px;line-height:1.25;font-weight:650;margin:4px 0 16px}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin:-8px 0 14px}
+.badge{font-size:11.5px;font-weight:600;border-radius:999px;padding:2px 9px;background:var(--chip-bg);color:var(--muted)}
+.badge.danger{background:rgba(255,59,48,.13);color:#d70015}
+@media (prefers-color-scheme:dark){.badge.danger{background:rgba(255,69,58,.2);color:#ff6961}}
+.lines{display:grid;grid-template-columns:max-content 1fr;column-gap:12px;row-gap:2px;width:100%}
+.lbl{color:var(--muted)}
+.val{overflow-wrap:anywhere}
+.cards{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.card{background:var(--card);border-radius:10px;padding:10px 12px;display:grid;gap:6px}
+.top{display:flex;gap:8px;align-items:baseline}
+.key{flex:none;font:600 11.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--chip-bg);border-radius:5px;padding:1px 6px;overflow-wrap:anywhere}
+.key[class*=" k-"]{display:inline-flex;align-items:center;gap:5px}
+.key[class*=" k-"]::before{content:"";width:9px;height:9px;border-radius:2px;background:var(--k)}
+.k-create{--k:#34a853}.k-update{--k:#4BADE8}.k-move{--k:#904EE2}.k-delete{--k:#d93025}.k-overwrite{--k:#f29900}.k-grant{--k:#5f6368}.k-adopt{--k:#12b5cb}
+.name{font-weight:500;overflow-wrap:anywhere}
+a.name{color:var(--to-fg);text-decoration:none;cursor:pointer}a.name:hover{text-decoration:underline}
+a.name::after{content:" 🔗";font-size:11px}
+.chg{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px}
+.from{color:var(--muted)}.arrow{color:var(--muted)}
+.to{background:var(--to-bg);color:var(--to-fg);border-radius:999px;padding:1px 9px;font-weight:600}
+.plain{color:var(--muted)}
+.foot{margin:16px 0 0;color:var(--muted);font-size:11.5px}
+</style></head><body>
+<h1>Publicar en Confluence</h1>
+<div class="badges"><span class="badge">desde mi-equipo/mi-servicio</span><span class="badge">1 se actualiza</span></div>
+<ul class="cards">
+<li class="card"><div class="top"><span class="key k-update">Actualiza</span><a class="name" href="https://example.atlassian.net/wiki/pages/viewpage.action?pageId=5014" target="_blank">Runbook de despliegue</a></div><div class="chg"><div class="lines"><span class="lbl">Archivo</span><span class="val">docs/runbook.md</span><span class="lbl">Página</span><span class="val">«Runbook de despliegue» (id 5014)</span></div></div></li>
+</ul>
+<p class="foot">Escape cancela · se cancela sola a los 100 s</p></body></html>
