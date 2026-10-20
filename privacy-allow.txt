@@ -3,3 +3,4 @@
 # One name per line, matched case-insensitively. Generic rules (paths, emails, secrets)
 # are never exempt. Add a name only when an episode needs it and the person agreed.
 product-brain-mcp
+product-brain
