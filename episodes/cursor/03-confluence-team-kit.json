@@ -88,7 +88,7 @@
           ],
           "source": "inferido",
           "cwd": "~",
-          "notes": "Esto deja ctk disponible desde cualquier carpeta. Importa mucho: ctk se corre en la raíz del repo que querés publicar, no dentro de este clon. Sin este paso solo anda con uv run --project y la ruta del clon. Si te avisa que falta una carpeta en el PATH, es la línea del ~/.zshrc de siempre."
+          "notes": "Esto deja ctk disponible desde cualquier carpeta. Importa mucho: ctk se corre en la raíz del repo que querés publicar, no dentro de este clon. Sin este paso solo anda con uv run --project y la ruta del clon. Si te avisa que falta una carpeta en el PATH, es la línea del ~/.zshrc de siempre. Fijate que aparece también ctk-mcp: ese programa solo corre con el extra mcp, y por eso la configuración del MCP usa uv run --project … --extra mcp."
         },
         {
           "type": "term",
@@ -166,7 +166,7 @@
           ],
           "source": "inferido",
           "cwd": "~",
-          "notes": "Último paso de la instalación: conectar el MCP. Es un archivo de configuración donde le decís a Cursor que arranque ctk-mcp con uv. Dos cosas para remarcar. CTK_ROOT es el repo que publica y las herramientas no reciben rutas: el agente no puede apuntar el servidor a otra carpeta, hay un servidor por repo. Y este archivo lleva el token, así que no se commitea. Sin las tres variables, el servidor se niega a arrancar y lo dice."
+          "notes": "Último paso de la instalación: conectar el MCP. Es el archivo de configuración de MCP que usa Cursor normalmente (~/.cursor/mcp.json); la guía de ctk solo dice «la configuración de MCP de tu editor», así que si el tuyo guarda otra ruta, es ahí. Le decís a Cursor que arranque ctk-mcp con uv. Dos cosas para remarcar. CTK_ROOT es el repo que publica y las herramientas no reciben rutas: el agente no puede apuntar el servidor a otra carpeta, hay un servidor por repo. Y este archivo lleva el token, así que no se commitea. Sin las tres variables, el servidor se niega a arrancar y lo dice."
         }
       ]
     },
@@ -318,11 +318,11 @@
         },
         {
           "q": "¿Qué pasa con on_drift en su valor por defecto?",
-          "a": "Con repo_wins el repo es la fuente de verdad y pisa la edición, pero solo si estás en la última versión de la rama por defecto. Si no, el plan bloquea y dice por qué: la salida es ponerte al día, nunca cambiar on_drift."
+          "a": "Con repo_wins el repo es la fuente de verdad y pisa la edición, pero solo si estás en la última versión de la rama por defecto; el plan lo avisa en la propia fila. Si no estás al día, bloquea y dice por qué: la salida es ponerte al día, nunca cambiar on_drift. Con on_drift: fail no se pisa nunca."
         },
         {
           "q": "¿Cómo traigo lo que escribió la otra persona?",
-          "a": "A mano: ctk detecta que la página cambió y muestra el diff, pero no fusiona. Copiás el cambio al .md, planificás de nuevo y recién ahí se publica."
+          "a": "A mano: ctk detecta que la página cambió y muestra el diff, pero no fusiona. Copiás el cambio al .md y planificás de nuevo. El plan puede seguir diciendo DRIFT, porque compara con la página de Confluence; con repo_wins y al día no se pierde nada, y publicar sigue pidiendo tu aprobación."
         },
         {
           "q": "¿Y si el plan sale BLOCKED?",
@@ -344,14 +344,13 @@
             "UNCHANGED docs/arquitectura/componentes.md  'Componentes'",
             "UNCHANGED docs/arquitectura/decisiones  'Decisiones'",
             "UNCHANGED docs/arquitectura/decisiones/adr-001.md  'ADR 001: usar colas'",
-            "DRIFT     docs/runbook.md  'Runbook de despliegue'  -- remote page was edited since the last sync",
+            "DRIFT     docs/runbook.md  'Runbook de despliegue'  -- remote page was edited since the last sync; repo wins: this checkout is the latest version of the default branch, so the Confluence edit is overwritten",
             "1 drift, 4 unchanged",
-            "plan written to ctk-plan.json",
-            "# exit 2"
+            "plan written to ctk-plan.json"
           ],
           "source": "inferido",
           "cwd": "~/mi-servicio",
-          "notes": "Ahora la fila dice DRIFT y el comando sale con código 2, que significa «mirá esto antes de seguir». En este repo el manifest tiene on_drift: fail, la opción más prudente: no se pisa nunca. Todavía no se escribió nada, y ctk apply tampoco escribiría."
+          "notes": "Ahora la fila dice DRIFT: alguien editó la página en Confluence y vos también cambiaste el archivo. Fijate el final de la línea: este repo usa el valor por defecto, repo_wins, y como estás en la última versión de la rama por defecto el plan no bloquea y avisa que la edición de Confluence se pisaría. Sale con código 0 y todavía no escribió nada: publicar es otro comando, con ventana. Inferido: el texto sale de plan.py, el resto es ilustrativo."
         },
         {
           "type": "term",
@@ -372,9 +371,9 @@
         },
         {
           "type": "say",
-          "md": "La página tiene una línea que **tu archivo no tiene**: alguien agregó «Avisá en el canal antes de correr el job». Si publico, esa línea se pierde.\n\n**¿Qué lado gana?**\n- **Recomendado:** traigo esa línea a `docs/runbook.md`, planifico de nuevo y publicamos juntos\n- **Si gana tu versión:** lo decidís vos; yo **no toco Confluence ni cambio `on_drift`**\n\nHasta que me digas, no publico nada.",
+          "md": "La página tiene una línea que **tu archivo no tiene**: alguien agregó «Avisá en el canal antes de correr el job». Si publico, el plan lo dice claro: **el repo gana y esa línea se pisa**.\n\n**¿Qué lado gana?**\n- **Recomendado:** traigo esa línea a `docs/runbook.md`, planifico de nuevo y recién ahí publicamos, sin perder nada\n- **Si gana tu versión tal cual:** lo decidís vos; yo **no toco Confluence ni cambio `on_drift`**\n\nHasta que me digas, no publico nada.",
           "source": "inferido",
-          "notes": "Acá se ve el criterio de la skill. Con on_drift: fail el agente no elige un lado: te pregunta. Y se cuida de dos atajos prohibidos: resolver el drift borrando la página o editando Confluence por su cuenta. La salida segura es siempre traer el cambio al archivo y volver a planificar."
+          "notes": "Acá se ve el criterio de la skill. Aunque el plan permitiría pisar, el agente no elige un lado por vos: te muestra qué se perdería y te pregunta. Y se cuida de dos atajos prohibidos: resolver el drift borrando la página o editando Confluence por su cuenta. Lo seguro es traer el cambio al archivo y volver a planificar."
         },
         {
           "type": "ask",
@@ -392,13 +391,13 @@
           "type": "tool",
           "label": "Ran · ctk plan",
           "source": "inferido",
-          "notes": "Planifica de nuevo con el archivo ya fusionado. Solo lectura. Ahora la fila deja de ser DRIFT y pasa a UPDATE, porque lo que publicaría tu repo ya contiene lo que escribió la otra persona."
+          "notes": "Planifica de nuevo con la línea ya en el archivo. Ojo, que es lo contraintuitivo: la fila sigue diciendo DRIFT. ctk compara la página de Confluence con lo que publicaría tu repo, no fusiona, y la página todavía no coincide con tu archivo. Pero ahora el repo gana sin perder nada: lo único que se pisa es la versión vieja de Confluence, porque la línea de la otra persona ya está en tu archivo. Sale con código 0."
         },
         {
           "type": "say",
-          "md": "Hecho: el plan ahora marca **1 UPDATE** y ya no hay drift. La línea de la otra persona **quedó en el archivo**.\n\n**¿Lo publico?** Se abre la misma ventana de aprobación que antes.",
+          "md": "Hecho: la línea de la otra persona **ya está en `docs/runbook.md`**. El plan sigue marcando **DRIFT**, pero ahora **el repo gana sin perder nada**: solo se reemplaza la versión vieja de la página.\n\n**¿Lo publico?** Se abre la misma ventana de aprobación que antes.",
           "source": "inferido",
-          "notes": "Terminó donde terminan todos los casos de escritura: pregunta y espera. Si decís que sí, se repite el aviso previo y la ventana que ya viste. No hace falta mostrarla otra vez.",
+          "notes": "Terminó donde terminan todos los casos de escritura: pregunta y espera. Si decís que sí, se repite el aviso previo y la ventana que ya viste. Remarcá que el plan dijo DRIFT a propósito: es el aviso, no un error, y lo que protege es que primero trajimos el cambio ajeno al archivo.",
           "pause": true
         }
       ]
@@ -492,7 +491,7 @@
         },
         {
           "type": "say",
-          "md": "#### Lo que te llevás\n- **Primero el plan, después el diff, después la escritura:** `ctk plan` y `ctk diff` solo leen; publicar es un paso aparte.\n- **Nada se escribe sin tu clic:** el agente avisa que se abre la ventana, vos aprobás, y si cancelás no insiste.\n- **No se pisa a nadie:** si alguien editó la página, hay drift y la salida es traer el cambio al archivo, no sobrescribir.\n\n#### Próximo episodio: product-brain-mcp\nCómo armar una iniciativa completa (el PRD, el RFC y las épicas) desde una conversación y exportarla a Jira, con otro MCP y otra ventana de aprobación.",
+          "md": "#### Lo que te llevás\n- **Primero el plan, después el diff, después la escritura:** `ctk plan` y `ctk diff` solo leen; publicar es un paso aparte.\n- **Nada se escribe sin tu clic:** el agente avisa que se abre la ventana, vos aprobás, y si cancelás no insiste.\n- **No se pisa a nadie:** si alguien editó la página, hay drift y primero se trae el cambio al archivo, antes de publicar.\n\n#### Próximo episodio: product-brain-mcp\nCómo armar una iniciativa completa (el PRD, el RFC y las épicas) desde una conversación y exportarla a Jira, con otro MCP y otra ventana de aprobación.",
           "source": "inferido",
           "notes": "Las tres ideas son el producto: plan antes de escribir, tu clic como única puerta, y no pisar a nadie. Anticipá el próximo en una frase: es el mismo patrón, con un MCP, pero para pasar de una conversación a una iniciativa completa.",
           "pause": true
