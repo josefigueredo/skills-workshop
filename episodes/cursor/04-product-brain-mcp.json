@@ -82,7 +82,7 @@
           ],
           "source": "inferido",
           "cwd": "~",
-          "notes": "Un solo comando hace dos cosas. Enlaza la skill, que le enseña al agente cuándo y cómo usar las herramientas, y escribe el servidor en el mcp.json de Cursor. No copia nada: son accesos directos a tu clon. Si tenés Claude Code también lo registra; acá no estaba y por eso dice skipped. Correrlo de nuevo es seguro. La última línea te dice qué falta. Inferido: corre uv sync, que necesita red."
+          "notes": "Un solo comando hace dos cosas. Enlaza la skill, que le enseña al agente cuándo y cómo usar las herramientas, y escribe el servidor en el mcp.json de Cursor. No copia nada: son accesos directos a tu clon."
         },
         {
           "type": "term",
@@ -99,7 +99,7 @@
           ],
           "source": "inferido",
           "cwd": "~",
-          "notes": "Esto dejó el instalador: le dice a Cursor que arranque el servidor con uv desde tu clon. Remarcá dos cosas. La ruta de --project es la de tu clon: si lo movés, el instalador no actualiza una entrada que ya existe y hay que corregirla a mano; es la causa más común de un servidor con error. Y este archivo no tiene ningún secreto. En Cursor Settings, en MCP, el servidor tiene que aparecer encendido con sus seis herramientas; si no, cerrá Cursor del todo y abrilo."
+          "notes": "Esto dejó el instalador: le dice a Cursor que arranque el servidor con uv desde tu clon. Ojo con la ruta de --project: si movés el clon, hay que corregirla a mano, es la causa más común de un servidor con error. No lleva ningún secreto."
         },
         {
           "type": "term",
@@ -127,7 +127,7 @@
           ],
           "source": "real",
           "cwd": "~",
-          "notes": "La configuración no tiene nada secreto: es la dirección del backend de tu equipo, y una línea que hoy no hace nada. Esto sí se lo podés pedir al agente. Sin este archivo, cualquier herramienta falla con config_missing y te dice qué ruta falta."
+          "notes": "Nada secreto: es la dirección del backend de tu equipo. Esta línea la escribió el agente a pedido, y la dirección real está en la documentación de tu equipo. Sin este archivo, cualquier herramienta falla con config_missing y dice qué ruta falta."
         },
         {
           "type": "term",
@@ -137,7 +137,7 @@
           ],
           "source": "inferido",
           "cwd": "~",
-          "notes": "Esto es lo único que no hace el agente, a propósito. El token es tu sesión: lo que hace que los cambios queden a tu nombre. Con tu sesión iniciada en el navegador, abrís las herramientas de desarrollo, buscás okta-token-storage en Local Storage y copiás accessToken.accessToken. Con eso en el portapapeles, corrés este comando: lo guarda con permisos solo tuyos e imprime cuántos caracteres guardó. Nunca lo pegues en el chat. Dura unas 8 horas. Inferido: necesita uv y tu sesión real.",
+          "notes": "Lo único que no hace el agente, a propósito: el token es tu sesión. Lo copiás del navegador (Local Storage, okta-token-storage, accessToken.accessToken) y corrés este comando, que lo guarda con permisos solo tuyos. Nunca en el chat. Dura unas 8 horas. Inferido.",
           "pause": true
         },
         {
@@ -148,7 +148,7 @@
           ],
           "source": "inferido",
           "cwd": "~",
-          "notes": "La prueba de que quedó bien, sin salir a la red. Mirá minutes_left; con menos de 30, warn pasa a True y el agente te avisa. Una cosa más a mano: allowed_projects, la lista de proyectos donde se puede escribir. Los que creás desde la skill se suman solos; uno que ya existía lo sumás vos con un editor. Es una barrera y no se le pide al agente que la amplíe."
+          "notes": "La prueba de que quedó bien, sin red. Mirá minutes_left; con menos de 30, el agente te avisa. Y a mano, allowed_projects: los proyectos donde se puede escribir. Los que creás desde la skill se suman solos; uno existente lo sumás vos."
         }
       ]
     },
@@ -178,9 +178,9 @@
       "steps": [
         {
           "type": "ask",
-          "text": "Quiero armar la iniciativa «Autogestión de devoluciones» con su PRD, su RFC y sus épicas. Hoy las devoluciones las resuelve soporte a mano y tardan 9 días. La meta es bajar a 3 días para el 01/03. Las hace un solo equipo, en dos entregas: 15/01 y 27/02. Afuera queda el reembolso a otros medios de pago.",
+          "text": "Quiero armar la iniciativa «Autogestión de devoluciones» con su PRD, su RFC y sus épicas. Hoy las devoluciones las resuelve soporte a mano y tardan 9 días. La meta es bajar a 3 días para el 01/03, y que el cliente pueda iniciarlas desde la web y la app. Las hace un solo equipo, en dos entregas: 15/01 y 27/02. Para la primera entrega pensaba hacer solo la web. Afuera queda el reembolso a otros medios de pago.",
           "source": "inferido",
-          "notes": "Un pedido normal, con mucho contexto de entrada, a propósito: cuanto más le contás en un solo mensaje, menos preguntas te hace. Fijate lo que dice: el problema con su número, la meta, el plazo, cuántos equipos entregan y qué queda afuera. No hay comandos ni nombres de herramientas: la skill sabe qué hacer."
+          "notes": "Un pedido normal, con mucho contexto de entrada, a propósito: cuanto más le contás en un solo mensaje, menos preguntas te hace. Fijate lo que dice: el problema con su número, la meta, el plazo, cuántos equipos entregan, qué queda afuera, y una propuesta suya: primero solo la web."
         },
         {
           "type": "tool",
@@ -208,9 +208,9 @@
         },
         {
           "type": "say",
-          "md": "Hola, **Persona del equipo**. Tu token vale por **464 minutos** más.\n\n#### Resumen a aprobar\n- **Problema:** las devoluciones se resuelven a mano en soporte y tardan **9 días**\n- **Usuarios:** clientes que devuelven y el equipo de soporte\n- **Éxito:** bajar a **3 días** para el **01/03**\n- **Afuera:** reembolso a otros medios de pago\n- **Restricciones:** un solo equipo, dos entregas (**15/01** y **27/02**)\n\n¿Está bien? Con tu sí creo el proyecto, y **se abre una ventana** con lo que se va a crear: **Cancelar** y **Aprobar**. La aprobación es tu clic, no mi pregunta.",
+          "md": "Hola, **Persona del equipo**. Tu token vale por **464 minutos** más.\n\n#### Resumen a aprobar\n- **Problema:** las devoluciones se resuelven a mano en soporte y tardan **9 días**\n- **Usuarios:** clientes que devuelven y el equipo de soporte\n- **Éxito:** bajar a **3 días** para el **01/03**, con inicio desde la **web y la app**\n- **Afuera:** reembolso a otros medios de pago\n- **Restricciones:** un solo equipo, dos entregas (**15/01** y **27/02**)\n\n¿Está bien? Con tu sí creo el proyecto, y **se abre una ventana** con lo que se va a crear: **Cancelar** y **Aprobar**. La aprobación es tu clic, no mi pregunta.",
           "source": "inferido",
-          "notes": "Mirá cómo cierra el agente: resume en cinco líneas lo decidido, que es el contrato de lo que sigue. Y avisa que se abre una ventana antes de lanzar el comando que escribe. Es una regla de la skill, y que vos estés frente a la pantalla es lo que hace valer la aprobación. Si no estás, no lo corre."
+          "notes": "Mirá cómo cierra el agente: resume en cinco líneas lo decidido, que es el contrato de lo que sigue. Y avisa que se abre una ventana antes de lanzar el comando que escribe."
         },
         {
           "type": "ask",
@@ -218,6 +218,12 @@
           "source": "inferido",
           "notes": "El visto bueno del resumen. Todavía no es la aprobación de la escritura: esa es la que viene.",
           "pause": true
+        },
+        {
+          "type": "tool",
+          "label": "Ran · project(action=\"create\")",
+          "source": "inferido",
+          "notes": "Esta llamada es la que abre la ventana: el agente no escribe nada por su cuenta, pide la escritura y el sistema espera tu clic."
         },
         {
           "type": "approve",
@@ -229,8 +235,14 @@
           ],
           "button": "Aprobar",
           "source": "inferido",
-          "notes": "La primera ventana nativa de macOS, el único camino para escribir. Muestra el plan en claro, qué se va a crear, no un resumen del agente. Crear un proyecto lo suma además a la lista de proyectos permitidos. Si cancelás, cerrás o esperás, no pasa nada. Inferida: no se puede capturar sin una persona.",
+          "notes": "La primera ventana nativa de macOS, el único camino para escribir. Muestra el plan en claro, qué se va a crear, no un resumen del agente. Crear un proyecto lo suma además a la lista de proyectos permitidos. Si cancelás, cerrás o esperás, no pasa nada.",
           "pause": true
+        },
+        {
+          "type": "tool",
+          "label": "Ran · workflow(action=\"list\")",
+          "source": "inferido",
+          "notes": "Antes de preguntar el modo, mira si hay un workflow sin terminar para ofrecerte retomarlo."
         },
         {
           "type": "say",
@@ -257,10 +269,16 @@
           "notes": "Lee los campos del PRD, que son más de cien. Por eso no te pregunta sección por sección: arma el documento entero con lo que ya sabe."
         },
         {
-          "type": "say",
-          "md": "Armé el PRD entero y lo abrí en tu editor. Todavía **no escribí nada**.\n\n#### Metas del PRD\n- Resolver en **3 días** para el **01/03**\n- Entregas 15/01 y 27/02 ≤ plazo 01/03 ✓\n- Solo la web, sin la app → objetivo «web y app» ✗\n\nPor el ✗ dejé **`{{pendiente}}`** en ese campo, aunque lo hayas propuesto: proponerlo no es aceptarlo. ¿Alcanza con la web en la primera entrega?\n\n**Completitud prevista: 88%.** Quedan parciales los riesgos y las dependencias.\n\nEditá el borrador, guardalo y decime **listo**.",
+          "type": "tool",
+          "label": "Ran · document(action=\"draft\")",
           "source": "inferido",
-          "notes": "Esta es la parte que distingue a la skill. Cada valor que propusiste se compara con las metas, y lo que no cumple, o no se sabe, queda pendiente y no como un texto que parezca completo. El porcentaje sale de la misma fórmula del sistema, antes de escribir. Ahora el trabajo es tuyo: editás el documento en tu editor, y el agente espera sin llamar a nada más.",
+          "notes": "Este es el paso que escribe el borrador en un archivo privado, lo abre en tu editor y devuelve la completitud prevista."
+        },
+        {
+          "type": "say",
+          "md": "Armé el PRD entero y lo abrí en tu editor. Todavía **no escribí nada**.\n\n#### Metas de la iniciativa\n- Resolver en **3 días** para el **01/03**\n- Entregas 15/01 y 27/02 ≤ plazo 01/03 ✓\n- Primera entrega solo web → objetivo «web y app» ✗\n\nPor el ✗ dejé **`{{pendiente}}`** en ese campo, aunque lo hayas propuesto: proponerlo no es aceptarlo. ¿Alcanza con la web en la primera entrega?\n\n**Completitud prevista: 88%.** Quedan parciales los riesgos y las dependencias.\n\nEditá el borrador, guardalo y decime **listo**.",
+          "source": "inferido",
+          "notes": "Esta es la parte que distingue a la skill. Cada valor que propusiste se compara con las metas, y lo que no cumple, o no se sabe, queda pendiente y no como un texto que parezca completo: acá, tu propia idea de la web primero.",
           "pause": true
         },
         {
@@ -309,9 +327,9 @@
         },
         {
           "type": "say",
-          "md": "Listo: el **PRD está escrito** y el workflow arrancó.\n\n#### Qué quedó\n- **Completitud:** **91%**, con un hueco en el campo `{{pendiente}}` que falta resolver\n- **Siguiente paso:** el RFC, con el mismo camino: borrador, tu «listo» y tu clic\n- **Después:** una épica con las dos entregas como historias\n\n¿Seguimos con el RFC?",
+          "md": "Listo: el **PRD está escrito** y el workflow arrancó.\n\n#### Qué quedó\n- **Completitud:** **94%**; lo que pediste (web primero, app en la segunda entrega) ya está en el documento\n- **Parciales:** los **riesgos** y las **dependencias**\n- **Siguiente paso:** completar esos dos campos, y después el RFC con el mismo camino: borrador, tu «listo» y tu clic\n\n¿Completamos los riesgos y las dependencias?",
           "source": "inferido",
-          "notes": "Cerrá con lo que queda: el documento escrito, su completitud y lo que falta. El RFC y la épica siguen el mismo camino, así que no hace falta mostrarlos.",
+          "notes": "Cerrá con lo que queda: el documento escrito, su completitud y lo que falta de verdad. Mirá que el hueco de la web y la app ya no está: lo resolviste vos en el borrador.",
           "pause": true
         }
       ]
@@ -360,15 +378,27 @@
         },
         {
           "type": "say",
-          "md": "A la épica le falta el **componente** de dos historias. Te propongo **Backend** y **Web**. ¿Va?\n\nCon tu sí corro la exportación: **se abre una ventana** con los issues que se crearían, y los botones **Cancelar** y **Aprobar**. Yo no puedo hacer ese clic.",
+          "md": "A la épica le falta el **componente** de dos historias. Eso lo completás **vos** en el sistema (no lo edito yo): cuando lo tengas, decime y vuelvo a revisar antes de exportar.",
           "source": "inferido",
-          "notes": "Dos cosas en un mensaje: el hueco concreto con una propuesta, para que respondas con un sí, y el aviso de que se abre una ventana. Las dos vienen antes de tocar nada."
+          "notes": "Acá el agente solo pregunta y señala el hueco; arreglarlo es una escritura sobre la épica y queda en tus manos. No exporta nada hasta que el chequeo previo salga limpio: es la regla de la skill."
         },
         {
           "type": "ask",
-          "text": "Va.",
+          "text": "Ya les puse el componente.",
           "source": "inferido",
-          "notes": "Una respuesta corta que habilita el export, y todavía no aprueba nada.",
+          "notes": "Lo resolviste vos, fuera del chat."
+        },
+        {
+          "type": "tool",
+          "label": "Ran · jira(action=\"preflight\")",
+          "source": "inferido",
+          "notes": "Vuelve a correr el chequeo, y ahora no tiene huecos."
+        },
+        {
+          "type": "say",
+          "md": "Sin huecos. Ahora la exportación: **se abre una ventana** con los issues que se crearían, **Cancelar** y **Aprobar**. Yo no puedo hacer ese clic.",
+          "source": "inferido",
+          "notes": "El aviso previo de siempre, antes de la escritura que crea issues de verdad.",
           "pause": true
         },
         {
@@ -382,7 +412,7 @@
           "title": "Exportar a Jira",
           "lines": [
             "Épica «Portal de devoluciones» · proyecto PLAT",
-            "Se crearían 4 issues: 1 épica y 3 historias, con sus tareas",
+            "Se crearían 4 issues: 1 épica y 3 historias",
             "Sin avisos: ningún campo quedó como {{pendiente}}",
             "Aprobás con un clic en Aprobar. Cancelar, Escape o cerrar la ventana no escriben nada. Se cancela sola a los 100 s."
           ],
@@ -449,6 +479,16 @@
           "source": "inferido",
           "cwd": "~",
           "notes": "El segundo: no hay token o venció, y dura unas 8 horas. Se repite el paso de copiarlo del navegador y pegarlo con token paste. No hay forma de renovarlo desde el agente, y es a propósito. Si el error dice token_expired es lo mismo. Inferido."
+        },
+        {
+          "type": "term",
+          "cmd": "# lo que ve el agente al escribir en un proyecto fuera de la lista",
+          "out": [
+            "project proj-demo-0002 is not in ~/.config/product-brain/allowed_projects; add its id there to let pbmcp write to it"
+          ],
+          "source": "inferido",
+          "cwd": "~",
+          "notes": "Este es el error en sí: not_allowed, con el id que falta. Es un texto de la herramienta, inferido; el comando de abajo es la lista de verdad."
         },
         {
           "type": "term",
