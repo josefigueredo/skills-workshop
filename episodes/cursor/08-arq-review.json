@@ -5,7 +5,7 @@
   "title": "arq-review",
   "pitch": {
     "ask": "Registrá el PRY-2026-0042: te pego la captura del pedido.",
-    "does": "Lleva la revisión de Arquitectura de un pedido de proyecto de punta a punta: lo registra tal cual, te propone el triage para que lo confirmes vos, arma la épica y el ticket del requirente en Jira, analiza con opciones y deja un veredicto propuesto. Escribe en Jira solo con un comando que corrés vos."
+    "does": "Lleva la revisión de Arquitectura de un pedido de proyecto de punta a punta: lo registra tal cual desde la captura, te propone el triage para que lo confirmes vos, abre el ticket del requirente en el help desk y la épica en el board de trabajo, analiza con opciones y deja un veredicto propuesto. Escribe en Jira solo con un comando que corrés vos."
   },
   "skill": {
     "repo": "arq-review",
@@ -59,7 +59,7 @@
             "Cloning into '~/skills/arq-review'..."
           ],
           "source": "inferido",
-          "notes": "Bajamos la herramienta. Es privado y va por SSH: si dice «Permission denied», falta el acceso (clave del episodio 0). Para quien no usa la terminal, docs/instalacion.md del repo hace lo mismo con prompts. Inferido: necesita red.",
+          "notes": "Bajamos la herramienta. Es privada y va por SSH: «Permission denied» es falta de acceso (episodio 0). Inferido: necesita red.",
           "cwd": "~"
         },
         {
@@ -71,7 +71,7 @@
             "cli: arq -> ~/skills/arq-review/arq.py"
           ],
           "source": "real",
-          "notes": "Un comando deja las dos skills y el comando arq, con enlaces a tu clon: nada se copia. Fijate en el aviso: si ~/.local/bin no está en el PATH, arq no se encuentra. Es el fallo más común; se arregla agregándolo a tu ~/.zshrc y abriendo una terminal nueva.",
+          "notes": "Un comando deja las dos skills y arq, con enlaces a tu clon. Fijate en el aviso: sin ~/.local/bin en el PATH, arq no se encuentra. Es el fallo más común.",
           "cwd": "~"
         },
         {
@@ -82,7 +82,7 @@
             "           {init,path,new,show,triage,set,state,timebox,lint,jira,jsm,seguimiento,ver,link,eval} ..."
           ],
           "source": "real",
-          "notes": "Comprobamos que arq responde. Aclaración: acá va la ruta completa porque la terminal de la grabación no tiene esa carpeta en el PATH; en tu máquina alcanza con arq. Lo mismo vale para el resto del episodio.",
+          "notes": "arq responde. Va la ruta completa porque la terminal de la grabación no tiene esa carpeta en el PATH; en tu máquina alcanza con arq.",
           "cwd": "~"
         },
         {
@@ -93,7 +93,7 @@
             "arq-manager"
           ],
           "source": "real",
-          "notes": "Las dos skills quedaron donde Cursor las lee: arq-manager coordina y arq-architect revisa lo técnico. No se llaman entre sí: cada una mira el estado del pedido y sabe si le toca. Abrí una sesión nueva del agente.",
+          "notes": "Las dos skills quedaron donde Cursor las lee: arq-manager coordina y arq-architect revisa lo técnico. Cada una mira el estado del pedido y sabe si le toca. Abrí una sesión nueva del agente.",
           "cwd": "~"
         },
         {
@@ -114,7 +114,7 @@
             "creado reviews/"
           ],
           "source": "real",
-          "notes": "arq init crea la configuración y la carpeta de reviews; si ya existen, no los toca. Después se completa el canal del requirente en el config.json, un help desk de Software o Jira Service Management. Se lo pedís al agente en una frase.",
+          "notes": "arq init crea la configuración y la carpeta de reviews, sin pisar lo que existe. En el config.json van los dos proyectos de Jira: el board de trabajo y el help desk del requirente.",
           "cwd": "~/arq-reviews"
         },
         {
@@ -125,7 +125,7 @@
             "-rw-------  1 persona  staff  138 19 oct 09:00 .env"
           ],
           "source": "inferido",
-          "notes": "Las tres variables de Jira (URL, email y token) viven en un .env fuera del repo de reviews. El token se crea con «Create API token» a secas, no «with scopes». Lo escribís vos con un editor, nunca por el chat. Salida inferida; los permisos 600 son una buena práctica nuestra.",
+          "notes": "Las tres variables de Jira viven en un .env fuera del repo de reviews. El token sale de «Create API token» a secas. Lo escribís vos, nunca por el chat. Salida inferida.",
           "cwd": "~",
           "pause": true
         }
@@ -247,7 +247,7 @@
         },
         {
           "type": "say",
-          "md": "#### Esto es lo que se crearía\nNo escribí nada en Jira. Una **épica**, **tres historias** (intake y triage, análisis y opciones, decisión y comunicación) y **ocho sub-tasks**. Abrí `PRY-2026-0042.html` para verlo con su descripción.\n\nComo el nivel es `complejo`, te pregunto: ¿hace falta la historia opcional de **validación técnica**?",
+          "md": "#### Esto es lo que se crearía\nNo escribí nada en Jira. En el board de trabajo, una **épica**, **tres historias** (intake y triage, análisis y opciones, decisión y comunicación) y **ocho sub-tasks**; en el help desk, el ticket del requirente. Abrí `PRY-2026-0042.html` para verlo con su descripción.\n\nComo el nivel es `complejo`, te pregunto: ¿hace falta la historia opcional de **validación técnica**?",
           "source": "inferido",
           "notes": "El agente muestra y pregunta. Como es complejo, ofrece una cuarta historia opcional. No sigue sin un sí explícito."
         },
@@ -296,6 +296,59 @@
           "md": "#### Listo\nVerifiqué la salida: la épica **PLAT-123** con 12 issues creados y el ticket del requirente **PLATHD-7**. El review está `triado`, nivel `complejo`, y el plazo quedó fijado.\n\nCada vez que el review cambie (gap check, análisis, firma, cierre) te voy a volver a dar este mismo comando: así Jira muestra lo mismo que git, y las tareas cumplidas pasan a Done. La de abrir el ticket y el plazo pasa en el próximo. Las descripciones no se editan a mano en Jira, se pisan; las notas van en comentarios.\n\nSiguiente: la revisión técnica la hace `arq-architect`.",
           "source": "inferido",
           "notes": "Idea del ciclo: cada cambio del review vuelve a Jira con el mismo comando. Y ahora le toca a la otra skill. Los números son de ejemplo."
+        }
+      ]
+    },
+    {
+      "id": "board-de-trabajo",
+      "title": "Otro caso: el board de trabajo",
+      "subtitle": "Dos boards, y la épica como kanban del equipo con jira-team-kit",
+      "screen": "cursor-agent",
+      "faq": [
+        {
+          "q": "¿Por qué dos proyectos de Jira y no uno?",
+          "a": "Porque son dos conversaciones distintas. El help desk es donde el requirente pregunta y recibe respuestas; el board de trabajo es donde el equipo reparte la revisión. Se configuran en .arq/config.json: jira_project es el board de trabajo y helpdesk_project, el del requirente."
+        },
+        {
+          "q": "¿Dónde queda el kanban local?",
+          "a": "En .jira-team-kit/ de la carpeta donde corrés jtk, una carpeta por issue. Con jtk pull se refresca desde Jira."
+        }
+      ],
+      "steps": [
+        {
+          "type": "ask",
+          "text": "¿Dónde quedó cada cosa en Jira? Y bajame la épica PLAT-123 para repartir las tareas del equipo.",
+          "source": "inferido",
+          "notes": "La pregunta típica después del primer --apply: hay dos proyectos de Jira, y cada uno tiene su función."
+        },
+        {
+          "type": "say",
+          "md": "#### Dos boards, dos funciones\n- **PLATHD, el help desk:** el ticket **PLATHD-7** es la conversación con el requirente. Está a su nombre, el head lo sigue, y ahí van el pedido de información y la devolución.\n- **PLAT, el board de trabajo:** la épica **PLAT-123** divide la revisión en tres historias y ocho sub-tasks para el equipo.\n\nLos une un link «Relates». Para el board de trabajo uso `jira-team-kit`.",
+          "source": "inferido",
+          "notes": "Así funciona un caso real: un help desk para hablar con quien pide y un board para repartir el trabajo. Claves inventadas."
+        },
+        {
+          "type": "tool",
+          "label": "Read · ~/.cursor/skills/jira-team-kit/SKILL.md",
+          "source": "inferido",
+          "notes": "Entra la skill de Jira del equipo, la del episodio 2. arq-review no la llama: el agente las combina."
+        },
+        {
+          "type": "term",
+          "cmd": "jtk pull PLAT-123 --project .",
+          "out": [
+            "PLAT-123: 12 issues -> ~/arq-reviews/.jira-team-kit/PLAT-123"
+          ],
+          "source": "inferido",
+          "cwd": "~/arq-reviews",
+          "notes": "Solo lee Jira: no abre ventana. Baja la épica, sus historias y sus sub-tasks, una carpeta por issue. Inferido: necesita Jira; el formato sale del código de jtk."
+        },
+        {
+          "type": "say",
+          "md": "#### El kanban es del equipo\nQuedó en `.jira-team-kit/PLAT-123/`. Desde ahí se mueven estados, se asignan tareas y se agregan sub-tasks. Vuelven a Jira con `jtk push PLAT-123`: primero el dry run, después la ventana de aprobación.\n\nDos reglas para no pisarse con arq:\n- Las descripciones de la revisión las escribe arq desde el review: las notas van en comentarios.\n- arq no borra lo que no creó: las sub-tasks que agregue el equipo se quedan.",
+          "source": "inferido",
+          "notes": "arq reconoce sus issues por un ID estable y nunca borra. Cada herramienta escribe con su propio control: arq con tu comando, jira-team-kit con su ventana.",
+          "pause": true
         }
       ]
     },
@@ -357,7 +410,7 @@
             "ok: ~/skills/arq-review/contract/constraints.md"
           ],
           "source": "real",
-          "notes": "Antes de revisar, la skill se asegura de que el contrato de constraints sea válido. Esas constraints son las reglas de Arquitectura contra las que se analiza. El contrato lo mantiene Arquitectura: arq lo lee, nunca lo reescribe. Salida real.",
+          "notes": "Antes de revisar, la skill valida el contrato de constraints: las reglas de Arquitectura. arq lo lee, nunca lo reescribe. Salida real.",
           "cwd": "~/arq-reviews"
         },
         {
@@ -511,7 +564,7 @@
           "type": "say",
           "md": "#### Análisis completo\nSeguí el método de la skill. El original es **viable**: ninguna constraint bloqueante queda sin solución.\n- **Componente más débil:** `datos`. El cruce entre cuentas exige un rol asumible [C-IAM-02] y declarar la clasificación de la facturación [C-DAT-01]\n- **Opción 0:** el original, con corte en una ventana el 30 de noviembre\n- **Opción 1:** replicación continua hasta el corte, con ventana mínima y mayor costo\n- **Opción 2:** instantánea cifrada compartida entre cuentas, con ventana más larga y menos esfuerzo\n- **Recomendación:** Opción 1, con condiciones verificables\n- **Señales:** seguridad, cloud y finops, sin veredicto\n\nVeredicto propuesto: **aprobar con condiciones**.",
           "source": "inferido",
-          "notes": "Cada afirmación del review lleva una etiqueta: [pedido], [C-XXX-NN] de la constraint, [supuesto] o [verificar]; ningún número sin etiqueta. Es la regla de evidencia de la skill. Contenido ilustrativo: el análisis real depende del pedido. Lo que sí es real es el método."
+          "notes": "Cada afirmación lleva una etiqueta: [pedido], [C-XXX-NN], [supuesto] o [verificar]; ningún número sin etiqueta. Contenido ilustrativo; lo real es el método."
         },
         {
           "type": "term",
@@ -595,7 +648,7 @@
             "# exit 1"
           ],
           "source": "real",
-          "notes": "Publicar sin firma: el CLI lo rechaza. Firmar es una decisión de una persona, no del agente. Salida real. El texto de la herramienta menciona Claude Code y el !; en Cursor el comando se pega en la terminal, sin el !.",
+          "notes": "Publicar sin firma: el CLI lo rechaza. Firmar es de una persona. Salida real. El texto menciona el ! de Claude Code; en Cursor, sin el !.",
           "cwd": "~/arq-reviews"
         },
         {
@@ -605,7 +658,7 @@
             "error: faltan variables de entorno: JIRA_BASE_URL, JIRA_EMAIL, JIRA_API_TOKEN"
           ],
           "source": "inferido",
-          "notes": "Si falta alguna credencial, el comando no escribe nada y lo dice. Que existan las tres no prueba que entren: la prueba real es arq ver, que es de solo lectura, o el primer --apply. Salida inferida, tomada de la guía de instalación de la herramienta.",
+          "notes": "Sin credenciales, el comando no escribe nada y lo dice. Que existan no prueba que entren: la prueba es arq ver, de solo lectura. Salida inferida, de la guía de instalación.",
           "cwd": "~/arq-reviews"
         }
       ]
@@ -638,7 +691,7 @@
         },
         {
           "type": "say",
-          "md": "#### Lo que te llevás\n- **Dos skills y un CLI:** `arq-manager` coordina (registro, triage, Jira, plazo, publicación) y `arq-architect` revisa lo técnico. Se instalan juntas y trabajan sobre tu repo de reviews.\n- **El `--apply` es tuyo:** el agente muestra el dry run y te da el comando para que lo corras vos. No hay ventana de aprobación: tu control es lo que ves antes.\n- **Decide una persona:** el triage, la firma y el click de Aprobar o Rechazar no son del agente.\n\n#### Fin de la serie de Cursor\nViste ocho herramientas con las mismas reglas: el agente prepara, vos aprobás.\n\n#### Próxima serie: Claude Code, episodio 1: wayofwork\nSiete skills que te guían para llevar una iniciativa de punta a punta, ahora desde Claude Code.",
+          "md": "#### Lo que te llevás\n- **Dos skills y un CLI:** `arq-manager` coordina (registro, triage, Jira, plazo, publicación) y `arq-architect` revisa lo técnico. Se instalan juntas y trabajan sobre tu repo de reviews.\n- **Dos boards:** el help desk para hablar con el requirente y el board de trabajo para el equipo, que lo lleva con `jira-team-kit`.\n- **El `--apply` es tuyo:** el agente muestra el dry run y te da el comando para que lo corras vos. No hay ventana de aprobación: tu control es lo que ves antes.\n- **Decide una persona:** el triage, la firma y el click de Aprobar o Rechazar no son del agente.\n\n#### Fin de la serie de Cursor\nViste ocho herramientas con las mismas reglas: el agente prepara, vos aprobás.\n\n#### Próxima serie: Claude Code, episodio 1: wayofwork\nSiete skills que te guían para llevar una iniciativa de punta a punta, ahora desde Claude Code.",
           "source": "inferido",
           "notes": "Las tres ideas de hoy. Y el cierre de la serie: la regla se repite, el agente prepara y la persona aprueba, con una ventana de macOS, un comando tuyo o tu OK en el chat. Anticipá la serie nueva: lo mismo desde Claude Code, empezando por WayOfWork.",
           "pause": true
