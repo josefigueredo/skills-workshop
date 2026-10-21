@@ -4,7 +4,7 @@
   "order": 8,
   "title": "arq-review",
   "pitch": {
-    "ask": "Registrá el PRY-2026-0042 y hacé el triage.",
+    "ask": "Registrá el PRY-2026-0042: te pego la captura del pedido.",
     "does": "Lleva la revisión de Arquitectura de un pedido de proyecto de punta a punta: lo registra tal cual, te propone el triage para que lo confirmes vos, arma la épica y el ticket del requirente en Jira, analiza con opciones y deja un veredicto propuesto. Escribe en Jira solo con un comando que corrés vos."
   },
   "skill": {
@@ -134,7 +134,7 @@
     {
       "id": "caso-principal",
       "title": "Caso principal",
-      "subtitle": "De un pedido que llegó al Jira armado",
+      "subtitle": "De la captura de un pedido al Jira armado",
       "screen": "cursor-full",
       "faq": [
         {
@@ -157,15 +157,21 @@
       "steps": [
         {
           "type": "ask",
-          "text": "Registrá el PRY-2026-0042. El pedido está en pedido.txt; contacto contacto@example.com y head head@example.com",
+          "text": "Registrá el PRY-2026-0042. Te pego la captura del pedido en la plataforma PRY.",
           "source": "inferido",
-          "notes": "El pedido es una frase: el número, el texto y los dos mails. El contacto es el requirente y el head queda de participante. Datos inventados. En un caso real el pedido se transcribe tal cual: es evidencia."
+          "notes": "Así llega un pedido real: una captura del formulario de la plataforma PRY. Los mails no se tipean: salen de «Contacto principal» y «Head / Stakeholder». Pedido inventado, con los campos del formulario real."
         },
         {
           "type": "tool",
           "label": "Read · ~/.agents/skills/arq-manager/SKILL.md",
           "source": "inferido",
           "notes": "Cursor carga arq-manager, la que coordina. Esta skill no emite juicio técnico, ni siquiera un «parece razonable»: eso es de la otra."
+        },
+        {
+          "type": "tool",
+          "label": "Write · ~/pedido-PRY-2026-0042.md",
+          "source": "inferido",
+          "notes": "El agente transcribe la captura campo por campo, sin resumir ni corregir: es evidencia. La deja fuera del repo de reviews, porque arq new copia el texto adentro. Ojo con «Google Doc (link)»: la captura trae el link, no el documento."
         },
         {
           "type": "term",
@@ -180,19 +186,19 @@
         },
         {
           "type": "term",
-          "cmd": "~/.local/bin/arq new PRY-2026-0042 --nombre \"Migración del servicio de reportes\" --pedido pedido.txt --contacto contacto@example.com --head head@example.com",
+          "cmd": "~/.local/bin/arq new PRY-2026-0042 --nombre \"Migración del servicio de reportes\" --pedido ~/pedido-PRY-2026-0042.md --contacto contacto@example.com --head head@example.com",
           "out": [
             "creado reviews/PRY-2026-0042.md (estado: recibido)"
           ],
           "source": "real",
-          "notes": "Se crea el review en «recibido», con el pedido copiado entero. Todo queda en un archivo del repo de reviews: git es la fuente de verdad.",
+          "notes": "Se crea el review en «recibido», con la transcripción entera en «Pedido original». Git es la fuente de verdad.",
           "cwd": "~/arq-reviews"
         },
         {
           "type": "say",
-          "md": "#### Registrado. Triage: mi propuesta\nLeí `contract/triage.md`. Cada sí o no lleva la frase del pedido que lo justifica:\n- `multi_cuenta`: **sí**, «pasar a la cuenta de Datos» desde la de Producto\n- `migracion`: **sí**, «mover la base de reportes»\n- `fecha_comprometida`: **sí**, «comprometido con el cliente»\n- `otros_equipos`: **sí**, «Finanzas y Soporte consumen los reportes»\n- `datos_sensibles_o_ia`: **sí**, «incluye facturación de clientes»\n- `larga_o_productiva`: **sí**, «queda productivo»\n\nLas respuestas las confirmás vos, no yo. ¿Las dejo así?",
+          "md": "#### Registrado. Triage: mi propuesta\nTranscribí la captura tal cual y leí `contract/triage.md`. Cada sí o no lleva el campo del pedido que lo justifica:\n- `multi_cuenta`: **sí**, Descripción: «de la cuenta de Producto a la cuenta de Datos»\n- `migracion`: **sí**, Tipo de trabajo: «Migración»\n- `fecha_comprometida`: **sí**, Fecha deseada: «No, no es negociable»\n- `otros_equipos`: **sí**, Equipos involucrados: «Finanzas y Soporte consumen los reportes»\n- `datos_sensibles_o_ia`: **sí**, Problema / mejora: «incluye facturación de clientes»\n- `larga_o_productiva`: **sí**, el pedido no dice cuánto dura y, ante la duda, el triage dice sí\n\nLas respuestas las confirmás vos, no yo. ¿Las dejo así?",
           "source": "inferido",
-          "notes": "Cada propuesta cita el pedido: es evidencia, no opinión del modelo. Y termina en una pregunta: el agente se frena y espera a la persona que coordina. Contenido ilustrativo."
+          "notes": "Cada propuesta cita un campo del formulario. La última: no hay campo de duración, y la regla es «ante la duda, sí»; así salió complejo un pedido real. Termina en pregunta: el agente espera a quien coordina."
         },
         {
           "type": "ask",
@@ -255,7 +261,7 @@
           "type": "say",
           "md": "#### El comando lo corrés vos\nPara crear la épica y el ticket del requirente (a su nombre, buscándolo por email), corré esto en la terminal de Cursor (sin el `!` del principio, que es de Claude Code):\n\n`set -a && source ~/.config/arq/.env && set +a && arq jira PRY-2026-0042 --apply`\n\nYo no lo corro: el `--apply` es tuyo. Si algo falla a mitad de camino, repetilo tal cual; retoma sin duplicar.",
           "source": "inferido",
-          "notes": "El momento clave, decilo despacio: el agente nunca corre un --apply. Te lo deja armado, con el .env cargado en la misma línea porque arq lee el entorno, no el archivo. No hay ventana de aprobación: tu control es el dry run que ya viste y que el comando lo corrés vos."
+          "notes": "El momento clave, decilo despacio: el agente nunca corre un --apply. Lo deja armado, con el .env cargado en la misma línea porque arq lee el entorno. Tu control es el dry run y que el comando lo corrés vos."
         },
         {
           "type": "term",
@@ -270,6 +276,16 @@
           "in": "zsh"
         },
         {
+          "type": "term",
+          "cmd": "~/.local/bin/arq timebox PRY-2026-0042",
+          "out": [
+            "vence: 2026-11-04 (en plazo)"
+          ],
+          "source": "real",
+          "cwd": "~/arq-reviews",
+          "notes": "Arranca el plazo: diez días hábiles. Si la fecha comprometida cayera antes, la skill avisa que la revisión está en el camino crítico. Salida real; la fecha depende del día de la captura."
+        },
+        {
           "type": "tool",
           "label": "Ran · git commit -m \"feat: PRY-2026-0042 registrado, triado y con Jira\"",
           "source": "inferido",
@@ -277,7 +293,7 @@
         },
         {
           "type": "say",
-          "md": "#### Listo\nVerifiqué la salida: la épica **PLAT-123** con 12 issues creados y el ticket del requirente **PLATHD-7**. El review está `triado`, nivel `complejo`.\n\nCada vez que el review cambie (gap check, análisis, firma, cierre) te voy a volver a dar este mismo comando: así Jira muestra lo mismo que git. Las descripciones no se editan a mano en Jira, se pisan; las notas van en comentarios.\n\nSiguiente: la revisión técnica la hace `arq-architect`.",
+          "md": "#### Listo\nVerifiqué la salida: la épica **PLAT-123** con 12 issues creados y el ticket del requirente **PLATHD-7**. El review está `triado`, nivel `complejo`, y el plazo quedó fijado.\n\nCada vez que el review cambie (gap check, análisis, firma, cierre) te voy a volver a dar este mismo comando: así Jira muestra lo mismo que git, y las tareas cumplidas pasan a Done. La de abrir el ticket y el plazo pasa en el próximo. Las descripciones no se editan a mano en Jira, se pisan; las notas van en comentarios.\n\nSiguiente: la revisión técnica la hace `arq-architect`.",
           "source": "inferido",
           "notes": "Idea del ciclo: cada cambio del review vuelve a Jira con el mismo comando. Y ahora le toca a la otra skill. Los números son de ejemplo."
         }
@@ -388,9 +404,50 @@
         },
         {
           "type": "say",
-          "md": "#### Pedido de información redactado\nPor cada faltante, una pregunta concreta para este pedido y por qué se pide:\n- **Cuentas y entornos:** ¿qué cuenta de Producto y qué cuenta de Datos, y en qué entornos se hace el corte?\n- **Flujos de datos:** ¿qué datos de facturación mueve el servicio y cómo están clasificados?\n- **Rollback:** ¿cómo se vuelve atrás si falla el corte del 30 de noviembre?\n\nPuse primero lo que bloquea esa fecha. El mensaje está en `reviews/PRY-2026-0042.jsm.md`. Publicarlo le toca a `arq-manager`; el plazo todavía no arrancó (`vence` vacío), pedile que lo fije.",
+          "md": "#### Pedido de información redactado\nPor cada faltante, una pregunta concreta para este pedido y por qué se pide:\n- **Cuentas y entornos:** ¿qué cuenta de Producto y qué cuenta de Datos, y en qué entornos se hace el corte?\n- **Flujos de datos:** ¿qué datos de facturación mueve el servicio y cómo están clasificados?\n- **Rollback:** ¿cómo se vuelve atrás si falla el corte del 30 de noviembre?\n\nPuse primero lo que bloquea esa fecha. El mensaje está en `reviews/PRY-2026-0042.jsm.md`. Publicarlo le toca a `arq-manager`.",
           "source": "inferido",
-          "notes": "Cada pregunta es específica del pedido, nunca genérica, y van primero las que bloquean la fecha comprometida. El agente avisa que no publica: lo hace arq-manager, con dry run y un comando que corrés vos en la terminal de Cursor, sin el !, igual que el Jira."
+          "notes": "Cada pregunta es del pedido, nunca genérica, y primero va lo que bloquea la fecha. El agente no publica: eso es de arq-manager."
+        },
+        {
+          "type": "ask",
+          "text": "Publicá el pedido de información del PRY-2026-0042",
+          "source": "inferido",
+          "notes": "Vuelve la skill que coordina: publicar en el ticket del requirente es comunicación, no juicio técnico."
+        },
+        {
+          "type": "term",
+          "cmd": "~/.local/bin/arq jsm PRY-2026-0042 --file reviews/PRY-2026-0042.jsm.md --public --template jsm-pedido-info.md",
+          "out": [
+            "respuesta pública al requirente en PLATHD-7:",
+            "",
+            "Hola equipo de Producto, gracias por el pedido PRY-2026-0042 (Migración del servicio de reportes).",
+            "",
+            "Para poder evaluarlo desde Arquitectura necesitamos completar esta información:",
+            "",
+            "Para llegar al 2026-11-30, primero lo que bloquea esa fecha:",
+            "",
+            "- Rollback: ¿cómo se vuelve atrás si falla el corte del 30 de noviembre, y qué criterio lo activa?",
+            "- Cuentas y entornos: ¿qué cuenta de Producto y qué cuenta de Datos, y en qué entornos se hace el corte?",
+            "- Flujos de datos: ¿qué datos de facturación mueve el servicio y cómo están clasificados?",
+            "",
+            "Por qué lo pedimos: sin estos datos no podemos evaluar el corte entre cuentas ni el tratamiento de la facturación de clientes.",
+            "",
+            "Pueden responder en este mismo ticket. Mantenemos el pedido abierto hasta el 2026-11-04; si para esa fecha no tenemos la información, lo vamos a cerrar como incompleto y se podrá volver a cargar cuando esté lista.",
+            "",
+            "Equipo de Arquitectura",
+            "",
+            "dry run: no se escribió nada. Para ejecutarlo, el usuario corre el mismo comando con --apply (en Claude Code, con !)."
+          ],
+          "source": "inferido",
+          "cwd": "~/arq-reviews",
+          "notes": "El dry run muestra el mensaje exacto. Antes, el CLI controla la plantilla, el PRY y el estado. Inferido: en la demo no existe PLATHD-7 y el comando real se frena antes. El formato sale del código."
+        },
+        {
+          "type": "say",
+          "md": "#### Los dos comandos los corrés vos\nSi el mensaje está bien, corré esto en la terminal de Cursor: publica el mensaje y después vuelve a sincronizar la épica, para que muestre los faltantes y pase a Done las tareas cumplidas.\n\n`set -a && source ~/.config/arq/.env && set +a && arq jsm PRY-2026-0042 --file reviews/PRY-2026-0042.jsm.md --public --template jsm-pedido-info.md --apply && arq jira PRY-2026-0042 --apply`\n\nEl mismo mensaje no se publica dos veces: si lo repetís, el CLI lo rechaza.",
+          "source": "inferido",
+          "notes": "Mismo patrón que con la épica. En un pedido real es el paso que más se repite: el requirente contesta y, si falta algo, sale otro pedido.",
+          "pause": true
         }
       ]
     },
@@ -480,7 +537,7 @@
           "type": "say",
           "md": "#### Listo para firma\nEl review quedó en `en-firma`. Quien firma el nivel `complejo` (el Sr Expert) lo lee completo en `reviews/PRY-2026-0042.md`. Redacté también el mensaje de devolución y el comentario corto para pegar en la plataforma PRY.\n\nLas condiciones están en el review, una por bullet: `arq-manager` crea una sub-task de seguimiento por cada una.",
           "source": "inferido",
-          "notes": "Cerrá con el límite: el agente prepara, una persona firma y una persona hace el click en la plataforma. Después, arq-manager publica la devolución con el mismo patrón de dry run y comando tuyo, y crea los seguimientos de las condiciones. No lo mostramos acá; está en el showcase de la skill."
+          "notes": "Cerrá con el límite: el agente prepara, una persona firma y otra hace el click en la plataforma. La devolución y los seguimientos siguen el mismo patrón de dry run y comando tuyo; están en el showcase de la skill."
         }
       ]
     },
@@ -583,7 +640,7 @@
           "type": "say",
           "md": "#### Lo que te llevás\n- **Dos skills y un CLI:** `arq-manager` coordina (registro, triage, Jira, plazo, publicación) y `arq-architect` revisa lo técnico. Se instalan juntas y trabajan sobre tu repo de reviews.\n- **El `--apply` es tuyo:** el agente muestra el dry run y te da el comando para que lo corras vos. No hay ventana de aprobación: tu control es lo que ves antes.\n- **Decide una persona:** el triage, la firma y el click de Aprobar o Rechazar no son del agente.\n\n#### Fin de la serie de Cursor\nViste ocho herramientas con las mismas reglas: el agente prepara, vos aprobás.\n\n#### Próxima serie: Claude Code, episodio 1: wayofwork\nSiete skills que te guían para llevar una iniciativa de punta a punta, ahora desde Claude Code.",
           "source": "inferido",
-          "notes": "Las tres ideas de hoy. Y el cierre de la serie: en todas las herramientas la regla se repite, el agente prepara y la persona aprueba, aunque cada una lo implementa distinto: con una ventana de macOS, con un comando tuyo, o con tu OK explícito en el chat antes de que el agente escriba. Anticipá la serie nueva en una frase: es el mismo trabajo, pero desde Claude Code, empezando por WayOfWork, que tiene siete skills.",
+          "notes": "Las tres ideas de hoy. Y el cierre de la serie: la regla se repite, el agente prepara y la persona aprueba, con una ventana de macOS, un comando tuyo o tu OK en el chat. Anticipá la serie nueva: lo mismo desde Claude Code, empezando por WayOfWork.",
           "pause": true
         }
       ]
