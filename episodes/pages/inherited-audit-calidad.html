@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calidad y arquitectura de mi-servicio</title>
+<style>
+:root{
+  --bg:#fbfaf7; --panel:#ffffff; --ink:#1d2330; --muted:#5d6678; --line:#e3e0d8;
+  --accent:#b4440d; --accent-soft:#fbeadf; --code-bg:#f3f1ea; --code-ink:#2a2f3a;
+  --ok:#17663a; --ok-bg:#e3f4ea; --warn:#8a5a00; --warn-bg:#fdf1d6;
+  --bad:#a1221c; --bad-bg:#fbe3e1; --info:#1f4f8f; --info-bg:#e4eefb;
+  --side:#f3f1ea; --shadow:0 1px 2px rgba(20,24,34,.06),0 4px 16px rgba(20,24,34,.05);
+  --high:#b3261e; --medium:#a15c00; --low:#3b6e3b;
+  --add:#e6f4e6; --del:#fbe9e7; --hl:#fff3c4; --red:#b3261e; --green:#2e7d32;
+  --high-bg:#fdecea; --medium-bg:#fff4e5; --low-bg:#ecfdf3;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14161b; --panel:#1b1e25; --ink:#e8e6e0; --muted:#9aa3b5; --line:#2c303a;
+    --accent:#ff8a4d; --accent-soft:#2c1d14; --code-bg:#11131a; --code-ink:#dfe3ee;
+    --ok:#5fd08a; --ok-bg:#12261b; --warn:#f0bf5a; --warn-bg:#2a2210;
+    --bad:#ff8a84; --bad-bg:#2c1514; --info:#7db4ff; --info-bg:#122032;
+    --side:#101218; --shadow:none;
+    --high:#f2827a; --medium:#e7b15a; --low:#8fc58f;
+    --add:#1f3320; --del:#3a2220; --hl:#3d3618; --red:#f2827a; --green:#8fc58f;
+    --high-bg:#3a1d1b; --medium-bg:#33260f; --low-bg:#16291a;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14161b; --panel:#1b1e25; --ink:#e8e6e0; --muted:#9aa3b5; --line:#2c303a;
+  --accent:#ff8a4d; --accent-soft:#2c1d14; --code-bg:#11131a; --code-ink:#dfe3ee;
+  --ok:#5fd08a; --ok-bg:#12261b; --warn:#f0bf5a; --warn-bg:#2a2210;
+  --bad:#ff8a84; --bad-bg:#2c1514; --info:#7db4ff; --info-bg:#122032;
+  --side:#101218; --shadow:none;
+  --high:#f2827a; --medium:#e7b15a; --low:#8fc58f;
+  --add:#1f3320; --del:#3a2220; --hl:#3d3618; --red:#f2827a; --green:#8fc58f;
+  --high-bg:#3a1d1b; --medium-bg:#33260f; --low-bg:#16291a;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:20px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+code,pre,kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88em}
+code{background:var(--code-bg);padding:.1em .38em;border-radius:5px;color:var(--code-ink);overflow-wrap:anywhere}
+pre{background:var(--code-bg);color:var(--code-ink);padding:14px 16px;border-radius:10px;overflow:auto;border:1px solid var(--line);position:relative;line-height:1.5}
+pre code{background:none;padding:0;color:inherit;overflow-wrap:normal}
+
+/* layout: side index + main column */
+.layout{display:grid;grid-template-columns:290px minmax(0,1fr);min-height:100vh}
+nav.side{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;background:var(--side);border-right:1px solid var(--line);padding:22px 18px 40px;display:flex;flex-direction:column}
+nav.side .brand{font-weight:800;font-size:1.05rem;letter-spacing:.01em}
+nav.side .brand small{display:block;font-weight:500;color:var(--muted);font-size:.78rem;margin-top:2px}
+nav.side ol{list-style:none;padding:0;margin:18px 0 0}
+nav.side li a{display:block;padding:6px 10px;border-radius:8px;color:var(--ink);text-decoration:none;font-size:.9rem}
+nav.side li a:hover{background:var(--accent-soft)}
+nav.side li a.active{background:var(--accent-soft);color:var(--accent);font-weight:700}
+nav.side .num{color:var(--muted);display:inline-block;width:1.7em}
+nav.side ol ol{margin:2px 0 6px 1.7em}
+nav.side ol ol li a{font-size:.82rem;padding:3px 10px;color:var(--muted)}
+nav.side .side-foot{margin-top:auto;position:sticky;bottom:0;background:var(--side);padding:12px 0 14px;border-top:1px solid var(--line)}
+nav.side .foot-row{display:flex;align-items:center;gap:10px}
+nav.side .ver{flex:1;font-size:.74rem;color:var(--muted);line-height:1.35}
+nav.side .theme-toggle{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--panel);
+  color:var(--ink);font-size:1.05rem;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0}
+nav.side .theme-toggle:hover{border-color:var(--accent);color:var(--accent)}
+main{padding:36px clamp(16px,4vw,56px) 90px;max-width:1040px;width:100%;min-width:0}
+header.hero{border-bottom:1px solid var(--line);padding-bottom:22px;margin-bottom:8px}
+header.hero h1{font-size:clamp(1.8rem,4vw,2.5rem);line-height:1.15;margin:0 0 8px}
+header.hero p{color:var(--muted);margin:.3rem 0}
+section{padding-top:34px}
+h2{font-size:1.6rem;margin:0 0 6px;line-height:1.2}
+h3{font-size:1.15rem;margin:26px 0 6px}
+h4{font-size:1rem;margin:18px 0 4px}
+.lead{color:var(--muted);margin:0 0 14px}
+
+/* tables, callouts, cards */
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;margin:12px 0;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{padding:9px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+th{background:var(--code-bg);font-weight:700;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+td.c{text-align:center}
+.callout{border-radius:10px;padding:12px 16px;margin:14px 0;border:1px solid;box-shadow:var(--shadow)}
+.callout>strong:first-child{display:block;margin-bottom:2px}
+.callout.ok{background:var(--ok-bg);border-color:var(--ok)}
+.callout.warn{background:var(--warn-bg);border-color:var(--warn)}
+.callout.bad{background:var(--bad-bg);border-color:var(--bad)}
+.callout.info{background:var(--info-bg);border-color:var(--info)}
+.callout p{margin:.3rem 0}
+.callout ul{margin:.3rem 0 0;padding-left:1.2rem}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:16px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow)}
+.card p{margin:.35rem 0}
+.kpis .card{padding:12px 16px}.kpis .card p{margin:0}.kpis .kpi-n{font-size:1.6rem;font-weight:800;line-height:1.2;margin-bottom:4px}
+details{border:1px solid var(--line);border-radius:10px;background:var(--panel);margin:12px 0;padding:2px 14px}
+summary{cursor:pointer;font-weight:700;padding:10px 0}
+details[open] summary{border-bottom:1px solid var(--line);margin-bottom:8px}
+figure{margin:16px 0}
+figcaption{color:var(--muted);font-size:.85rem;margin-top:4px}
+.pill{background:var(--code-bg);border:1px solid var(--line);border-radius:99px;padding:2px 10px;font-size:.82rem}
+.who{display:inline-block;font-size:.72rem;font-weight:700;padding:1px 7px;border-radius:6px;background:var(--code-bg);border:1px solid var(--line);white-space:nowrap}
+.ref{color:var(--muted);font-size:.85em}
+a.cite{text-decoration:none;white-space:normal}
+a.cite code{border-bottom:1px dashed var(--accent);color:var(--accent)}
+a.cite:hover code{background:var(--accent-soft)}
+a.cite::after{content:"\2197";font-size:.75em;margin-left:2px;color:var(--accent)}
+
+/* severity badge */
+.verdict{display:inline-block;font-size:.72rem;font-weight:800;padding:2px 8px;border-radius:6px;letter-spacing:.03em;text-transform:uppercase}
+.verdict.high{background:var(--high-bg);color:var(--high)}
+.verdict.medium{background:var(--medium-bg);color:var(--medium)}
+.verdict.low{background:var(--low-bg);color:var(--low)}
+.verdict.na{background:var(--line);color:var(--muted)}
+.sev{margin:-4px 0 10px}
+
+/* finding card */
+.issue{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin:20px 0;box-shadow:var(--shadow)}
+.issue header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.issue header h3{margin:0}
+.issue-n{font:700 14px ui-monospace,Menlo,monospace;background:var(--ink);color:var(--panel);border-radius:6px;padding:2px 8px}
+.issue h4{font-size:.8rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:20px 0 6px}
+.meta{display:grid;grid-template-columns:max-content 1fr;gap:2px 12px;font-size:13px;color:var(--muted);margin:10px 0 0}.meta dt{font-weight:600}.meta dd{margin:0}
+figure.code{margin:8px 0;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+figure.code figcaption{font:12px ui-monospace,Menlo,monospace;color:var(--muted);padding:6px 10px;border-bottom:1px solid var(--line);background:var(--code-bg);margin:0}
+figure.code pre{margin:0;padding:8px 0;border:0;border-radius:0;overflow-x:auto;font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--panel);color:var(--ink)}
+figure.code pre span{display:block;padding:0 12px;white-space:pre}pre .ln i{display:inline-block;width:3.5em;color:var(--muted);font-style:normal;user-select:none}
+pre .hl{background:var(--hl)}pre .add{background:var(--add)}pre .del{background:var(--del)}pre .hunk{color:var(--muted)}pre .file{font-weight:700;padding-top:6px}
+.out pre{padding:8px 12px;white-space:pre}.out.red figcaption{color:var(--red)}.out.green figcaption{color:var(--green)}
+pre.cmd{font:12.5px/1.5 ui-monospace,Menlo,monospace;padding:8px 10px;white-space:pre;overflow-x:auto}
+.nota{font-size:14px;color:var(--muted)}
+.aviso{color:var(--medium)}
+.tests td:first-child{word-break:break-all}
+.issue p,.issue li,.issue dd,.callout{overflow-wrap:anywhere}
+
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr}
+  nav.side{position:relative;height:auto;border-right:none;border-bottom:1px solid var(--line)}
+  nav.side ol{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+  nav.side ol ol{display:none}
+  nav.side .side-foot{position:static;margin-top:18px}
+}
+@media (max-width:640px){.meta{grid-template-columns:1fr}.issue{padding:16px 14px}}
+@media print{nav.side{display:none}.layout{display:block}.issue{break-inside:avoid-page}}
+
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="side" aria-label="Índice">
+  <div class="brand">mi-servicio<small>auditoría de sistema heredado</small></div>
+  <ol id="toc">
+    <li><a href="#summary">En una pantalla</a></li>
+    <li><a href="#start-here">Por dónde empezar</a></li>
+    <li><a href="#cat-estadisticas">estadisticas</a></li>
+    <li><a href="#how">Cómo se hizo</a></li>
+  </ol>
+  <div class="side-foot"><div class="foot-row"><span class="ver">Generado el 2026-10-22 con ia.py render</span>
+    <button class="theme-toggle" type="button" title="Cambiar tema" aria-label="Cambiar tema">&#9680;</button></div></div>
+</nav>
+<main>
+<header class="hero">
+  <h1>Calidad y arquitectura de mi-servicio</h1>
+  <p>Revisión de API, ROOT sobre la base fijada. Deja de lado los bugs: busca deficiencias de calidad y de arquitectura, y para cada una dice dónde está, por qué importa y qué cambiar.</p>
+</header>
+<section id="summary">
+<h2>En una pantalla</h2>
+<div class="cards kpis">
+<div class="card"><p class="kpi-n">1</p><p>hallazgos en este informe</p></div>
+<div class="card"><p class="kpi-n">0</p><p>de severidad alta</p></div>
+<div class="card"><p class="kpi-n">1</p><p>categorías</p></div>
+</div>
+<p class="lead">Se muestran 1 de 1. Los demás quedaron afuera por el filtro del equipo dueño: sin confirmar, refutados por el contraste o fuera de alcance.</p>
+<div class="callout info"><strong>Cómo leer este informe</strong><ul><li><b>Severidad</b>, con un criterio fijo. <b>Alta:</b> expone datos o credenciales a quien no debería, corrompe datos, o rompe una función entera. <b>Media:</b> produce un resultado incorrecto que se nota, o expone información menor. <b>Baja:</b> robustez, observabilidad o una inconsistencia visible sin pérdida.</li><li><b>Esfuerzo:</b> S es un cambio chico y local, M toca varios archivos, L pide rediseñar una parte. Los links llevan a las líneas citadas en la base fijada.</li></ul></div>
+<div class="tbl"><table><thead><tr><th>#</th><th>Hallazgo</th><th>Categoría</th><th>Severidad</th><th>Esfuerzo</th></tr></thead><tbody><tr><td>Q-01</td><td><a href="#f-q-01">La paginación dice empezar en 1 pero empieza en 0</a></td><td>estadisticas</td><td><span class="verdict low">baja</span></td><td>S</td></tr></tbody></table></div>
+</section>
+<section id="start-here">
+<h2>Por dónde empezar</h2>
+<p class="lead">Lo de mayor severidad y menor esfuerzo primero.</p><div class="tbl"><table><thead><tr><th>#</th><th>Hallazgo</th><th>Severidad</th><th>Esfuerzo</th></tr></thead><tbody><tr><td>Q-01</td><td><a href="#f-q-01">La paginación dice empezar en 1 pero empieza en 0</a></td><td><span class="verdict low">baja</span></td><td>S</td></tr></tbody></table></div>
+</section>
+<section id="cat-estadisticas" class="cat" data-category="estadisticas">
+<h2>estadisticas</h2>
+<article class="issue" id="f-q-01">
+<header><span class="issue-n">Q-01</span><h3>La paginación dice empezar en 1 pero empieza en 0</h3><span class="verdict low">baja</span></header>
+<p class="sev">estadisticas · esfuerzo S</p>
+<h4>Qué pasa</h4><p>La documentación de paginate() y su cálculo no coinciden en cuál es la primera página.</p>
+
+<h4>Evidencia en la base</h4>
+<figure class="code"><figcaption><code>API/mi_servicio/stats.py:9-12</code> · page * size: la primera página es la 0</figcaption><pre><span class="ln"><i>6</i>    return sum(values) / len(values)</span><span class="ln"><i>7</i></span><span class="ln"><i>8</i></span><span class="ln hl"><i>9</i>def paginate(items, page, size):</span><span class="ln hl"><i>10</i>    &quot;&quot;&quot;Return the items of a 1-based page.&quot;&quot;&quot;</span><span class="ln hl"><i>11</i>    start = page * size</span><span class="ln hl"><i>12</i>    return items[start:start + size]</span></pre></figure>
+<h4>Sugerencia</h4><p>Decidir si la primera página es la 0 o la 1, corregir el docstring o el cálculo y sumar un test de la página 1.</p>
+</article>
+</section>
+<section id="how">
+<h2>Cómo se hizo</h2>
+<p>Se leyó cada repo en un commit fijo; todo lo citado sale de ese commit, no del árbol de trabajo.</p>
+<div class="tbl"><table><thead><tr><th>Repo</th><th>Base</th><th>Remoto</th><th>Carpeta</th></tr></thead><tbody><tr><td>API</td><td><code title="8151c7c7d1a409a17bdb058f27bc878250be75d1">8151c7c</code></td><td>sin remoto</td><td>api</td></tr><tr><td>ROOT</td><td><code title="8151c7c7d1a409a17bdb058f27bc878250be75d1">8151c7c</code></td><td>sin remoto</td><td>-</td></tr></tbody></table></div>
+<p>Quién revisó cada paso: las herramientas externas por nombre y, si no hubo, la revisión propia.</p>
+<p>Modelo autor: <code>GPT-5.6 Terra</code></p>
+<div class="tbl"><table><thead><tr><th>Paso</th><th>Quién lo hizo</th></tr></thead><tbody><tr><td>corrección</td><td><span class="who">/review-bugbot</span></td></tr><tr><td>calidad</td><td>revisión propia</td></tr><tr><td>contraste</td><td><span class="who">Sonnet 5.5 High</span></td></tr></tbody></table></div>
+<p>Un segundo modelo revisó cada hallazgo; si es de la misma familia que el autor, el contraste vale menos y se dice.</p>
+<div class="tbl"><table><thead><tr><th>#</th><th>Modelo de contraste</th><th>Familia</th><th>Veredicto</th></tr></thead><tbody><tr><td><a href="#f-q-01">Q-01</a></td><td><code>Sonnet 5.5 High</code></td><td>misma familia: no</td><td>coincide</td></tr></tbody></table></div>
+<p>Lo que pasó el filtro:</p><ul><li>Corrección: se muestran 1 de 2</li><li>Calidad: se muestran 1 de 1</li></ul>
+<p class="nota">Los demás quedaron afuera por el filtro del equipo dueño: sin confirmar, refutados por el contraste o fuera de alcance.</p>
+</section>
+</main>
+</div>
+<script>
+(function () {
+  var root = document.documentElement;
+  var btn = document.querySelector(".theme-toggle");
+  try { var saved = localStorage.getItem("ia-theme"); if (saved) { root.setAttribute("data-theme", saved); } } catch (e) {}
+  if (btn) {
+    btn.addEventListener("click", function () {
+      var dark = root.getAttribute("data-theme") === "dark" ||
+        (!root.getAttribute("data-theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      var next = dark ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      try { localStorage.setItem("ia-theme", next); } catch (e) {}
+    });
+  }
+  var links = Array.prototype.slice.call(document.querySelectorAll("#toc > li > a"));
+  if (!("IntersectionObserver" in window) || !links.length) { return; }
+  var byId = {};
+  links.forEach(function (a) { byId[a.getAttribute("href").slice(1)] = a; });
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting && byId[en.target.id]) {
+        links.forEach(function (a) { a.classList.remove("active"); });
+        byId[en.target.id].classList.add("active");
+      }
+    });
+  }, { rootMargin: "0px 0px -70% 0px" });
+  Object.keys(byId).forEach(function (id) { var el = document.getElementById(id); if (el) { obs.observe(el); } });
+})();
+</script>
+</body>
+</html>

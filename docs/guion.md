@@ -22,7 +22,7 @@ Un episodio es un archivo JSON en `episodes/<serie>/NN-nombre.json`. El motor lo
 ```
 
 - `series`: `cursor` o `claude-code`. `order`: posición dentro de la serie (el 0 es «Antes de empezar»).
-- `workspace.repo` es el nombre del repo que se ve en Cursor; `workspace` también acepta `files` (lista de nombres) y `chats` (`[{"title": "…", "age": "2d"}]`).
+- `workspace.repo` es el nombre del repo que se ve en Cursor; `workspace` también acepta `files` (lista de nombres) y `chats` (`[{"title": "…", "age": "2d"}]`) y `model`, el modelo que muestra el chat (por defecto, Sonnet 5.5): tiene que ser el que escribe en el episodio.
 - `skill.commit` y `skill.date` dicen contra qué versión de la skill se escribió el episodio.
 - Cada capítulo se muestra **primero como una placa** (sale sola, no se declara en `steps`) y después sus pasos. `screen` elige la pantalla: `terminal`, `cursor-full`, `cursor-agent` o `claude-code`.
 - En el episodio de ejemplo más corto, [episodes/cursor/00-antes-de-empezar.json](../episodes/cursor/00-antes-de-empezar.json), se ve todo junto. El piloto completo es [01-inherited-audit.json](../episodes/cursor/01-inherited-audit.json).
@@ -39,9 +39,9 @@ Todo paso lleva `type` y `source` (obligatorios).
 | `say` | `md` | La respuesta del agente, en markdown mínimo (ver abajo) |
 | `approve` | `title`, `button`, y `lines` (lista) o `src` | La ventana de aprobación. Con `src` (`pages/<nombre>.html`) es la ventana real de la herramienta: la página que dibuja su código, con `window` (el título de la barra), `width` y `height` (los puntos que le da la herramienta) y los botones Cancelar y `button` abajo. Sin `src`, una caja genérica con `lines` |
 | `worked` | `seconds` | «Worked for Ns» |
-| `page` | `title`, `src` | Una página HTML real en una ventana de navegador sobre la pantalla, por ejemplo la vista previa de `jtk create --html`. `src` es `pages/<nombre>.html` dentro de `episodes/`; el `build` la mete en el bundle y el escenario la muestra en un iframe con `sandbox` (corre su propio JS, nunca toca el escenario). `title` va en la barra de direcciones |
+| `page` | `title`, `src` | Una página HTML real en una ventana de navegador sobre la pantalla, por ejemplo la vista previa de `jtk create --html`. `src` es `pages/<nombre>.html` dentro de `episodes/`; el `build` la mete en el bundle y el escenario la muestra en un iframe con `sandbox` (corre su propio JS, nunca toca el escenario). `title` va en la barra de direcciones. Con `capture` (`~/<ruta>`, solo en un paso `real`), `build.py capture` copia a `src` el archivo que escribieron los pasos reales en el HOME de prueba, por ejemplo los reportes de `ia.py render`: pasa por la misma normalización y el mismo control de privacidad que la salida de los comandos |
 
-Las páginas de `episodes/pages/` (la vista previa de jtk y las ventanas de aprobación de jtk, ctk y pbmcp) las genera `python3 tools/real_pages.py` con el código de cada herramienta en el commit que fija su episodio, y escribe el ancho y el alto de cada ventana. Si cambia el episodio o el commit, se vuelve a correr.
+Las páginas sin `capture` (la vista previa de jtk y las ventanas de aprobación de jtk, ctk y pbmcp) las genera `python3 tools/real_pages.py` con el código de cada herramienta en el commit que fija su episodio, en `workshop/episodes/pages/` del repo de cada skill, y escribe el ancho y el alto de cada ventana; después `build.py sync` las trae a la copia. Si cambia el episodio o el commit, se vuelve a correr.
 
 Campos opcionales de cualquier paso:
 

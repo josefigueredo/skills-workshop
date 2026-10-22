@@ -457,6 +457,42 @@ class CaptureCommandTests(unittest.TestCase):
         self.assertNotIn("leaky@corp.org", out)
         self.assertIn("privacy hit", out)
 
+    def page_episode(self, cmd, capture="~/out/report.html"):
+        ep = self.episode("a", 1, cmd)
+        ep["chapters"][0]["steps"].append({"type": "page", "title": "report.html", "src": "pages/report.html",
+                                           "source": "real", "capture": capture})
+        return ep
+
+    def test_capture_copies_a_page_from_the_fake_home_and_normalises_it(self):
+        p = self.tree.write("cursor", "01-a.json", self.page_episode(
+            'mkdir -p ~/out && printf "<p>%s</p>\\n" "$HOME/mi-servicio" > ~/out/report.html'))
+        code, out = self.run_cli()
+        self.assertEqual(code, 0, out)
+        page = self.tree.root / "episodes" / "pages" / "report.html"
+        self.assertEqual(page.read_text(encoding="utf-8"), "<p>~/mi-servicio</p>\n")
+        self.assertIn("a: episodes/pages/report.html from ~/out/report.html", out)
+        self.assertTrue(p.is_file())
+
+    def test_a_page_the_steps_never_wrote_fails_the_capture(self):
+        p = self.tree.write("cursor", "01-a.json", self.page_episode("echo nothing"))
+        before = p.read_text()
+        code, out = self.run_cli()
+        self.assertEqual(code, 1)
+        self.assertIn("~/out/report.html", out)
+        self.assertEqual(p.read_text(), before)
+        self.assertFalse((self.tree.root / "episodes" / "pages" / "report.html").exists())
+
+    def test_a_privacy_hit_in_a_page_writes_neither_the_page_nor_the_episode(self):
+        p = self.tree.write("cursor", "01-a.json", self.page_episode(
+            'mkdir -p ~/out && echo "<p>leaky@corp.org</p>" > ~/out/report.html'))
+        before = p.read_text()
+        code, out = self.run_cli()
+        self.assertEqual(code, 1)
+        self.assertIn("privacy hit", out)
+        self.assertNotIn("leaky@corp.org", out)
+        self.assertEqual(p.read_text(), before)
+        self.assertFalse((self.tree.root / "episodes" / "pages" / "report.html").exists())
+
     def test_leak_terms_file_gates_capture(self):
         terms = self.tree.root / "terms.txt"
         terms.write_text("forbiddenword\n")

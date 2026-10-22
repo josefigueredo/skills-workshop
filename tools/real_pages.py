@@ -4,8 +4,9 @@ or Product Brain.
 
     python3 tools/real_pages.py [--harness ~/CurrentCode/SPECKIT/Harness]
 
-Each tool's checkout must sit at the commit its episode pins (skill.commit), so the page matches what the episode
-teaches. ctk and pbmcp need Python 3.11+ and pbmcp needs its dependencies: each tool runs with the Python of its own
+The pages and the episode that pins each tool's commit live in the tool's own repo (<checkout>/workshop/episodes/);
+`build.py sync` then brings them to this workshop's mirror. Each tool's checkout must sit at the commit its episode pins
+(skill.commit), so the page matches what the episode teaches. ctk and pbmcp need Python 3.11+ and pbmcp needs its dependencies: each tool runs with the Python of its own
 .venv when there is one. Prints the width and height each window gets, for the episode's approve step."""
 from __future__ import annotations
 
@@ -16,7 +17,6 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-PAGES = ROOT / "episodes" / "pages"
 # tool -> (checkout folder under the Harness, the episode that pins its commit)
 TOOLS = {
     "jtk": ("jira-kanban", "cursor/02-jira-team-kit.json"),
@@ -173,8 +173,12 @@ def pbmcp(repo: Path, scratch: Path) -> list:
     return [(name, html, (600, approval.window_height(plan)), title) for name, title, html, plan in out]
 
 
+def _episodes(repo: Path) -> Path:
+    return repo / "workshop" / "episodes"
+
+
 def _check_pin(name: str, repo: Path) -> None:
-    episode = json.loads((ROOT / "episodes" / TOOLS[name][1]).read_text(encoding="utf-8"))
+    episode = json.loads((_episodes(repo) / TOOLS[name][1]).read_text(encoding="utf-8"))
     pin = episode["skill"]["commit"]
     head = subprocess.run(["git", "-C", str(repo), "rev-parse", "--short=7", "HEAD"], check=True,
                           capture_output=True, text=True).stdout.strip()
@@ -188,7 +192,7 @@ def _one(name: str, repo: Path, scratch: Path) -> None:
     pages = {"jtk": lambda: jtk(repo), "ctk": lambda: ctk(repo), "pbmcp": lambda: pbmcp(repo, scratch)}[name]()
     for page in pages:
         file, html, size = page[:3]
-        (PAGES / file).write_text(html, encoding="utf-8")
+        (_episodes(repo) / "pages" / file).write_text(html, encoding="utf-8")
         window = page[3] if len(page) > 3 else {"jtk": "jtk · Jira", "ctk": "ctk · Confluence"}.get(name)
         print(json.dumps({"page": file, "window": window if size else None,
                           "width": size[0] if size else None, "height": size[1] if size else None},
@@ -205,13 +209,13 @@ def main(argv) -> int:
     if args.only:
         _one(args.only, harness / TOOLS[args.only][0], Path(args.scratch))
         return 0
-    PAGES.mkdir(parents=True, exist_ok=True)
     import tempfile
 
     with tempfile.TemporaryDirectory(prefix="ws-real-pages-") as scratch:
         for name, (folder, _episode) in TOOLS.items():
             repo = harness / folder
             _check_pin(name, repo)
+            (_episodes(repo) / "pages").mkdir(parents=True, exist_ok=True)
             venv = repo / ".venv" / "bin" / "python"
             python = str(venv) if venv.exists() else sys.executable
             subprocess.run([python, str(Path(__file__).resolve()), "--harness", str(harness), "--only", name,
