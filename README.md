@@ -17,10 +17,10 @@ Abrís `dist/control.html`, hacés clic en «Abrir escenario» y compartís solo
 
 ## Cómo se agrega un episodio
 
-Se arranca con `python3 build.py new <skill>` (un esqueleto con `COMPLETAR` que `build` no deja pasar), se completa el guion JSON, se captura lo que corre de verdad, se arma `dist/` y se revisa la privacidad. Todo en [docs/guion.md](docs/guion.md).
+El guion de cada episodio vive en el repo de su skill (`workshop/episodes/`), que lo mantiene y publica su propio sitio en GitHub Pages. Este repo tiene el motor y una copia de los guiones para armar las series completas: `python3 build.py sync` la trae de las skills. Se arranca con `python3 build.py --root <skill>/workshop new <skill>` (un esqueleto con `COMPLETAR` que `build` no deja pasar), se completa el guion JSON, se captura lo que corre de verdad, se arma `dist/` y se revisa la privacidad. Todo en [docs/guion.md](docs/guion.md).
 
 ```
-python3 build.py new SKILL [--series S] [--order N] [--id ID] | validate | capture [--episode ID] | build | check | duration [--episode ID]
+python3 build.py [--root DIR] new SKILL [--series S] [--order N] [--id ID] | validate | capture [--episode ID] | build | check | duration [--episode ID] | sync [--repo R] [--check]
 ```
 
 ## Desarrollo
@@ -38,23 +38,23 @@ Los tests de JavaScript corren en Chrome sin ventana (headless) y hace falta ten
 
 Serie Cursor:
 
-| # | Episodio | Estado |
-|---|---|---|
-| 0 | Antes de empezar | listo |
-| 1 | inherited-audit | listo |
-| 2 | jira-team-kit | listo |
-| 3 | confluence-team-kit | listo |
-| 4 | product-brain-mcp | listo |
-| 5 | auditing-repos | listo |
-| 6 | local-board-skill | listo |
-| 7 | install-unified-ci | listo |
-| 8 | arq-review | listo |
+| # | Episodio | Estado | El guion vive en |
+|---|---|---|---|
+| 0 | Antes de empezar | listo | este repo |
+| 1 | inherited-audit | listo | `inherited-audit` |
+| 2 | jira-team-kit | listo | `jira-team-kit` |
+| 3 | confluence-team-kit | listo | `confluence-skill-mcp` |
+| 4 | product-brain-mcp | listo | `product-brain-skill-mcp` (en `/taller/` de su sitio) |
+| 5 | auditing-repos | listo | `josefigueredo/teamwayofwork` |
+| 6 | local-board-skill | listo | `josefigueredo/teamwayofwork` |
+| 7 | install-unified-ci | listo | `josefigueredo/teamwayofwork` |
+| 8 | arq-review | listo | `arch-review` |
 
 Serie Claude Code:
 
-| # | Episodio | Estado |
-|---|---|---|
-| 1 | wayofwork (7 skills `wow-*`) | listo |
-| 2 | run-in-cursor | listo |
+| # | Episodio | Estado | El guion vive en |
+|---|---|---|---|
+| 1 | wayofwork (7 skills `wow-*`) | listo | `wow` |
+| 2 | run-in-cursor | listo | `run-in-cursor` |
 
 El «Cierre» de cada episodio nombra al siguiente; el último de Cursor nombra la serie de Claude Code y el último de Claude Code cierra el taller. Lo comprueba `CierreChainTests` en `tests/test_schema.py`.

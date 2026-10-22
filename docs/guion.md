@@ -93,9 +93,17 @@ Dos cuidados:
 - **Nunca captures `git log` ni `git show` sobre el clon de una skill**: muestran el autor real del commit y es un dato personal. Si necesitás mostrar historia, que sea de `~/mi-servicio` (autor «Demo»).
 - Dentro de la captura el PATH tiene solo el `python3` del sistema o de Homebrew, nunca uno dentro de tu carpeta personal: los pasos usan `/usr/bin/python3`.
 
+## Dónde vive cada episodio
+
+El guion de cada skill vive **en el repo de la skill**, en `workshop/`: `workshop/episodes/<serie>/NN-<id>.json` y sus páginas en `workshop/episodes/pages/`. Ahí se mantiene, en el mismo PR que cambia la skill. El repo también commitea su sitio armado (`workshop/dist/`), y su GitHub Pages lo publica (`.github/workflows/workshop-pages.yml`, copiado de `templates/skill-pages.yml`; en product-brain-mcp va en `/taller/` de su sitio). El workflow no arma nada: compara `workshop/dist/source.sha256` con los guiones y, si `dist/` quedó viejo, falla. Así no hace falta que el CI de la skill lea este repo, que es privado.
+
+El `episodes/` de este repo es **una copia** de los guiones de las skills: con ella se arman las series completas y la portada del taller. Solo `antes-de-empezar` es de acá. No edites la copia: editá la skill y traela con `sync`.
+
+El motor, la demo (`demo/setup.sh`) y los scripts de preparación (`demo/prep/`) siguen acá: con `--root <skill>/workshop`, todos los comandos leen y escriben los guiones de la skill y usan el motor y la demo de este repo.
+
 ## Los comandos
 
-Se corren desde la raíz del repo del taller.
+Se corren desde la raíz del repo del taller. Con `--root <skill>/workshop` trabajan sobre los guiones de esa skill.
 
 ```
 python3 build.py new mi-skill [--series cursor|claude-code] [--order N]   # esqueleto de un episodio nuevo
@@ -103,7 +111,10 @@ python3 build.py validate                       # revisa el formato de los guion
 python3 build.py capture --episode mi-skill     # re-corre los pasos `real` y actualiza el JSON
 python3 build.py build                          # valida, arma dist/ y revisa privacidad
 python3 build.py check                          # revisa privacidad de episodes/, demo/ y dist/
+python3 build.py sync [--repo R] [--check]      # trae los guiones de las skills a episodes/
 ```
+
+`sync` busca cada skill como `capture` (`$WS_SKILLS_ROOT`, o al lado del taller) y lee su copia de trabajo, así que tiene que estar en una rama que tenga `workshop/`. Sin `--repo`, recorre los repos de la copia. Copia los guiones y sus páginas, borra de la copia los episodios que la skill ya no tiene y vuelve a armar el `dist/` de la skill en memoria: si el commiteado quedó viejo (porque cambió el guion o el motor), lo dice y sale con 1. `--check` no escribe nada: lista lo que difiere y sale con 1 si hay algo.
 
 `capture` sin `--episode` los corre todos. Escribe en los JSON solo si pasan las reglas de privacidad. `build` no escribe nada en `dist/` si algo falla.
 
@@ -136,13 +147,15 @@ Si tu lista marca el nombre de una skill que el taller enseña (por ejemplo, el 
 
 ## Sumar una skill nueva
 
-1. **Armá el esqueleto:** `python3 build.py new <repo-de-la-skill>` (con `--series claude-code` si va en esa serie, y `--order N` si no querés el siguiente número libre). Si varias skills viven en un mismo repo (un monorepo), usá `--id <skill>`: `python3 build.py new teamwayofwork --id auditing-repos` escribe `NN-auditing-repos.json` con `id` `auditing-repos` y `skill.repo` el monorepo. El id es lo que no se puede repetir, no el repo, así que de un mismo repo salen tantos episodios como ids distintos. Escribe `episodes/<serie>/NN-<id>.json` (el id es el repo si no pasás `--id`) con la estructura fija: instalar, caso principal, otro caso, si algo falla y cierre. Toma `skill.commit` de la primera carpeta de `$WS_SKILLS_ROOT` que tenga `<repo>` si lo encuentra, y la fecha de hoy. No pisa nada: si el episodio o el número ya existen, se niega.
+1. **Armá el esqueleto en la skill:** `python3 build.py --root <skill>/workshop new <repo-de-la-skill>` (con `--series claude-code` si va en esa serie, y `--order N` si no querés el siguiente número libre). Si varias skills viven en un mismo repo (un monorepo), usá `--id <skill>`: `python3 build.py new teamwayofwork --id auditing-repos` escribe `NN-auditing-repos.json` con `id` `auditing-repos` y `skill.repo` el monorepo. El id es lo que no se puede repetir, no el repo, así que de un mismo repo salen tantos episodios como ids distintos. Escribe `episodes/<serie>/NN-<id>.json` (el id es el repo si no pasás `--id`) con la estructura fija: instalar, caso principal, otro caso, si algo falla y cierre. Toma `skill.commit` de la primera carpeta de `$WS_SKILLS_ROOT` que tenga `<repo>` si lo encuentra, y la fecha de hoy. No pisa nada: si el episodio o el número ya existen, se niega.
    Ojo con el pin: `new` toma `skill.commit` del HEAD de tu copia local, y esa copia puede estar en otra rama o atrasada. Si no está en el commit de la rama por defecto del remoto, corregí `skill.commit` a mano ni bien termine `new` (y `skill.date` con `git -C <repo> log -1 --format=%cs <commit>`). La captura clona la copia local y hace checkout de `skill.commit`, así que lo que sale en pantalla es ese commit. Nunca hagas checkout ni fetch en la copia de la skill.
 2. **Completá todo lo que dice `COMPLETAR`**, leyendo el README, el showcase y la instalación de la skill (ver «Cómo sacar un episodio de una skill»). Mientras quede un `COMPLETAR`, `validate` y `build` fallan y te dicen el archivo, el capítulo y el paso, así que un episodio a medias nunca llega a `dist/`.
-3. **Capturá** lo que corre sin red: `python3 build.py capture --episode <id>`.
-4. **Armá:** `python3 build.py build` (regenera también la portada `dist/index.html`) y revisá la privacidad con `check`.
-5. **Mirá la vista previa:** abrí `dist/index.html`, entrá al episodio nuevo o andá directo a `dist/serie-<serie>.html#<id>/1`.
-6. **Pasalo a revisión de la persona** antes de sumarlo a la tabla de episodios del README y de publicarlo.
+3. **Capturá** lo que corre sin red: `python3 build.py --root <skill>/workshop capture --episode <id>`.
+4. **Armá:** `python3 build.py --root <skill>/workshop build` y revisá la privacidad con `check`.
+5. **Mirá la vista previa:** abrí `<skill>/workshop/dist/index.html`, entrá al episodio nuevo o andá directo a `serie-<serie>.html#<id>/1`.
+6. **Publicalo desde la skill:** copiá `templates/skill-pages.yml` a `<skill>/.github/workflows/workshop-pages.yml` y `templates/skill-workshop-README.md` a `<skill>/workshop/README.md`, y commiteá `workshop/` en la skill. La primera vez, en Settings → Pages de la skill, elegí «GitHub Actions».
+7. **Traelo al taller:** `python3 build.py sync --repo <repo-de-la-skill>` y `python3 build.py build`.
+8. **Pasalo a revisión de la persona** antes de sumarlo a la tabla de episodios del README y de publicarlo.
 
 ## Cuánto dura
 
@@ -153,6 +166,7 @@ Para no sumar a mano: `python3 build.py duration` (o `--episode <id>`) imprime u
 ## Antes de entregar
 
 ```
+python3 build.py sync --check
 python3 build.py build
 WS_LEAK_TERMS=<tu archivo> python3 build.py check
 python3 -m unittest discover -s tests
