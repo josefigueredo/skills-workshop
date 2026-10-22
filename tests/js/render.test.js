@@ -442,3 +442,14 @@ test("a callout whose match is missing renders nothing and does not throw", func
   assertEqual(c.querySelectorAll(".ws-co-box").length, 0);
   assert(c.querySelector('[data-step="4"]').textContent.indexOf("a1b2c3d") >= 0, "say intact");
 });
+
+test("worked shows minutes and hours once a step runs that long", function () {
+  var ep = fixtureEpisode();
+  var steps = ep.chapters[1].steps;
+  steps[1].seconds = 802;
+  assert(render(5, ep).textContent.indexOf("Worked for 13m 22s") >= 0, "minutes: " + render(5, ep).textContent);
+  steps[1].seconds = 6620;
+  assert(render(5, ep).textContent.indexOf("Worked for 1h 50m 20s") >= 0, "hours");
+  steps[1].seconds = 42;
+  assert(render(5, ep).textContent.indexOf("Worked for 42s") >= 0, "seconds stay as they were");
+});

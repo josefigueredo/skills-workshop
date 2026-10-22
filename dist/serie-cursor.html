@@ -742,7 +742,11 @@ var Render = (function () {
   }
 
   // ---- shared pieces ----
-  function workedText(st) { return "Worked for " + (st.seconds || 0) + "s"; }
+  // "42s", "13m 22s", "1h 50m 20s": long runs read like the host shows them.
+  function workedText(st) {
+    var t = Math.round(st.seconds || 0), h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), sec = t % 60;
+    return "Worked for " + (h ? h + "h " + m + "m " + sec + "s" : m ? m + "m " + sec + "s" : sec + "s");
+  }
   function inRepo(cwd, repo) {
     var home = "~/" + repo;
     return cwd === home || cwd.indexOf(home + "/") === 0;
