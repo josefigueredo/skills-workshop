@@ -304,6 +304,15 @@ class TreeTests(unittest.TestCase):
             self.assertEqual(len(msgs), 1, msgs)
             self.assertIn("episodes/pages/v.html does not exist", msgs[0])
 
+    def test_the_workspace_may_name_the_model_its_chat_shows(self):
+        ep = minimal_episode()
+        ep["workspace"]["model"] = "GPT-5.6 Terra"
+        self.assertEqual(schema.validate(ep, "x.json"), [])
+        ep["workspace"]["model"] = 5
+        msgs = schema.validate(ep, "x.json")
+        self.assertEqual(len(msgs), 1, msgs)
+        self.assertIn("'model'", msgs[0])
+
     def test_bad_json_is_reported_not_raised(self):
         with TempTree() as t:
             (t.root / "episodes" / "cursor").mkdir()

@@ -229,6 +229,16 @@ test("the user label and model are the generic ones", function () {
   assert(c.textContent.indexOf("Agregar endpoint de pagos") >= 0, "workspace chat missing");
 });
 
+test("an episode can name the model its chat shows", function () {
+  var ep = fixtureEpisode();
+  ep.workspace.model = "GPT-5.6 Terra";
+  [4, 10, 12].forEach(function (i) {
+    var c = render(i, ep);
+    assert(c.textContent.indexOf("GPT-5.6 Terra") >= 0, "model missing at " + i);
+    assert(c.textContent.indexOf("Sonnet 5.5") < 0, "default model still shown at " + i);
+  });
+});
+
 test("claude-code uses the transcript layout", function () {
   var c = render(15);
   var root = c.querySelector(".ws-claude-code");

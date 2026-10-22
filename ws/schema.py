@@ -31,7 +31,7 @@ TOP_KEYS = ("id", "series", "order", "title", "pitch", "skill", "workspace", "ch
 CHAPTER_KEYS = ("id", "title", "subtitle", "screen", "faq", "steps")
 PITCH_KEYS = ("ask", "does")
 SKILL_KEYS = ("repo", "commit", "date")
-WORKSPACE_KEYS = ("repo", "files", "chats")
+WORKSPACE_KEYS = ("repo", "files", "chats", "model")
 FAQ_KEYS = ("q", "a")
 
 
@@ -219,6 +219,8 @@ def validate(episode: dict, where: str) -> list:
     if isinstance(episode.get("workspace"), dict):
         _require(episode["workspace"], {"repo": str}, "%s: workspace" % where, out)
         _unknown_keys(episode["workspace"], WORKSPACE_KEYS, "%s: workspace" % where, out)
+        if "model" in episode["workspace"]:
+            _check_type(episode["workspace"]["model"], str, "%s: workspace: 'model'" % where, out)
     chapters = episode.get("chapters")
     if isinstance(chapters, list):
         if not chapters:

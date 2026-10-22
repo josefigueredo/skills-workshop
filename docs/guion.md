@@ -22,7 +22,7 @@ Un episodio es un archivo JSON en `episodes/<serie>/NN-nombre.json`. El motor lo
 ```
 
 - `series`: `cursor` o `claude-code`. `order`: posición dentro de la serie (el 0 es «Antes de empezar»).
-- `workspace.repo` es el nombre del repo que se ve en Cursor; `workspace` también acepta `files` (lista de nombres) y `chats` (`[{"title": "…", "age": "2d"}]`).
+- `workspace.repo` es el nombre del repo que se ve en Cursor; `workspace` también acepta `files` (lista de nombres) y `chats` (`[{"title": "…", "age": "2d"}]`) y `model`, el modelo que muestra el chat (por defecto, Sonnet 5.5): tiene que ser el que escribe en el episodio.
 - `skill.commit` y `skill.date` dicen contra qué versión de la skill se escribió el episodio.
 - Cada capítulo se muestra **primero como una placa** (sale sola, no se declara en `steps`) y después sus pasos. `screen` elige la pantalla: `terminal`, `cursor-full`, `cursor-agent` o `claude-code`.
 - En el episodio de ejemplo más corto, [episodes/cursor/00-antes-de-empezar.json](../episodes/cursor/00-antes-de-empezar.json), se ve todo junto. El piloto completo es [01-inherited-audit.json](../episodes/cursor/01-inherited-audit.json).
