@@ -49,6 +49,12 @@ Campos opcionales de cualquier paso:
 
 - `notes`: texto para quien presenta, solo en el control.
 - `pause: true`: el play automático frena después de este paso.
+- `callouts`: marcas visuales que el escenario muestra **solo mientras ese paso es el actual**, para que el público vea dónde mirar; con el paso siguiente desaparecen. Es una lista; cada una tiene `kind` y, según el tipo:
+  - `{"kind": "note", "text": "…"}`: una nube con texto (acepta `**negrita**` y `` `código` ``) al final del paso.
+  - `{"kind": "box", "match": "…", "text": "…"}`: un recuadro sobre el texto exacto `match`; con `text`, una etiqueta al lado.
+  - `{"kind": "underline", "match": "…"}`: un subrayado sobre `match` (también acepta `text`).
+
+  `match` tiene que caer dentro de un solo tramo de texto del paso: el comando, una línea de salida o un tramo del markdown de `say` (la negrita y el `código` lo parten en tramos). Si no está, `validate` lo rechaza. En los pasos `page` y `approve` solo vale `note`, porque su contenido es una ventana aparte.
 
 Opcionales solo de `term`:
 

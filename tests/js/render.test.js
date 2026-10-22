@@ -389,3 +389,56 @@ test("the last path component of the prompt is bold", function () {
   seg = render(1, ep).querySelector('[data-step="0"] .ws-seg-path');
   assertEqual(seg.querySelector("b").textContent, "~", "a bare ~ is its own last component");
 });
+
+// ---- callouts: visual cues on the current step ----
+function calloutEpisode() {
+  var ep = fixtureEpisode();
+  var caso = ep.chapters[1].steps;
+  caso[3].callouts = [{kind: "box", match: "baseline: done", text: "el paso 0 cerró"}];   // zsh term, index 7
+  caso[4].callouts = [{kind: "note", text: "Fijate en **la base**"},                       // say, index 8
+                      {kind: "underline", match: "a1b2c3d"}];
+  ep.chapters[0].steps[0].callouts = [{kind: "underline", match: "listo"}];               // terminal term, index 1
+  ep.chapters[2].steps[1].callouts = [{kind: "box", match: "b"}];                          // claude-code term, index 13
+  return ep;
+}
+
+test("a note callout shows its text on the current step only", function () {
+  var ep = calloutEpisode();
+  var c = render(8, ep);
+  var note = c.querySelector('[data-step="4"] .ws-co-note');
+  assert(note, "no note on the current say");
+  assert(note.textContent.indexOf("Fijate en la base") >= 0, "note text: " + note.textContent);
+  assert(note.querySelector("strong"), "note keeps inline markdown");
+  var later = render(9, ep);
+  assertEqual(later.querySelectorAll(".ws-co-note").length, 0);
+});
+
+test("box and underline wrap exactly the matched text of the current step", function () {
+  var ep = calloutEpisode();
+  var c = render(8, ep);
+  var u = c.querySelector('[data-step="4"] .ws-co-underline');
+  assert(u, "no underline");
+  assertEqual(u.textContent, "a1b2c3d");
+  var b = render(7, ep).querySelector('[data-step="3"] .ws-co-box');
+  assert(b, "no box on the zsh term");
+  assertEqual(b.textContent, "baseline: done");
+  var tag = render(7, ep).querySelector('[data-step="3"] .ws-co-tag');
+  assert(tag && tag.textContent.indexOf("el paso 0 cerró") >= 0, "box text shows as a tag");
+  assertEqual(render(8, ep).querySelectorAll(".ws-co-box").length, 0);
+});
+
+test("callouts work on the terminal and claude-code screens", function () {
+  var ep = calloutEpisode();
+  var t = render(1, ep).querySelector('[data-step="0"] .ws-co-underline');
+  assert(t && t.textContent === "listo", "terminal underline");
+  var cc = render(13, ep).querySelector('[data-step="1"] .ws-co-box');
+  assert(cc && cc.textContent === "b", "claude-code box");
+});
+
+test("a callout whose match is missing renders nothing and does not throw", function () {
+  var ep = fixtureEpisode();
+  ep.chapters[1].steps[4].callouts = [{kind: "box", match: "no está"}];
+  var c = render(8, ep);
+  assertEqual(c.querySelectorAll(".ws-co-box").length, 0);
+  assert(c.querySelector('[data-step="4"]').textContent.indexOf("a1b2c3d") >= 0, "say intact");
+});

@@ -313,6 +313,51 @@ class TreeTests(unittest.TestCase):
         self.assertEqual(len(msgs), 1, msgs)
         self.assertIn("'model'", msgs[0])
 
+    def test_steps_may_carry_callouts(self):
+        ep = minimal_episode()
+        term = ep["chapters"][0]["steps"][0]
+        term["callouts"] = [{"kind": "note", "text": "Fijate **acá**"}, {"kind": "box", "match": "a", "text": "ojo"},
+                            {"kind": "underline", "match": "ls"}]
+        self.assertEqual(schema.validate(ep, "x.json"), [])
+
+    def test_bad_callouts_are_reported(self):
+        cases = [
+            ("note", {"kind": "note"}, "'text'"),
+            ("box", {"kind": "box"}, "'match'"),
+            ("kind", {"kind": "arrow", "text": "x"}, "kind"),
+            ("key", {"kind": "note", "text": "x", "color": "red"}, "color"),
+            ("missing match", {"kind": "underline", "match": "not in this step"}, "not in the step"),
+        ]
+        for label, co, needle in cases:
+            ep = minimal_episode()
+            ep["chapters"][0]["steps"][0]["callouts"] = [co]
+            msgs = schema.validate(ep, "x.json")
+            self.assertEqual(len(msgs), 1, (label, msgs))
+            self.assertIn(needle, msgs[0], label)
+        ep = minimal_episode()
+        ep["chapters"][0]["steps"][0]["callouts"] = {"kind": "note", "text": "x"}
+        self.assertEqual(len(schema.validate(ep, "x.json")), 1)
+
+    def test_a_callout_match_must_sit_in_one_rendered_text_run(self):
+        # The stage wraps the first text node that holds `match`: **bold** and `code` split a say into runs.
+        ep = minimal_episode()
+        say = {"type": "say", "md": "- La base es **a1b2c3d** con `npm ci`.", "source": "inferido",
+               "callouts": [{"kind": "box", "match": "a1b2c3d"}, {"kind": "underline", "match": "npm ci"}]}
+        ep["chapters"][0]["steps"].append(say)
+        self.assertEqual(schema.validate(ep, "x.json"), [])
+        say["callouts"] = [{"kind": "box", "match": "a1b2c3d con npm ci"}]
+        msgs = schema.validate(ep, "x.json")
+        self.assertEqual(len(msgs), 1, msgs)
+        self.assertIn("not in the step", msgs[0])
+
+    def test_a_page_or_approve_step_takes_only_note_callouts(self):
+        ep = minimal_episode()
+        ep["chapters"][0]["steps"].append({"type": "page", "title": "t", "src": "pages/a.html", "source": "inferido",
+                                           "callouts": [{"kind": "box", "match": "t"}]})
+        msgs = schema.validate(ep, "x.json")
+        self.assertEqual(len(msgs), 1, msgs)
+        self.assertIn("only 'note'", msgs[0])
+
     def test_an_episode_may_declare_its_own_minutes(self):
         ep = minimal_episode()
         for ok in ([6, 12], [1, 4], [2, 2]):

@@ -25,7 +25,7 @@ PAGE_SRC_RE = re.compile(r"^pages/[a-z0-9][a-z0-9-]*\.html$")
 
 # Keys allowed besides the required ones, so a misspelt key fails instead of being ignored.
 # `in` and `capture_only` are accepted on any step so their own, clearer message reports a misplacement.
-STEP_COMMON = ("type", "source", "notes", "pause", "in", "capture_only")
+STEP_COMMON = ("type", "source", "notes", "pause", "in", "capture_only", "callouts")
 STEP_EXTRA = {"term": ("cwd",), "approve": ("lines", "src", "window", "width", "height"), "page": ("capture",)}
 TOP_KEYS = ("id", "series", "order", "title", "pitch", "skill", "workspace", "minutes", "chapters")
 CHAPTER_KEYS = ("id", "title", "subtitle", "screen", "faq", "steps")
@@ -136,6 +136,8 @@ def _validate_step(step, prefix, out, screen=None):
             out.append("%s: 'capture_only' is only valid on a real term step" % prefix)
     if stype == "approve":
         _validate_approve(step, prefix, out)
+    if "callouts" in step:
+        _validate_callouts(step, prefix, out)
     if stype in ("page", "approve") and isinstance(step.get("src"), str) and not PAGE_SRC_RE.match(step["src"]):
         out.append("%s: 'src' must be 'pages/<name>.html' (lowercase, under episodes/)" % prefix)
     # `capture: "~/<path>"` on a real page step: capture copies that file, written by the episode's real steps in the
@@ -151,6 +153,69 @@ def _validate_step(step, prefix, out, screen=None):
             out.append("%s: real term step needs 'cwd'" % prefix)
         elif not _home_relative(cwd):
             out.append("%s: 'cwd' must be '~' or '~/<path>' without '..' (relative to the fake HOME)" % prefix)
+
+
+CALLOUT_KINDS = ("note", "box", "underline")
+CALLOUT_KEYS = ("kind", "text", "match")
+_INLINE_RE = re.compile(r"(\*\*[^*]+?\*\*|`[^`]+`)")
+
+
+def _text_runs(step) -> list:
+    """The text runs the stage renders for a step, each one text node: `match` must fall inside one of them."""
+    stype = step.get("type")
+    if stype == "term":
+        runs = [str(step.get("cmd", ""))] + [str(o) for o in step.get("out") or []]
+        return runs + ["▸ Ran · " + runs[0]]
+    if stype == "ask":
+        return [str(step.get("text", ""))]
+    if stype == "tool":
+        return [str(step.get("label", "")), "▸ " + str(step.get("label", ""))]
+    if stype == "worked":
+        return ["Worked for %ss" % step.get("seconds", 0)]
+    if stype == "say":
+        runs = []
+        for line in str(step.get("md", "")).split("\n"):
+            line = re.sub(r"^(- |#{2,4} )", "", line.strip())
+            for part in _INLINE_RE.split(line):
+                if part.startswith("**") and part.endswith("**") and len(part) > 4:
+                    part = part[2:-2]
+                elif part.startswith("`") and part.endswith("`") and len(part) > 2:
+                    part = part[1:-1]
+                if part:
+                    runs.append(part)
+        return runs
+    return []
+
+
+def _validate_callouts(step, prefix, out):
+    """`callouts`: visual cues the stage shows while the step is current (render.js applyCallouts)."""
+    cos = step["callouts"]
+    if not isinstance(cos, list):
+        out.append("%s: 'callouts' must be a list" % prefix)
+        return
+    overlay = step.get("type") in ("page", "approve")
+    for i, co in enumerate(cos):
+        where = "%s callout %d" % (prefix, i)
+        if not isinstance(co, dict):
+            out.append("%s: must be an object" % where)
+            continue
+        bad = sorted(k for k in co if k not in CALLOUT_KEYS)
+        kind = co.get("kind")
+        if bad:
+            out.append("%s: unknown key(s) %s" % (where, ", ".join(bad)))
+        elif kind not in CALLOUT_KINDS:
+            out.append("%s: kind must be one of %s" % (where, ", ".join(CALLOUT_KINDS)))
+        elif overlay and kind != "note":
+            out.append("%s: a %s step takes only 'note' callouts (its content is a frame)" % (where, step["type"]))
+        elif kind == "note" and not (isinstance(co.get("text"), str) and co["text"].strip()):
+            out.append("%s: a note needs 'text'" % where)
+        elif kind != "note" and not (isinstance(co.get("match"), str) and co["match"]):
+            out.append("%s: a %s needs 'match'" % (where, kind))
+        elif "text" in co and not isinstance(co["text"], str):
+            out.append("%s: 'text' must be a string" % where)
+        elif kind != "note" and not any(co["match"] in r for r in _text_runs(step)):
+            out.append("%s: match %r is not in the step's text (it must sit inside one line or one run of "
+                       "plain, bold or code text)" % (where, co["match"]))
 
 
 def _validate_approve(step, prefix, out):
