@@ -110,8 +110,14 @@ def cmd_duration(args) -> int:
     return duration.report(Path(args.root), args.episode)
 
 
+def cmd_sync(args) -> int:
+    from ws import sync
+
+    return sync.run(Path(args.root), args.repo, args.check)
+
+
 def make_parser() -> argparse.ArgumentParser:
-    parser = _Parser(prog="build.py", description="Workshop engine: validate, check, capture, build, new, duration.")
+    parser = _Parser(prog="build.py", description="Workshop engine: validate, check, capture, build, new, duration, sync.")
     parser.add_argument("--root", default=str(HERE), help="repo root (default: this repo)")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("validate", help="validate episode scripts").set_defaults(func=cmd_validate)
@@ -130,6 +136,11 @@ def make_parser() -> argparse.ArgumentParser:
     dur = sub.add_parser("duration", help="screen + narration time per episode and chapter (needs Chrome)")
     dur.add_argument("--episode", metavar="ID", help="only this episode id")
     dur.set_defaults(func=cmd_duration)
+    syn = sub.add_parser("sync", help="copy each skill's workshop/episodes into episodes/ (the mirror)")
+    syn.add_argument("--repo", action="append", metavar="REPO",
+                     help="only this skill repo (repeatable; default: every repo of the mirror)")
+    syn.add_argument("--check", action="store_true", help="report drift without writing; exit 1 if any")
+    syn.set_defaults(func=cmd_sync)
     return parser
 
 

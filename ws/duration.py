@@ -9,7 +9,7 @@ from html import unescape
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
-from ws import bundle, schema
+from ws import bundle, paths, schema
 from ws.chrome import chrome_available, chrome_path
 
 ENGINE_SCRIPTS = ("nav.js", "render.js", "animate.js")
@@ -55,7 +55,7 @@ def fmt(ms: float) -> str:
 
 def measure(root, episodes: List[dict]) -> Dict[str, dict]:
     """{episode id: {"total": ms, "chapters": [{"id", "ms"}]}} from Animate.episodeDuration in Chrome."""
-    engine = Path(root) / "engine"
+    engine = paths.engine_dir(root)
     scripts = "\n".join('<script src="%s"></script>' % (engine / f).as_uri() for f in ENGINE_SCRIPTS)
     data = '<script type="application/json" id="episodes">%s</script>' % bundle.episodes_json(episodes)
     page = _PAGE % {"scripts": scripts + "\n" + data, "speed": SPEED}

@@ -53,11 +53,12 @@ class IndexPage(unittest.TestCase):
             tree.write("cursor", "01-t.json", ep)
             self.assertIn("2 capítulos", bundle.render(tree.root)["index.html"])
 
-    def test_empty_series_says_so(self):
+    def test_empty_series_is_left_out(self):
         with with_engine(TempTree()) as tree:
             tree.write("cursor", "01-a.json", minimal_episode(id="cur-a"))
             html = bundle.render(tree.root)["index.html"]
-            self.assertIn("Todavía no hay episodios", html)
+            self.assertIn("Serie Cursor", html)
+            self.assertNotIn("Serie Claude Code", html)
 
     def test_episode_text_is_escaped(self):
         ep = minimal_episode(id="evil", title="<b>T</b> & \"q\"")
