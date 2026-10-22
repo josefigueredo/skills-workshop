@@ -7,7 +7,7 @@ from html import escape
 from pathlib import Path
 from typing import Dict, List
 
-from ws import schema
+from ws import paths, schema, stamp
 
 CSS_FILES = ("tokens.css", "screens.css")
 JS_COMMON = ("nav.js", "render.js", "animate.js")
@@ -88,8 +88,8 @@ def episode_list(episodes: List[dict]) -> str:
     for series, heading in SERIES_TITLES:
         parts.append("<h2>%s</h2>" % escape(heading))
         mine = [e for e in episodes if e.get("series") == series]
-        if not mine:
-            parts.append('<p class="empty">Todavía no hay episodios.</p>')
+        if not mine:  # a skill's own site carries only its series
+            parts.pop()
             continue
         parts.append('<ul class="eps">')
         for e in mine:
@@ -102,9 +102,9 @@ def episode_list(episodes: List[dict]) -> str:
 
 
 def render(root) -> Dict[str, str]:
-    """Build every dist file in memory: {file name: html}. Writes nothing."""
+    """Build every dist file in memory: {file name: html}. Writes nothing. A series with no episodes gets no page."""
     root = Path(root)
-    engine = root / "engine"
+    engine = paths.engine_dir(root)
     episodes = [for_stage(e, root) for e in schema.load_all(root)]
     css = "<style>\n" + "\n".join(_inline(engine / f, "</style") for f in CSS_FILES) + "\n</style>"
     out: Dict[str, str] = {}
@@ -112,6 +112,8 @@ def render(root) -> Dict[str, str]:
         scripts = "\n".join("<script>\n%s\n</script>" % _inline(engine / f, "</script")
                             for f in JS_COMMON + (last,))
         chosen = [e for e in episodes if series is None or e.get("series") == series]
+        if series is not None and not chosen:
+            continue
         data = '<script type="application/json" id="episodes">%s</script>' % episodes_json(chosen)
         html = _fill(_read(engine / template), {"CSS": css, "JS": scripts, "EPISODES": data}, template)
         out[name] = html
@@ -124,14 +126,17 @@ def render(root) -> Dict[str, str]:
 def write(root, rendered: Dict[str, str]) -> List[Path]:
     dist = Path(root) / "dist"
     dist.mkdir(exist_ok=True)
-    paths = []
+    written = []
     for name in rendered:
         p = dist / name
         p.write_bytes(rendered[name].encode("utf-8"))
-        paths.append(p)
-    return paths
+        written.append(p)
+    p = dist / stamp.FILE
+    p.write_text(stamp.digest(root) + "\n", encoding="utf-8")
+    written.append(p)
+    return written
 
 
 def build(root) -> List[Path]:
-    """Write dist/serie-*.html, control.html and the landing page index.html."""
+    """Write dist/serie-*.html, control.html, the landing page index.html and the source stamp."""
     return write(root, render(root))

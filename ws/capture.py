@@ -15,7 +15,7 @@ import tempfile
 from pathlib import Path
 from typing import List, Optional
 
-from ws import privacy, schema
+from ws import paths, privacy, schema
 
 DEMO_NAME = "Demo"
 DEMO_EMAIL = "demo@example.com"
@@ -33,11 +33,11 @@ class CaptureError(Exception):
 
 def skill_candidates(root: Path, repo: str) -> List[Path]:
     """Every `<dir>/<repo>` to look in: each folder of $WS_SKILLS_ROOT (split on os.pathsep),
-    else the workshop repo's parent."""
+    else the workshop repo's parent (this workshop's for a skill's content root)."""
     env = os.environ.get("WS_SKILLS_ROOT")
     dirs = [Path(d) for d in env.split(os.pathsep) if d] if env else []
     if not dirs:
-        dirs = [Path(root).resolve().parent]
+        dirs = [paths.workshop_root(root).resolve().parent]
     return [d / repo for d in dirs]
 
 
@@ -51,7 +51,7 @@ def skill_source(root: Path, repo: str) -> Path:
     for c in cands:
         if _is_git(c):
             return c
-    return Path(root).resolve().parent / repo
+    return paths.workshop_root(root).resolve().parent / repo
 
 
 def _under(path: str, base: str) -> bool:
@@ -96,7 +96,7 @@ def prepare_home(root: Path, episode: dict, home: Path) -> None:
     """Build the demo at home/mi-servicio and the episode's skill at home/skills/<repo>."""
     root, home = Path(root), Path(home)
     env = scratch_env(home)
-    _run_quiet(["bash", str(root / "demo" / "setup.sh"), str(home)], "demo/setup.sh", env)
+    _run_quiet(["bash", str(paths.demo_dir(root) / "setup.sh"), str(home)], "demo/setup.sh", env)
     skill = episode["skill"]
     repo, commit = skill["repo"], skill["commit"]
     src = skill_source(root, repo)
@@ -122,7 +122,7 @@ def prepare_home(root: Path, episode: dict, home: Path) -> None:
     except CaptureError as exc:
         raise CaptureError("skill %r at commit %s (source %s): %s" % (repo, commit, src, exc))
     # Episode-specific demo state (e.g. seeded worker output): demo/prep/<id>.sh <home>.
-    prep = root / "demo" / "prep" / ("%s.sh" % episode["id"])
+    prep = paths.demo_dir(root) / "prep" / ("%s.sh" % episode["id"])
     if prep.is_file():
         _run_quiet(["bash", str(prep), str(home)], "demo/prep/%s.sh" % episode["id"], env)
 

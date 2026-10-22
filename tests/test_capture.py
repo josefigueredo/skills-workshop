@@ -354,10 +354,15 @@ class PrepareHomeTests(unittest.TestCase):
                 capture.prepare_home(self._tree_with_prep("echo nope; exit 3\n"), ep, other)
         self.assertIn("demo/prep/demo.sh", str(cm.exception))
 
+    def workshop(self):
+        ws = self.tmp / "a" / "b" / "ws"
+        (ws / "engine").mkdir(parents=True)
+        return ws
+
     def test_default_skill_source_is_next_to_the_workshop(self):
         env = {k: v for k, v in os.environ.items() if k != "WS_SKILLS_ROOT"}
         with mock.patch.dict(os.environ, env, clear=True):
-            self.assertEqual(capture.skill_source(Path("/a/b/ws"), "x"), Path("/a/b/x"))
+            self.assertEqual(capture.skill_source(self.workshop(), "x"), (self.tmp / "a" / "b" / "x").resolve())
 
     def test_skill_source_picks_the_first_root_holding_the_repo(self):
         one, two = self.tmp / "one", self.tmp / "two"
@@ -371,7 +376,7 @@ class PrepareHomeTests(unittest.TestCase):
 
     def test_skill_source_without_a_hit_falls_back_to_the_default(self):
         with mock.patch.dict(os.environ, {"WS_SKILLS_ROOT": str(self.tmp / "nope")}):
-            self.assertEqual(capture.skill_source(Path("/a/b/ws"), "x"), Path("/a/b/x"))
+            self.assertEqual(capture.skill_source(self.workshop(), "x"), (self.tmp / "a" / "b" / "x").resolve())
 
     def test_prepare_home_error_lists_every_root_tried(self):
         one, two = self.tmp / "one", self.tmp / "two"

@@ -13,7 +13,7 @@ from pathlib import Path
 import build
 from tests.helpers import ROOT, TempTree, minimal_episode
 from tests.test_engine import CHROME, HAVE_CHROME, SKIP_MSG
-from ws import bundle
+from ws import bundle, stamp
 
 NAMES = ["serie-cursor.html", "serie-claude-code.html", "control.html", "index.html"]
 STAGE_NAMES = NAMES[:3]
@@ -55,7 +55,7 @@ class BundleContent(unittest.TestCase):
     def test_build_writes_every_file(self):
         with two_series_tree() as tree:
             paths = bundle.build(tree.root)
-            self.assertEqual([p.name for p in paths], NAMES)
+            self.assertEqual([p.name for p in paths], NAMES + [stamp.FILE])
             for p in paths:
                 self.assertEqual(p.parent, tree.root / "dist")
                 self.assertTrue(p.is_file())
@@ -82,12 +82,12 @@ class BundleContent(unittest.TestCase):
             self.assertEqual([e["id"] for e in cc], ["cc-a"])
             self.assertEqual([e["id"] for e in ctl], ["cc-a", "cur-a", "cur-b"])
 
-    def test_zero_episodes_for_a_series_still_builds(self):
+    def test_a_series_with_no_episodes_gets_no_page(self):
         with with_engine(TempTree()) as tree:
             tree.write("cursor", "01-a.json", minimal_episode(id="cur-a"))
             bundle.build(tree.root)
-            html = (tree.root / "dist" / "serie-claude-code.html").read_text(encoding="utf-8")
-            self.assertEqual(episodes_in(html), [])
+            self.assertTrue((tree.root / "dist" / "serie-cursor.html").is_file())
+            self.assertFalse((tree.root / "dist" / "serie-claude-code.html").exists())
 
     def test_slot_order_and_script_per_file(self):
         with two_series_tree() as tree:
@@ -246,6 +246,8 @@ class CommittedDist(unittest.TestCase):
             self.assertTrue(path.is_file(), "dist/%s missing: run `python3 build.py build`" % name)
             self.assertEqual(path.read_bytes(), text.encode("utf-8"),
                              "dist/%s is stale: run `python3 build.py build`" % name)
+        self.assertEqual((ROOT / "dist" / stamp.FILE).read_text(encoding="utf-8"), stamp.digest(ROOT) + "\n",
+                         "dist/%s is stale: run `python3 build.py build`" % stamp.FILE)
 
 
 @unittest.skipUnless(HAVE_CHROME, SKIP_MSG)
