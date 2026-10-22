@@ -25,7 +25,8 @@
         "title": "Agregar endpoint de pagos",
         "age": "2d"
       }
-    ]
+    ],
+    "model": "GPT-5.6 Terra"
   },
   "chapters": [
     {
@@ -295,13 +296,13 @@
         },
         {
           "type": "tool",
-          "label": "Ran · subagente nuevo · contraste con Opus 5.5 · solo lectura",
+          "label": "Ran · subagente nuevo · contraste con Sonnet 5.5 High · solo lectura",
           "source": "inferido",
-          "notes": "Segunda mirada: otro modelo revisa cada hallazgo sin poder tocar nada. Como no hay CLI agent ni otra familia disponible, la skill usa su pasada propia con un modelo más grande de la misma familia, y lo anota así en el reporte. La verificación extra es solo para lo de severidad alta, y acá no hay nada alto."
+          "notes": "Segunda mirada: un modelo de otra familia revisa cada hallazgo sin poder tocar nada. Como no está el CLI agent, la skill usa su pasada propia en un subagente nuevo, con Sonnet 5.5 High: de otra familia que GPT-5.6 Terra, que escribió los hallazgos. El reporte dice quién contrastó a quién. La verificación extra es solo para lo de severidad alta, y acá no hay nada alto."
         },
         {
           "type": "term",
-          "cmd": "python3 ~/.cursor/skills/inherited-audit/ia.py set --run mi-servicio 'author_model=Sonnet 5.5' && python3 ~/.cursor/skills/inherited-audit/ia.py finding set --run mi-servicio C-01 'contrast.model=Opus 5.5' contrast.same_family=true contrast.verdict=agree 'contrast.note=El test rojo reproduce el total negativo.' && python3 ~/.cursor/skills/inherited-audit/ia.py finding set --run mi-servicio C-02 'contrast.model=Opus 5.5' contrast.same_family=true contrast.verdict=unsure 'contrast.note=Plausible, pero sin un test que lo muestre.' && python3 ~/.cursor/skills/inherited-audit/ia.py finding set --run mi-servicio Q-01 'contrast.model=Opus 5.5' contrast.same_family=true contrast.verdict=agree 'contrast.note=El docstring y el cálculo no coinciden.' && for s in contrast verify; do python3 ~/.cursor/skills/inherited-audit/ia.py step --run mi-servicio $s done; done",
+          "cmd": "python3 ~/.cursor/skills/inherited-audit/ia.py set --run mi-servicio 'author_model=GPT-5.6 Terra' && python3 ~/.cursor/skills/inherited-audit/ia.py finding set --run mi-servicio C-01 'contrast.model=Sonnet 5.5 High' contrast.same_family=false contrast.verdict=agree 'contrast.note=El test rojo reproduce el total negativo.' && python3 ~/.cursor/skills/inherited-audit/ia.py finding set --run mi-servicio C-02 'contrast.model=Sonnet 5.5 High' contrast.same_family=false contrast.verdict=unsure 'contrast.note=Plausible, pero sin un test que lo muestre.' && python3 ~/.cursor/skills/inherited-audit/ia.py finding set --run mi-servicio Q-01 'contrast.model=Sonnet 5.5 High' contrast.same_family=false contrast.verdict=agree 'contrast.note=El docstring y el cálculo no coinciden.' && for s in contrast verify; do python3 ~/.cursor/skills/inherited-audit/ia.py step --run mi-servicio $s done; done",
           "out": [
             "set author_model",
             "C-01",
@@ -312,7 +313,7 @@
           ],
           "source": "real",
           "cwd": "~/auditorias",
-          "notes": "Solo captura: anota quién escribió (Sonnet 5.5) y el contraste de Opus 5.5, misma familia, en cada hallazgo; cierra contrast y verify (no hay hallazgos de severidad alta).",
+          "notes": "Solo captura: anota quién escribió (GPT-5.6 Terra) y el contraste de Sonnet 5.5 High, de otra familia, en cada hallazgo; cierra contrast y verify (no hay hallazgos de severidad alta).",
           "capture_only": true
         },
         {
@@ -409,7 +410,7 @@
         },
         {
           "type": "say",
-          "md": "#### Listo\n- Corrida y reportes en `~/auditorias/mi-servicio`: `mi-servicio-correctness.html` y `mi-servicio-quality.html`.\n- Correctitud: **se muestra 1 de 2**. C-02 (la carrera en el contador) quedó sin verificar y afuera.\n- Calidad: **se muestra 1 de 1**.\n- Una rama local, `fix/c-01-descuento-sin-tope`, sin push.\n- Pasadas propias en vez de obreros externos: estático (sin semgrep, gitleaks ni osv-scanner), calidad (sin wshobson/agents) y contraste (sin el CLI `agent`).\n- Contraste: **Opus 5.5** revisó lo que escribí yo (**Sonnet 5.5**). Es la **misma familia**: no había otra disponible, y el reporte lo dice.\n- Pendiente: los tests nuevos (paso 1.5), como pediste; sin superpowers, con la pasada propia.",
+          "md": "#### Listo\n- Corrida y reportes en `~/auditorias/mi-servicio`: `mi-servicio-correctness.html` y `mi-servicio-quality.html`.\n- Correctitud: **se muestra 1 de 2**. C-02 (la carrera en el contador) quedó sin verificar y afuera.\n- Calidad: **se muestra 1 de 1**.\n- Una rama local, `fix/c-01-descuento-sin-tope`, sin push.\n- Pasadas propias en vez de obreros externos: estático (sin semgrep, gitleaks ni osv-scanner), calidad (sin wshobson/agents) y contraste (sin el CLI `agent`).\n- Contraste: **Sonnet 5.5 High** revisó lo que escribí yo (**GPT-5.6 Terra**), un modelo de **otra familia**, y el reporte dice quién contrastó a quién.\n- Pendiente: los tests nuevos (paso 1.5), como pediste; sin superpowers, con la pasada propia.",
           "source": "inferido",
           "notes": "Leé el cierre: dónde están los reportes, cuánto se muestra de cuánto, qué rama quedó (local), qué pasos usaron la pasada propia, quién contrastó a quién y qué falta. Nada se publicó.",
           "pause": true
