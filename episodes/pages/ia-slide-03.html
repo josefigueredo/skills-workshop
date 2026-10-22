@@ -1,0 +1,31 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dirige la obra; los workers la construyen</title><style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#fff;color:#1d1d1f;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif}
+.s{height:100%;display:flex;flex-direction:column;padding:34px 56px 22px}
+.k{font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:#7a4fe0;font-weight:600}
+h1{margin:.25em 0 .1em;font-size:42px;line-height:1.1;letter-spacing:-.01em}
+.lead{margin:0 0 18px;font-size:21px;color:#3a3a3c;max-width:1180px;line-height:1.4}
+.body{flex:1;min-height:0;display:flex;flex-direction:column}
+.foot{display:flex;justify-content:space-between;font-size:12.5px;color:#a0a0a0;padding-top:10px;
+  border-top:1px solid #ececec;margin-top:12px}
+code,.m{font-family:"SF Mono",Menlo,Monaco,monospace;font-size:.88em}
+code{background:#f2f2f4;border-radius:5px;padding:.08em .35em}
+ul{margin:0;padding-left:1.1em}li{margin:.35em 0}
+.grid{display:grid;gap:18px}
+.card{border-radius:14px;padding:20px 22px;background:#f7f7f9;border:1px solid #ececec}
+.card h3{margin:0 0 8px;font-size:21px}
+.card p,.card li{font-size:19px;line-height:1.45;color:#3a3a3c;margin:.3em 0}
+.cli{background:#e8f0fd;border-color:#c9daf8}.cli h3{color:#163a7a}
+.mod{background:#f1ebfd;border-color:#ddd0f8}.mod h3{color:#3d2385}
+.no{background:#fff5f4;border-color:#f6d5d1}.no h3{color:#9a2a1f}
+.big{font-size:27px;line-height:1.45}
+.mid{justify-content:center}
+.lg .card p{font-size:21.5px}.lg .card h3{font-size:24px}
+.pill{display:inline-block;border-radius:999px;padding:.1em .7em;font-size:14px;font-weight:600}
+.pc{background:#2d6cdf;color:#fff}.pm{background:#7a4fe0;color:#fff}
+svg{width:100%;height:100%;display:block}
+table{border-collapse:collapse;width:100%;font-size:16.5px}
+td,th{padding:11px 12px;border-bottom:1px solid #ececec;text-align:left;vertical-align:top;line-height:1.4}
+th{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#7a7a7a}
+</style></head><body><div class="s"><div class="k">inherited-audit · Cómo funciona</div><h1>Dirige la obra; los workers la construyen</h1><p class="lead">La skill tiene el checklist, el orden y los criterios de aceptación. Regla: un worker externo donde exista y sea bueno, una pasada propia donde no haya nada.</p><div class="body"><table><tr><th>Paso</th><th>Worker en Cursor</th><th>Lo hace</th></tr><tr><td class="m" style="width:150px"><b>baseline</b></td><td>pasada propia (inventario) + <code>ia.py detect</code> y <code>baseline</code></td><td style="width:220px"><span class="pill pm">un modelo</span> <span class="pill pc">ia.py</span></td></tr><tr><td class="m" style="width:150px"><b>correctness</b></td><td><code>/review-bugbot</code> · carreras y seguridad: pasadas propias · semgrep, gitleaks, trivy, osv-scanner</td><td style="width:220px"><span class="pill pm">un modelo</span></td></tr><tr><td class="m" style="width:150px"><b>proof</b></td><td>pasada propia: un subagente por candidato, en su worktree</td><td style="width:220px"><span class="pill pm">un modelo</span></td></tr><tr><td class="m" style="width:150px"><b>tests</b></td><td>obra/superpowers · Playwright · pasada e2e-infra</td><td style="width:220px"><span class="pill pm">un modelo</span></td></tr><tr><td class="m" style="width:150px"><b>quality</b></td><td>cuatro lentes + wshobson/agents · dependency-cruiser, knip, jscpd</td><td style="width:220px"><span class="pill pm">un modelo</span></td></tr><tr><td class="m" style="width:150px"><b>contrast</b></td><td><code>agent -p --mode ask</code> con un modelo de otra familia</td><td style="width:220px"><span class="pill pm">un modelo</span></td></tr><tr><td class="m" style="width:150px"><b>verify</b></td><td>subagente nuevo, que no vio el razonamiento</td><td style="width:220px"><span class="pill pm">un modelo</span></td></tr><tr><td class="m" style="width:150px"><b>filter</b></td><td><code>ia.py filter</code></td><td style="width:220px"><span class="pill pc">ia.py</span></td></tr><tr><td class="m" style="width:150px"><b>prose</b></td><td>pasada propia, sin jerga ni culpas</td><td style="width:220px"><span class="pill pm">un modelo</span></td></tr><tr><td class="m" style="width:150px"><b>hygiene</b></td><td><code>ia.py hygiene</code></td><td style="width:220px"><span class="pill pc">ia.py</span></td></tr><tr><td class="m" style="width:150px"><b>render</b></td><td><code>ia.py render</code></td><td style="width:220px"><span class="pill pc">ia.py</span></td></tr></table></div><div class="foot"><span>Fuente: <code>docs/referencia.md</code> («El checklist»), <code>skill/references/workers.md</code> (Cursor)</span><span>3 de 9</span></div></div></body></html>

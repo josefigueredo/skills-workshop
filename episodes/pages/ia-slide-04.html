@@ -1,0 +1,31 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Qué es determinístico y qué no</title><style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#fff;color:#1d1d1f;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif}
+.s{height:100%;display:flex;flex-direction:column;padding:34px 56px 22px}
+.k{font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:#7a4fe0;font-weight:600}
+h1{margin:.25em 0 .1em;font-size:42px;line-height:1.1;letter-spacing:-.01em}
+.lead{margin:0 0 18px;font-size:21px;color:#3a3a3c;max-width:1180px;line-height:1.4}
+.body{flex:1;min-height:0;display:flex;flex-direction:column}
+.foot{display:flex;justify-content:space-between;font-size:12.5px;color:#a0a0a0;padding-top:10px;
+  border-top:1px solid #ececec;margin-top:12px}
+code,.m{font-family:"SF Mono",Menlo,Monaco,monospace;font-size:.88em}
+code{background:#f2f2f4;border-radius:5px;padding:.08em .35em}
+ul{margin:0;padding-left:1.1em}li{margin:.35em 0}
+.grid{display:grid;gap:18px}
+.card{border-radius:14px;padding:20px 22px;background:#f7f7f9;border:1px solid #ececec}
+.card h3{margin:0 0 8px;font-size:21px}
+.card p,.card li{font-size:19px;line-height:1.45;color:#3a3a3c;margin:.3em 0}
+.cli{background:#e8f0fd;border-color:#c9daf8}.cli h3{color:#163a7a}
+.mod{background:#f1ebfd;border-color:#ddd0f8}.mod h3{color:#3d2385}
+.no{background:#fff5f4;border-color:#f6d5d1}.no h3{color:#9a2a1f}
+.big{font-size:27px;line-height:1.45}
+.mid{justify-content:center}
+.lg .card p{font-size:21.5px}.lg .card h3{font-size:24px}
+.pill{display:inline-block;border-radius:999px;padding:.1em .7em;font-size:14px;font-weight:600}
+.pc{background:#2d6cdf;color:#fff}.pm{background:#7a4fe0;color:#fff}
+svg{width:100%;height:100%;display:block}
+table{border-collapse:collapse;width:100%;font-size:16.5px}
+td,th{padding:11px 12px;border-bottom:1px solid #ececec;text-align:left;vertical-align:top;line-height:1.4}
+th{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#7a7a7a}
+</style></head><body><div class="s"><div class="k">inherited-audit · Cómo funciona</div><h1>Qué es determinístico y qué no</h1><div class="body"><div class="grid" style="grid-template-columns:1fr 210px 1fr;align-items:stretch;flex:1"><div class="card cli"><h3>Determinístico · <code>ia.py</code></h3><p>Python, solo biblioteca estándar. <b>Nunca llama a un modelo.</b> Misma entrada, misma salida.</p><ul><li><code>init</code> fija el commit; rechaza un repo con cambios o una salida commiteable</li><li><code>detect</code> · <code>baseline</code>: stack, workers que faltan, suite medida</li><li><code>finding add|set</code>: valida el esquema; rechaza un confirmado sin test rojo</li><li><code>coverage</code> · <code>step</code>: no cierra un paso con módulos sin visitar</li><li><code>merge-check</code> · <code>cite-check</code> · <code>hygiene</code></li><li><code>filter</code> · <code>render</code> · <code>publish</code> (escribe, nunca corre)</li></ul></div><div style="display:flex;flex-direction:column;justify-content:center;text-align:center;gap:14px"><div style="font-size:15px;color:#7a7a7a;letter-spacing:.08em;text-transform:uppercase">la regla</div><div style="font-size:25px;line-height:1.3;font-weight:700"><span style="color:#7a4fe0">El modelo propone</span><br>↓<br><span style="color:#2d6cdf">el CLI decide si entra</span></div><div style="font-size:14.5px;color:#3a3a3c">Cada paso se cierra con un comando que puede negarse (sale con 1 y dice por qué).</div></div><div class="card mod"><h3>No determinístico · un modelo</h3><p>Juicio: dos corridas no encuentran exactamente lo mismo. Por eso cada resultado pasa por una compuerta.</p><ul><li>inventario del sistema y elección de módulos</li><li>pasadas de correctitud, carreras y seguridad</li><li>escribir el test que falla, y los tests que faltaban</li><li>las cuatro lentes de calidad</li><li>contraste con otro modelo, y verificación de cada severidad alta</li><li>la prosa para el equipo dueño</li></ul></div></div></div><div class="foot"><span>Fuente: <code>docs/referencia.md</code> («Se cierra cuando»), <code>skill/SKILL.md</code> («The CLI and where it lives»)</span><span>4 de 9</span></div></div></body></html>
