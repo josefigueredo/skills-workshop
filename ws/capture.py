@@ -230,6 +230,23 @@ def run(episode: dict, home: Path, timeout: float = STEP_TIMEOUT) -> dict:
     return new
 
 
+def harvest(episode: dict, home: Path) -> List[tuple]:
+    """(src, capture, text) for each page step with `capture`: the file the real steps wrote in the fake HOME,
+    normalised like their output. Raises CaptureError when a file is not there."""
+    home = Path(home)
+    pages = []
+    for chapter in episode["chapters"]:
+        for step in chapter["steps"]:
+            if step.get("type") != "page" or "capture" not in step:
+                continue
+            path = home / step["capture"][2:]
+            if not path.is_file():
+                raise CaptureError("page %s: the real steps did not write %s" % (step["src"], step["capture"]))
+            text = path.read_text(encoding="utf-8", errors="replace")
+            pages.append((step["src"], step["capture"], normalise(text, home, [home.parent])))
+    return pages
+
+
 def has_real_steps(episode: dict) -> bool:
     return any(s.get("type") == "term" and s.get("source") == "real"
                for c in episode["chapters"] for s in c["steps"])
@@ -261,6 +278,7 @@ def capture_tree(root, episode_id: Optional[str] = None, emit=print) -> int:
             try:
                 prepare_home(root, ep, home)
                 new = run(ep, home)
+                pages = harvest(new, home)
             except CaptureError as exc:
                 failed += 1
                 emit("%s: capture failed: %s" % (ep["id"], exc))
@@ -268,6 +286,8 @@ def capture_tree(root, episode_id: Optional[str] = None, emit=print) -> int:
         text = dump(new)
         try:
             hits = privacy.scan_text(text, "%s/%s" % (path.parent.name, path.name))
+            for src, _, page in pages:
+                hits += privacy.scan_text(page, src)
         except ValueError as exc:
             hits = ["privacy rules unavailable: %s" % exc]
         if hits:
@@ -281,6 +301,12 @@ def capture_tree(root, episode_id: Optional[str] = None, emit=print) -> int:
                 if step.get("type") == "term" and step.get("source") == "real":
                     emit("%s chapter %s step %d: %s (%d lines)"
                          % (ep["id"], chapter["id"], j, step["cmd"], len(step["out"])))
+        for src, origin, page in pages:
+            dest = root / "episodes" / src
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            if not dest.is_file() or dest.read_text(encoding="utf-8") != page:
+                dest.write_text(page, encoding="utf-8")
+            emit("%s: episodes/%s from %s" % (ep["id"], src, origin))
         if path.read_text(encoding="utf-8") != text:
             path.write_text(text, encoding="utf-8")
     return 1 if failed else 0

@@ -82,7 +82,7 @@ def cmd_capture(args) -> int:
     from ws import capture, schema
 
     root = Path(args.root)
-    problems = schema.check_tree(root)
+    problems = schema.check_tree(root, capturing=True)
     if problems:
         for p in problems:
             print(p)

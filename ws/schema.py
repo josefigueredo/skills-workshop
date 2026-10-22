@@ -26,7 +26,7 @@ PAGE_SRC_RE = re.compile(r"^pages/[a-z0-9][a-z0-9-]*\.html$")
 # Keys allowed besides the required ones, so a misspelt key fails instead of being ignored.
 # `in` and `capture_only` are accepted on any step so their own, clearer message reports a misplacement.
 STEP_COMMON = ("type", "source", "notes", "pause", "in", "capture_only")
-STEP_EXTRA = {"term": ("cwd",), "approve": ("lines", "src", "window", "width", "height")}
+STEP_EXTRA = {"term": ("cwd",), "approve": ("lines", "src", "window", "width", "height"), "page": ("capture",)}
 TOP_KEYS = ("id", "series", "order", "title", "pitch", "skill", "workspace", "chapters")
 CHAPTER_KEYS = ("id", "title", "subtitle", "screen", "faq", "steps")
 PITCH_KEYS = ("ask", "does")
@@ -138,6 +138,13 @@ def _validate_step(step, prefix, out, screen=None):
         _validate_approve(step, prefix, out)
     if stype in ("page", "approve") and isinstance(step.get("src"), str) and not PAGE_SRC_RE.match(step["src"]):
         out.append("%s: 'src' must be 'pages/<name>.html' (lowercase, under episodes/)" % prefix)
+    # `capture: "~/<path>"` on a real page step: capture copies that file, written by the episode's real steps in the
+    # fake HOME, to episodes/<src> (normalised and privacy-checked like the steps' output).
+    if "capture" in step:
+        if source != "real":
+            out.append("%s: 'capture' is only valid on a real page step" % prefix)
+        elif step["capture"] == "~" or not _home_relative(step["capture"]):
+            out.append("%s: 'capture' must be '~/<path>' without '..' (a file in the fake HOME)" % prefix)
     if stype == "term" and source == "real":
         cwd = step.get("cwd")
         if cwd is None:
@@ -231,15 +238,18 @@ def page_steps(episode):
                 yield st
 
 
-def _missing_pages(episode, root: Path, where: str) -> list:
+def _missing_pages(episode, root: Path, where: str, capturing: bool = False) -> list:
     if not isinstance(episode, dict):
         return []
     return ["%s: episodes/%s does not exist" % (where, st["src"])
-            for st in page_steps(episode) if not (root / "episodes" / st["src"]).is_file()]
+            for st in page_steps(episode)
+            if not (capturing and "capture" in st) and not (root / "episodes" / st["src"]).is_file()]
 
 
-def check_tree(root) -> list:
-    """Validate every episode under root/episodes plus cross-file rules."""
+def check_tree(root, capturing: bool = False) -> list:
+    """Validate every episode under root/episodes plus cross-file rules.
+
+    capturing: a page that capture is about to write (a page step with `capture`) may not exist yet."""
     out: list = []
     seen: dict = {}
     for path in episode_files(Path(root)):
@@ -253,7 +263,7 @@ def check_tree(root) -> list:
         from ws import scaffold  # late: scaffold imports schema
 
         out.extend(scaffold.pending(ep, where))
-        out.extend(_missing_pages(ep, Path(root), where))
+        out.extend(_missing_pages(ep, Path(root), where, capturing))
         if not isinstance(ep, dict):
             continue
         if ep.get("series") != path.parent.name:

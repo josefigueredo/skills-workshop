@@ -274,6 +274,36 @@ class TreeTests(unittest.TestCase):
             (t.root / "episodes" / "pages" / "w.html").write_text("<p>w</p>", encoding="utf-8")
             self.assertEqual(schema.check_tree(t.root), [])
 
+    def test_a_real_page_step_can_name_the_file_capture_copies_from_the_fake_home(self):
+        def with_capture(value, source="real", stype="page"):
+            ep = minimal_episode()
+            step = {"type": stype, "title": "r.html", "src": "pages/r.html", "source": source, "capture": value}
+            if stype == "approve":
+                step["button"] = "Apruebo 1"
+            ep["chapters"][0]["steps"].append(step)
+            return schema.validate(ep, "x.json")
+        self.assertEqual(with_capture("~/auditorias/r.html"), [])
+        for bad in ("/etc/r.html", "~/../r.html", "r.html", "~", 3):
+            with self.subTest(capture=bad):
+                msgs = with_capture(bad)
+                self.assertEqual(len(msgs), 1, msgs)
+                self.assertIn("'capture'", msgs[0])
+        self.assertIn("'capture' is only valid on a real page step", with_capture("~/r.html", source="inferido")[0])
+        self.assertIn("unknown key 'capture'", with_capture("~/r.html", stype="approve")[0])
+
+    def test_a_captured_page_may_be_missing_only_while_capturing(self):
+        with TempTree() as t:
+            ep = minimal_episode()
+            ep["chapters"][0]["steps"].append({"type": "page", "title": "r", "src": "pages/r.html", "source": "real",
+                                               "capture": "~/r.html"})
+            ep["chapters"][0]["steps"].append({"type": "page", "title": "v", "src": "pages/v.html", "source": "real"})
+            t.write("cursor", "a.json", ep)
+            msgs = schema.check_tree(t.root)
+            self.assertEqual(len(msgs), 2, msgs)
+            msgs = schema.check_tree(t.root, capturing=True)
+            self.assertEqual(len(msgs), 1, msgs)
+            self.assertIn("episodes/pages/v.html does not exist", msgs[0])
+
     def test_bad_json_is_reported_not_raised(self):
         with TempTree() as t:
             (t.root / "episodes" / "cursor").mkdir()
