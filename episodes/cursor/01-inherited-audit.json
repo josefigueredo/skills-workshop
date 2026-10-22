@@ -5,7 +5,7 @@
   "title": "inherited-audit",
   "pitch": {
     "ask": "Auditá este sistema antes de que empecemos: el back está en ~/w/api y el front en ~/w/web",
-    "does": "Fija el commit de cada repo, mide la suite, pregunta una sola vez qué obreros faltan instalar y recorre el checklist hasta los dos reportes."
+    "does": "Fija el commit de cada repo, mide la suite, pregunta una sola vez qué workers faltan instalar y recorre el checklist hasta los dos reportes."
   },
   "skill": {
     "repo": "inherited-audit",
@@ -28,6 +28,10 @@
     ],
     "model": "GPT-5.6 Terra"
   },
+  "minutes": [
+    6,
+    12
+  ],
   "chapters": [
     {
       "id": "instalar",
@@ -127,7 +131,7 @@
         },
         {
           "type": "say",
-          "md": "Estoy en **Cursor**, así que uso sus obreros.\n\nUna sola pregunta antes de arrancar: ¿querés que al final deje escritos los textos de issues y PRs (`publish`)? Viene apagado, y aunque lo prendas los publicás vos, nunca yo.",
+          "md": "Estoy en **Cursor**, así que uso sus workers.\n\nUna sola pregunta antes de arrancar: ¿querés que al final deje escritos los textos de issues y PRs (`publish`)? Viene apagado, y aunque lo prendas los publicás vos, nunca yo.",
           "source": "inferido",
           "notes": "Remarcá el «nunca yo»: la skill no publica nada en ningún lado.",
           "pause": true
@@ -168,7 +172,7 @@
         },
         {
           "type": "say",
-          "md": "Te pregunto **una sola vez**. Faltan estos obreros:\n- `brew install semgrep`, `brew install gitleaks` y `brew install osv-scanner`: análisis estático\n- el CLI `agent` de Cursor: el contraste con un modelo de otra familia\n- `/add-plugin superpowers`: tests unitarios\n- `/add-plugin` de wshobson/agents (marketplace de Cursor 2.5+): calidad\n\nLos dos plugins no los puede revisar `detect`; los busqué en esta sesión y no están. Lo que no instales lo cubre una pasada propia de la skill durante toda la corrida. ¿Instalo alguno?",
+          "md": "Te pregunto **una sola vez**. Faltan estos workers:\n- `brew install semgrep`, `brew install gitleaks` y `brew install osv-scanner`: análisis estático\n- el CLI `agent` de Cursor: el contraste con un modelo de otra familia\n- `/add-plugin superpowers`: tests unitarios\n- `/add-plugin` de wshobson/agents (marketplace de Cursor 2.5+): calidad\n\nLos dos plugins no los puede revisar `detect`; los busqué en esta sesión y no están. Lo que no instales lo cubre una pasada propia de la skill durante toda la corrida. ¿Instalo alguno?",
           "source": "inferido",
           "notes": "Es la única pregunta sobre herramientas en toda la corrida, con el comando exacto de cada una; los plugins de Cursor los revisa el agente, porque detect no puede. Si decís que no, la skill no se traba: usa su propia pasada. Funciona con lo que ya tenés.",
           "pause": true
@@ -193,7 +197,7 @@
           "type": "tool",
           "label": "Ran · /review-bugbot, races-distributed y security · API/mi_servicio",
           "source": "inferido",
-          "notes": "Trabajan los obreros: el revisor de bugs de Cursor y dos pasadas propias, carreras y seguridad. La skill es el director de obra; ellos ponen los ladrillos."
+          "notes": "Trabajan los workers: el revisor de bugs de Cursor y dos pasadas propias, carreras y seguridad. La skill dirige la obra; los workers la construyen."
         },
         {
           "type": "term",
@@ -410,7 +414,7 @@
         },
         {
           "type": "say",
-          "md": "#### Listo\n- Corrida y reportes en `~/auditorias/mi-servicio`: `mi-servicio-correctness.html` y `mi-servicio-quality.html`.\n- Correctitud: **se muestra 1 de 2**. C-02 (la carrera en el contador) quedó sin verificar y afuera.\n- Calidad: **se muestra 1 de 1**.\n- Una rama local, `fix/c-01-descuento-sin-tope`, sin push.\n- Pasadas propias en vez de obreros externos: estático (sin semgrep, gitleaks ni osv-scanner), calidad (sin wshobson/agents) y contraste (sin el CLI `agent`).\n- Contraste: **Sonnet 5.5 High** revisó lo que escribí yo (**GPT-5.6 Terra**), un modelo de **otra familia**, y el reporte dice quién contrastó a quién.\n- Pendiente: los tests nuevos (paso 1.5), como pediste; sin superpowers, con la pasada propia.",
+          "md": "#### Listo\n- Corrida y reportes en `~/auditorias/mi-servicio`: `mi-servicio-correctness.html` y `mi-servicio-quality.html`.\n- Correctitud: **se muestra 1 de 2**. C-02 (la carrera en el contador) quedó sin verificar y afuera.\n- Calidad: **se muestra 1 de 1**.\n- Una rama local, `fix/c-01-descuento-sin-tope`, sin push.\n- Pasadas propias en vez de workers externos: estático (sin semgrep, gitleaks ni osv-scanner), calidad (sin wshobson/agents) y contraste (sin el CLI `agent`).\n- Contraste: **Sonnet 5.5 High** revisó lo que escribí yo (**GPT-5.6 Terra**), un modelo de **otra familia**, y el reporte dice quién contrastó a quién.\n- Pendiente: los tests nuevos (paso 1.5), como pediste; sin superpowers, con la pasada propia.",
           "source": "inferido",
           "notes": "Leé el cierre: dónde están los reportes, cuánto se muestra de cuánto, qué rama quedó (local), qué pasos usaron la pasada propia, quién contrastó a quién y qué falta. Nada se publicó.",
           "pause": true
@@ -609,7 +613,7 @@
       "faq": [
         {
           "q": "¿Me vuelve a preguntar lo del principio?",
-          "a": "No. Las opciones (publish, los obreros que no quisiste) quedan en la corrida y se leen de ahí."
+          "a": "No. Las opciones (publish, los workers que no quisiste) quedan en la corrida y se leen de ahí."
         },
         {
           "q": "¿Y si la corrida la escribió una versión más nueva de la skill?",
