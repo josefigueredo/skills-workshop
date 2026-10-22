@@ -100,6 +100,31 @@ class Report(unittest.TestCase):
         self.assertIn("z: screen 2:00", out)
         self.assertIn("setup intro", out)
 
+    def test_an_episode_is_checked_against_its_own_minutes(self):
+        self.tree.write("cursor", "01-a.json", ep_notes("w", id="a", order=1, minutes=[1, 4]))
+        self.tree.write("cursor", "02-b.json", ep_notes("w", id="b", order=2, minutes=[8, 15]))
+        code, out = self.run_duration({"a": (2 * MIN, [2 * MIN]), "b": (13 * MIN, [13 * MIN])})
+        self.assertEqual(code, 0, out)
+        self.assertIn("a: screen 2:00", out)
+        self.assertIn("(rango 1-4 min)", out)
+        code, out = self.run_duration({"a": (5 * MIN, [5 * MIN]), "b": (7 * MIN, [7 * MIN])})
+        self.assertEqual(code, 1, out)
+        self.assertIn("duration: a is outside 1-4 min", out)
+        self.assertIn("duration: b is outside 8-15 min", out)
+
+    def test_without_minutes_the_range_is_6_to_12(self):
+        self.tree.write("cursor", "01-a.json", ep_notes("w", id="a", order=1))
+        code, out = self.run_duration({"a": (13 * MIN, [13 * MIN])})
+        self.assertEqual(code, 1, out)
+        self.assertIn("(rango 6-12 min)", out)
+        self.assertIn("duration: a is outside 6-12 min", out)
+
+    def test_order_0_with_its_own_minutes_is_checked(self):
+        self.tree.write("cursor", "00-z.json", ep_notes("w", id="z", order=0, minutes=[1, 2]))
+        code, out = self.run_duration({"z": (3 * MIN, [3 * MIN])})
+        self.assertEqual(code, 1, out)
+        self.assertIn("duration: z is outside 1-2 min", out)
+
     def test_episode_filter_and_unknown_id(self):
         self.tree.write("cursor", "01-a.json", ep_notes("w", id="a", order=1))
         self.tree.write("cursor", "02-b.json", ep_notes("w", id="b", order=2))

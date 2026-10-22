@@ -313,6 +313,17 @@ class TreeTests(unittest.TestCase):
         self.assertEqual(len(msgs), 1, msgs)
         self.assertIn("'model'", msgs[0])
 
+    def test_an_episode_may_declare_its_own_minutes(self):
+        ep = minimal_episode()
+        for ok in ([6, 12], [1, 4], [2, 2]):
+            ep["minutes"] = ok
+            self.assertEqual(schema.validate(ep, "x.json"), [], ok)
+        for bad in (8, "6-12", [6], [6, 12, 15], [0, 4], [-1, 4], [5, 3], [1.5, 4], [True, 4], ["6", "12"]):
+            ep["minutes"] = bad
+            msgs = schema.validate(ep, "x.json")
+            self.assertEqual(len(msgs), 1, (bad, msgs))
+            self.assertIn("'minutes'", msgs[0])
+
     def test_bad_json_is_reported_not_raised(self):
         with TempTree() as t:
             (t.root / "episodes" / "cursor").mkdir()

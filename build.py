@@ -95,11 +95,18 @@ def cmd_new(args) -> int:
     from ws import scaffold
 
     try:
-        path = scaffold.create(Path(args.root), args.skill_repo, args.series, args.order, id=args.id)
+        text = args.minutes
+        if text is None and sys.stdin.isatty():
+            text = input("¿Cuánto tiene que durar el episodio? Minutos MIN-MAX [6-12]: ").strip() or None
+        minutes = scaffold.parse_minutes(text) if text is not None else scaffold.DEFAULT_MINUTES
+        path = scaffold.create(Path(args.root), args.skill_repo, args.series, args.order, id=args.id,
+                               minutes=minutes)
     except scaffold.ScaffoldError as exc:
         print("new: %s" % exc)
         return 1
     print("ok: wrote %s/%s" % (path.parent.name, path.name))
+    print("minutes: %d-%d%s" % (minutes + ("" if text is not None else
+                                           " (default; pass --minutes MIN-MAX to set another range)",)))
     print("next: fill every COMPLETAR (validate and build refuse them), then capture and build")
     return 0
 
@@ -129,6 +136,8 @@ def make_parser() -> argparse.ArgumentParser:
     new.add_argument("--id", metavar="ID", help="episode id (default: the repo name); for a monorepo with several skills")
     new.add_argument("--series", choices=("cursor", "claude-code"), default="cursor")
     new.add_argument("--order", type=int, metavar="N", help="position in the series (default: next free)")
+    new.add_argument("--minutes", metavar="MIN-MAX",
+                     help="how long the episode should last, in minutes (asked on a terminal; default 6-12)")
     new.set_defaults(func=cmd_new)
     cap = sub.add_parser("capture", help="re-run `real` terminal steps in a fake HOME")
     cap.add_argument("--episode", metavar="ID", help="capture only this episode id")

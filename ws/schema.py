@@ -27,7 +27,7 @@ PAGE_SRC_RE = re.compile(r"^pages/[a-z0-9][a-z0-9-]*\.html$")
 # `in` and `capture_only` are accepted on any step so their own, clearer message reports a misplacement.
 STEP_COMMON = ("type", "source", "notes", "pause", "in", "capture_only")
 STEP_EXTRA = {"term": ("cwd",), "approve": ("lines", "src", "window", "width", "height"), "page": ("capture",)}
-TOP_KEYS = ("id", "series", "order", "title", "pitch", "skill", "workspace", "chapters")
+TOP_KEYS = ("id", "series", "order", "title", "pitch", "skill", "workspace", "minutes", "chapters")
 CHAPTER_KEYS = ("id", "title", "subtitle", "screen", "faq", "steps")
 PITCH_KEYS = ("ask", "does")
 SKILL_KEYS = ("repo", "commit", "date")
@@ -199,6 +199,16 @@ def _validate_chapter(chapter, i, out, where, seen_ids):
             _validate_step(step, "%s step %d" % (prefix, j), out, chapter.get("screen"))
 
 
+def minutes_problem(value) -> str:
+    """'' when value is a valid [min, max] in whole minutes (0 < min <= max), else what is wrong."""
+    if not (isinstance(value, list) and len(value) == 2
+            and all(isinstance(v, int) and not isinstance(v, bool) for v in value)):
+        return "must be [min, max] in whole minutes"
+    if not 0 < value[0] <= value[1]:
+        return "must have 0 < min <= max (got %d-%d)" % tuple(value)
+    return ""
+
+
 def validate(episode: dict, where: str) -> list:
     """Return a list of problems ('<file> chapter <i> (<id>) step <j>: <problem>')."""
     out: list = []
@@ -221,6 +231,8 @@ def validate(episode: dict, where: str) -> list:
         _unknown_keys(episode["workspace"], WORKSPACE_KEYS, "%s: workspace" % where, out)
         if "model" in episode["workspace"]:
             _check_type(episode["workspace"]["model"], str, "%s: workspace: 'model'" % where, out)
+    if "minutes" in episode and minutes_problem(episode["minutes"]):
+        out.append("%s: 'minutes' %s" % (where, minutes_problem(episode["minutes"])))
     chapters = episode.get("chapters")
     if isinstance(chapters, list):
         if not chapters:
