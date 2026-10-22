@@ -156,6 +156,40 @@ class NewCommand(unittest.TestCase):
         self.assertEqual(code, 0, out)
         self.assertTrue(self.path("cursor", "07-x-skill.json").is_file())
 
+    def new_episode(self, *args, tty=False, answer=None):
+        with env_without_skills_root(WS_SKILLS_ROOT=str(self.skills)), \
+                mock.patch("sys.stdin.isatty", lambda: tty), \
+                mock.patch("builtins.input", lambda prompt="": answer):
+            code, out = run_cli(self.tree.root, "new", "x-skill", *args)
+        p = self.path("cursor", "01-x-skill.json")
+        return code, out, (json.loads(p.read_text(encoding="utf-8")) if p.is_file() else None)
+
+    def test_minutes_flag_is_written_into_the_episode(self):
+        code, out, ep = self.new_episode("--minutes", "2-5")
+        self.assertEqual(code, 0, out)
+        self.assertEqual(ep["minutes"], [2, 5])
+        self.assertIn("minutes: 2-5", out)
+
+    def test_on_a_terminal_it_asks_for_the_minutes(self):
+        code, out, ep = self.new_episode(tty=True, answer="3-7")
+        self.assertEqual(code, 0, out)
+        self.assertEqual(ep["minutes"], [3, 7])
+
+    def test_an_empty_answer_or_no_terminal_writes_6_to_12_and_says_so(self):
+        code, out, ep = self.new_episode(tty=True, answer="")
+        self.assertEqual((code, ep["minutes"]), (0, [6, 12]), out)
+        self.path("cursor", "01-x-skill.json").unlink()
+        code, out, ep = self.new_episode(tty=False)
+        self.assertEqual((code, ep["minutes"]), (0, [6, 12]), out)
+        self.assertIn("--minutes", out)
+
+    def test_bad_minutes_are_refused_and_nothing_is_written(self):
+        for bad in ("x", "6", "5-3", "0-4", "1-2-3"):
+            code, out, ep = self.new_episode("--minutes", bad)
+            self.assertEqual(code, 1, (bad, out))
+            self.assertIn("minutes", out)
+            self.assertIsNone(ep, bad)
+
     def test_commit_comes_from_the_skill_repo_when_available(self):
         short = make_skill_repo(self.skills, "mi-skill")
         with env_without_skills_root(WS_SKILLS_ROOT=str(self.skills)):

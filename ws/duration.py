@@ -14,7 +14,7 @@ from ws.chrome import chrome_available, chrome_path
 
 ENGINE_SCRIPTS = ("nav.js", "render.js", "animate.js")
 WORDS_PER_MINUTE = 150
-MIN_MS, MAX_MS = 6 * 60000, 12 * 60000
+DEFAULT_MINUTES = (6, 12)  # an episode without `minutes`
 SPEED = 1  # the engine's normal speed
 
 _PAGE = """<!doctype html><html><head><meta charset="utf-8"></head><body>
@@ -82,9 +82,10 @@ def _line(label: str, screen_ms: float, words: int) -> str:
 
 def report(root, episode_id: Optional[str] = None, emit: Callable = print,
            measure_fn: Optional[Callable] = None) -> int:
-    """Print one line per episode and chapter. 0 ok, 1 an episode outside 6-12 min, 2 unknown id.
+    """Print one line per episode and chapter. 0 ok, 1 an episode outside its range, 2 unknown id.
 
-    Episodes with `order` 0 (the setup intro) are listed but never fail the range."""
+    The range is the episode's `minutes` ([min, max]), 6-12 when it has none. An episode with `order` 0 (the setup
+    intro) and no `minutes` is listed but never fails the range."""
     if not chrome_available():
         emit("duration: skipped, Chrome not found at %s (set CHROME)" % chrome_path())
         return 0
@@ -118,12 +119,14 @@ def report(root, episode_id: Optional[str] = None, emit: Callable = print,
     bad = []
     for ep, screen, words, chapters in rows:
         total = screen + narration_ms(words)
-        intro = ep.get("order") == 0
-        emit(_line(ep["id"], screen, words) + ("  (setup intro, not range-checked)" if intro else ""))
+        lo, hi = ep.get("minutes") or DEFAULT_MINUTES
+        intro = ep.get("order") == 0 and "minutes" not in ep
+        emit(_line(ep["id"], screen, words)
+             + ("  (setup intro, not range-checked)" if intro else "  (rango %d-%d min)" % (lo, hi)))
         for cid, cms, cw in chapters:
             emit("  " + _line(cid, cms, cw))
-        if not intro and not (MIN_MS <= total <= MAX_MS):
-            bad.append((ep["id"], total))
-    for ep_id, total in bad:
-        emit("duration: %s is outside 6-12 min (total %s)" % (ep_id, fmt(total)))
+        if not intro and not (lo * 60000 <= total <= hi * 60000):
+            bad.append((ep["id"], total, lo, hi))
+    for ep_id, total, lo, hi in bad:
+        emit("duration: %s is outside %d-%d min (total %s)" % (ep_id, lo, hi, fmt(total)))
     return 1 if bad else 0

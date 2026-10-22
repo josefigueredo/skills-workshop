@@ -20,7 +20,7 @@ Abrís `dist/control.html`, hacés clic en «Abrir escenario» y compartís solo
 El guion de cada episodio vive en el repo de su skill (`workshop/episodes/`), que lo mantiene y publica su propio sitio en GitHub Pages. Este repo tiene el motor y una copia de los guiones para armar las series completas: `python3 build.py sync` la trae de las skills. Se arranca con `python3 build.py --root <skill>/workshop new <skill>` (un esqueleto con `COMPLETAR` que `build` no deja pasar), se completa el guion JSON, se captura lo que corre de verdad, se arma `dist/` y se revisa la privacidad. Todo en [docs/guion.md](docs/guion.md).
 
 ```
-python3 build.py [--root DIR] new SKILL [--series S] [--order N] [--id ID] | validate | capture [--episode ID] | build | check | duration [--episode ID] | sync [--repo R] [--check]
+python3 build.py [--root DIR] new SKILL [--series S] [--order N] [--id ID] [--minutes MIN-MAX] | validate | capture [--episode ID] | build | check | duration [--episode ID] | sync [--repo R] [--check]
 ```
 
 ## Desarrollo

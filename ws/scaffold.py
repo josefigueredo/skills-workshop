@@ -39,10 +39,27 @@ def _chapter(cid: str, title: str, screen: str, steps: list) -> dict:
             "screen": screen, "faq": _faq(title.lower()), "steps": steps}
 
 
-def skeleton(repo: str, series: str, order: int, commit: str, date: str, id: Optional[str] = None) -> dict:
+DEFAULT_MINUTES = (6, 12)
+
+
+def parse_minutes(text: str) -> tuple:
+    """'MIN-MAX' in whole minutes -> (min, max); raises ScaffoldError."""
+    parts = text.strip().split("-")
+    try:
+        lo, hi = (int(p) for p in parts) if len(parts) == 2 else (None, None)
+    except ValueError:
+        lo = hi = None
+    if lo is None or schema.minutes_problem([lo, hi]):
+        raise ScaffoldError("minutes must be MIN-MAX in whole minutes with 0 < MIN <= MAX, for example 6-12 (got %r)"
+                            % text)
+    return lo, hi
+
+
+def skeleton(repo: str, series: str, order: int, commit: str, date: str, id: Optional[str] = None,
+             minutes: tuple = DEFAULT_MINUTES) -> dict:
     """The fixed episode structure of the design spec, every text a COMPLETAR placeholder."""
     return {
-        "id": id or repo, "series": series, "order": order, "title": id or repo,
+        "id": id or repo, "series": series, "order": order, "title": id or repo, "minutes": list(minutes),
         "pitch": {"ask": "%s: lo que le decís al agente (README de la skill)" % MARK,
                   "does": "%s: lo que hace la skill (README de la skill)" % MARK},
         "skill": {"repo": repo, "commit": commit, "date": date},
@@ -118,7 +135,8 @@ def skill_commit(root, repo: str) -> str:
 
 
 def create(root, repo: str, series: str = "cursor", order: Optional[int] = None,
-           today: Optional[datetime.date] = None, id: Optional[str] = None) -> Path:
+           today: Optional[datetime.date] = None, id: Optional[str] = None,
+           minutes: tuple = DEFAULT_MINUTES) -> Path:
     """Write episodes/<series>/<NN>-<id>.json (id defaults to the repo name in lowercase; a monorepo hosts
     several ids). Never overwrites; raises ScaffoldError."""
     id = id or repo.lower()
@@ -153,7 +171,7 @@ def create(root, repo: str, series: str = "cursor", order: Optional[int] = None,
     if target.exists():
         raise ScaffoldError("%s already exists" % target.name)
     date = (today or datetime.date.today()).isoformat()
-    ep = skeleton(repo, series, order, skill_commit(root, repo), date, id)
+    ep = skeleton(repo, series, order, skill_commit(root, repo), date, id, minutes)
     target.parent.mkdir(parents=True, exist_ok=True)
     with open(str(target), "x", encoding="utf-8") as fh:  # "x": fails instead of overwriting
         fh.write(json.dumps(ep, ensure_ascii=False, indent=2) + "\n")

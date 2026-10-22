@@ -10,6 +10,7 @@ Un episodio es un archivo JSON en `episodes/<serie>/NN-nombre.json`. El motor lo
   "pitch": {"ask": "Lo que le decís al agente…", "does": "Lo que hace la skill."},
   "skill": {"repo": "mi-skill", "commit": "51311c7", "date": "2026-10-19"},
   "workspace": {"repo": "mi-servicio"},
+  "minutes": [6, 12],
   "chapters": [
     {"id": "instalar", "title": "Instalar", "subtitle": "Una vez por máquina", "screen": "terminal",
      "faq": [{"q": "¿Y si no tengo Docker?", "a": "No hace falta."}],
@@ -22,6 +23,7 @@ Un episodio es un archivo JSON en `episodes/<serie>/NN-nombre.json`. El motor lo
 ```
 
 - `series`: `cursor` o `claude-code`. `order`: posición dentro de la serie (el 0 es «Antes de empezar»).
+- `minutes`: cuánto tiene que durar el episodio, `[mínimo, máximo]` en minutos enteros. Lo pregunta `new` al crearlo; cada episodio tiene el suyo, porque una presentación de diapositivas y una demo de punta a punta no duran lo mismo. Sin `minutes`, el rango es de 6 a 12 (ver «Cuánto dura»).
 - `workspace.repo` es el nombre del repo que se ve en Cursor; `workspace` también acepta `files` (lista de nombres) y `chats` (`[{"title": "…", "age": "2d"}]`) y `model`, el modelo que muestra el chat (por defecto, Sonnet 5.5): tiene que ser el que escribe en el episodio.
 - `skill.commit` y `skill.date` dicen contra qué versión de la skill se escribió el episodio.
 - Cada capítulo se muestra **primero como una placa** (sale sola, no se declara en `steps`) y después sus pasos. `screen` elige la pantalla: `terminal`, `cursor-full`, `cursor-agent` o `claude-code`.
@@ -106,7 +108,7 @@ El motor, la demo (`demo/setup.sh`) y los scripts de preparación (`demo/prep/`)
 Se corren desde la raíz del repo del taller. Con `--root <skill>/workshop` trabajan sobre los guiones de esa skill.
 
 ```
-python3 build.py new mi-skill [--series cursor|claude-code] [--order N]   # esqueleto de un episodio nuevo
+python3 build.py new mi-skill [--series cursor|claude-code] [--order N] [--minutes MIN-MAX]   # esqueleto de un episodio nuevo
 python3 build.py validate                       # revisa el formato de los guiones
 python3 build.py capture --episode mi-skill     # re-corre los pasos `real` y actualiza el JSON
 python3 build.py build                          # valida, arma dist/ y revisa privacidad
@@ -147,7 +149,7 @@ Si tu lista marca el nombre de una skill que el taller enseña (por ejemplo, el 
 
 ## Sumar una skill nueva
 
-1. **Armá el esqueleto en la skill:** `python3 build.py --root <skill>/workshop new <repo-de-la-skill>` (con `--series claude-code` si va en esa serie, y `--order N` si no querés el siguiente número libre). Si varias skills viven en un mismo repo (un monorepo), usá `--id <skill>`: `python3 build.py new teamwayofwork --id auditing-repos` escribe `NN-auditing-repos.json` con `id` `auditing-repos` y `skill.repo` el monorepo. El id es lo que no se puede repetir, no el repo, así que de un mismo repo salen tantos episodios como ids distintos. Escribe `episodes/<serie>/NN-<id>.json` (el id es el repo si no pasás `--id`) con la estructura fija: instalar, caso principal, otro caso, si algo falla y cierre. Toma `skill.commit` de la primera carpeta de `$WS_SKILLS_ROOT` que tenga `<repo>` si lo encuentra, y la fecha de hoy. No pisa nada: si el episodio o el número ya existen, se niega.
+1. **Armá el esqueleto en la skill:** `python3 build.py --root <skill>/workshop new <repo-de-la-skill>` (con `--series claude-code` si va en esa serie, y `--order N` si no querés el siguiente número libre). En una terminal te pregunta cuánto tiene que durar (`--minutes MIN-MAX` para no preguntar; Enter deja 6-12) y lo escribe en `minutes`. Si varias skills viven en un mismo repo (un monorepo), usá `--id <skill>`: `python3 build.py new teamwayofwork --id auditing-repos` escribe `NN-auditing-repos.json` con `id` `auditing-repos` y `skill.repo` el monorepo. El id es lo que no se puede repetir, no el repo, así que de un mismo repo salen tantos episodios como ids distintos. Escribe `episodes/<serie>/NN-<id>.json` (el id es el repo si no pasás `--id`) con la estructura fija: instalar, caso principal, otro caso, si algo falla y cierre. Toma `skill.commit` de la primera carpeta de `$WS_SKILLS_ROOT` que tenga `<repo>` si lo encuentra, y la fecha de hoy. No pisa nada: si el episodio o el número ya existen, se niega.
    Ojo con el pin: `new` toma `skill.commit` del HEAD de tu copia local, y esa copia puede estar en otra rama o atrasada. Si no está en el commit de la rama por defecto del remoto, corregí `skill.commit` a mano ni bien termine `new` (y `skill.date` con `git -C <repo> log -1 --format=%cs <commit>`). La captura clona la copia local y hace checkout de `skill.commit`, así que lo que sale en pantalla es ese commit. Nunca hagas checkout ni fetch en la copia de la skill.
 2. **Completá todo lo que dice `COMPLETAR`**, leyendo el README, el showcase y la instalación de la skill (ver «Cómo sacar un episodio de una skill»). Mientras quede un `COMPLETAR`, `validate` y `build` fallan y te dicen el archivo, el capítulo y el paso, así que un episodio a medias nunca llega a `dist/`.
 3. **Capturá** lo que corre sin red: `python3 build.py --root <skill>/workshop capture --episode <id>`.
@@ -159,9 +161,9 @@ Si tu lista marca el nombre de una skill que el taller enseña (por ejemplo, el 
 
 ## Cuánto dura
 
-El control muestra el estimado: abrí `dist/control.html` y mirá «Estimado ~» (total, a la velocidad elegida) y el estimado por capítulo. Sale de `Animate.episodeDuration` (lo que tarda el tipeo y las animaciones). Eso es solo la pantalla: sumale la narración, a unas 150 palabras por minuto sobre el texto de las `notes`. La meta es de **6 a 12 minutos** por episodio. Si te pasás, partí el caso principal o sacá un caso del medio.
+El control muestra el estimado: abrí `dist/control.html` y mirá «Estimado ~» (total, a la velocidad elegida) y el estimado por capítulo. Sale de `Animate.episodeDuration` (lo que tarda el tipeo y las animaciones). Eso es solo la pantalla: sumale la narración, a unas 150 palabras por minuto sobre el texto de las `notes`. La meta es la que declara el episodio en `minutes`: la elegís al crearlo, según para qué es (una demo, una presentación para un grupo técnico, una intro corta). Si no la declara, es de **6 a 12 minutos**. Si te pasás, primero preguntate si el rango sigue siendo el correcto; si lo es, partí el caso principal o sacá un caso del medio.
 
-Para no sumar a mano: `python3 build.py duration` (o `--episode <id>`) imprime una línea por episodio y por capítulo, `screen m:ss · narración m:ss · total m:ss`. La pantalla sale de `Animate.episodeDuration` corrido en Chrome sin ventana (no se reimplementa en Python), y la narración es la cuenta de palabras de las `notes` a 150 por minuto. Termina con código 1 y nombra al episodio si su total queda fuera de 6 a 12 minutos. El episodio de `order` 0 (`antes-de-empezar`, la intro de preparación, hoy 4:13) se lista pero no cuenta para el código de salida: no es un episodio de skill. Sin Chrome, avisa que se saltea y sale con 0 (`CHROME` apunta a otro binario).
+Para no sumar a mano: `python3 build.py duration` (o `--episode <id>`) imprime una línea por episodio y por capítulo, `screen m:ss · narración m:ss · total m:ss`. La pantalla sale de `Animate.episodeDuration` corrido en Chrome sin ventana (no se reimplementa en Python), y la narración es la cuenta de palabras de las `notes` a 150 por minuto. Cada línea de episodio dice su rango (`(rango 6-12 min)`). Termina con código 1 y nombra al episodio si su total queda fuera de su rango. El episodio de `order` 0 (`antes-de-empezar`, la intro de preparación, hoy 4:13) se lista pero no cuenta para el código de salida, salvo que declare `minutes`: no es un episodio de skill. Sin Chrome, avisa que se saltea y sale con 0 (`CHROME` apunta a otro binario).
 
 ## Antes de entregar
 
