@@ -675,7 +675,7 @@
         },
         {
           "q": "¿Qué pasa con las skills que me quedaron de la serie?",
-          "a": "Siguen instaladas. La serie de Claude Code usa las mismas ideas, pero con otro cliente: lo vemos en el próximo episodio."
+          "a": "Siguen instaladas. La serie de Cursor tiene un episodio más, cursor-budget, para cuidar lo que gastás en Cursor; después viene la serie de Claude Code."
         },
         {
           "q": "¿Dónde veo el recorrido completo, con la firma y el cierre?",
@@ -687,13 +687,13 @@
           "type": "ask",
           "text": "¿Qué me llevo de arq-review y qué sigue?",
           "source": "inferido",
-          "notes": "Cerramos la serie de Cursor. Es un cierre doble: el de este episodio y el de toda la serie."
+          "notes": "Cerramos el episodio. La serie de Cursor sigue con uno más: cursor-budget."
         },
         {
           "type": "say",
-          "md": "#### Lo que te llevás\n- **Dos skills y un CLI:** `arq-manager` coordina (registro, triage, Jira, plazo, publicación) y `arq-architect` revisa lo técnico. Se instalan juntas y trabajan sobre tu repo de reviews.\n- **Dos boards:** el help desk para hablar con el requirente y el board de trabajo para el equipo, que lo lleva con `jira-team-kit`.\n- **El `--apply` es tuyo:** el agente muestra el dry run y te da el comando para que lo corras vos. No hay ventana de aprobación: tu control es lo que ves antes.\n- **Decide una persona:** el triage, la firma y el click de Aprobar o Rechazar no son del agente.\n\n#### Fin de la serie de Cursor\nViste ocho herramientas con las mismas reglas: el agente prepara, vos aprobás.\n\n#### Próxima serie: Claude Code, episodio 1: wayofwork\nSiete skills que te guían para llevar una iniciativa de punta a punta, ahora desde Claude Code.",
+          "md": "#### Lo que te llevás\n- **Dos skills y un CLI:** `arq-manager` coordina (registro, triage, Jira, plazo, publicación) y `arq-architect` revisa lo técnico. Se instalan juntas y trabajan sobre tu repo de reviews.\n- **Dos boards:** el help desk para hablar con el requirente y el board de trabajo para el equipo, que lo lleva con `jira-team-kit`.\n- **El `--apply` es tuyo:** el agente muestra el dry run y te da el comando para que lo corras vos. No hay ventana de aprobación: tu control es lo que ves antes.\n- **Decide una persona:** el triage, la firma y el click de Aprobar o Rechazar no son del agente.\n\n#### Próximo episodio: cursor-budget\nCuánto estás gastando en Cursor mientras trabajás: un aviso en cada turno y un freno antes de que un modelo caro o un chat largo se coman el ciclo.",
           "source": "inferido",
-          "notes": "Las tres ideas de hoy. Y el cierre de la serie: la regla se repite, el agente prepara y la persona aprueba, con una ventana de macOS, un comando tuyo o tu OK en el chat. Anticipá la serie nueva: lo mismo desde Claude Code, empezando por WayOfWork.",
+          "notes": "Las tres ideas de hoy, con la regla que se repite en toda la serie: el agente prepara y la persona aprueba, con una ventana de macOS, un comando tuyo o tu OK en el chat. Anticipá el próximo en una frase: después de tanto agente trabajando, cuánto cuesta y cómo frenarlo a tiempo.",
           "pause": true
         }
       ]

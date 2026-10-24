@@ -1,0 +1,690 @@
+{
+  "id": "cursor-budget",
+  "series": "cursor",
+  "order": 9,
+  "title": "cursor-budget",
+  "minutes": [
+    6,
+    10
+  ],
+  "pitch": {
+    "ask": "¿Cuánto llevo gastado en Cursor? Bajá el tope diario a 12",
+    "does": "Estima el costo de cada turno, te avisa con una notificación cuando un chat, el día, el ciclo o un modelo pasan su límite, y frena el prompt antes de que llegue al modelo si ya llegaste al tope o el modelo está bloqueado."
+  },
+  "skill": {
+    "repo": "cursor-budget",
+    "commit": "a28b6b2",
+    "date": "2026-10-24"
+  },
+  "workspace": {
+    "repo": "mi-servicio",
+    "files": [
+      "api",
+      "web",
+      "docs",
+      "README.md"
+    ],
+    "chats": [
+      {
+        "title": "Revisar el alcance de devoluciones",
+        "age": "1d"
+      }
+    ]
+  },
+  "chapters": [
+    {
+      "id": "instalar",
+      "title": "Instalar",
+      "subtitle": "Una línea, una vez por máquina",
+      "screen": "terminal",
+      "faq": [
+        {
+          "q": "¿Necesito gh?",
+          "a": "Sí, o acceso por SSH a GitHub: el repo es interno. brew install gh y gh auth login, una vez."
+        },
+        {
+          "q": "¿Toca mis otros hooks?",
+          "a": "No. Suma los suyos y deja los demás; antes de cambiar el archivo guarda una copia .bak."
+        },
+        {
+          "q": "¿Cómo lo actualizo?",
+          "a": "Con la misma línea. Reemplaza el programa y respeta tus límites y tu registro."
+        },
+        {
+          "q": "¿Anda en Windows o Linux?",
+          "a": "Está hecho para macOS: los avisos son notificaciones de macOS. En Linux registra y frena, pero no avisa."
+        }
+      ],
+      "steps": [
+        {
+          "type": "term",
+          "cmd": "gh api repos/josefigueredo/cursor-budget/contents/bootstrap.sh -H \"Accept: application/vnd.github.raw\" | bash",
+          "out": [
+            "copiado en ~/.cursor/budget/app",
+            "hook instalado",
+            "alias agregado en ~/.zshrc; abrí otra terminal o corré: source ~/.zshrc",
+            "skill: cursor-budget (Cursor, Claude Code, Codex) -> ~/.cursor/budget/app",
+            "Mandé una notificación de prueba. Si no la viste, los avisos no te van a llegar: abrí Configuración del Sistema → Notificaciones → Script Editor, activá «Permitir notificaciones» y probá de nuevo con `cbudget notify-test`.",
+            "Listo. Abrí una terminal nueva y probá: cbudget report"
+          ],
+          "source": "inferido",
+          "callouts": [
+            {
+              "kind": "box",
+              "match": "hook instalado",
+              "text": "dos hooks globales de Cursor"
+            },
+            {
+              "kind": "box",
+              "match": "Mandé una notificación de prueba.",
+              "text": "¿la viste?"
+            }
+          ],
+          "notes": "Una sola línea. gh pone tu sesión de GitHub porque el repo es interno: un curl suelto recibe 404. El instalador copia el programa a su propia carpeta, suma dos hooks a Cursor sin tocar los que ya tenías, agrega el alias cbudget y deja la skill a mano de Cursor, Claude Code y Codex. Al final manda una notificación de prueba: preguntá si la vieron, porque todos los avisos llegan así. Paso inferido: necesita red."
+        },
+        {
+          "type": "term",
+          "cmd": "bash ~/skills/cursor-budget/install.sh",
+          "out": [
+            "copiado en ~/.cursor/budget/app",
+            "hook instalado",
+            "alias agregado en ~/.zshrc; abrí otra terminal o corré: source ~/.zshrc",
+            "skill: cursor-budget (Cursor, Claude Code, Codex) -> ~/.cursor/budget/app",
+            "Mandé una notificación de prueba. Si no la viste, los avisos no te van a llegar: abrí Configuración del Sistema → Notificaciones → Script Editor, activá «Permitir notificaciones» y probá de nuevo con `cbudget notify-test`."
+          ],
+          "source": "real",
+          "cwd": "~",
+          "capture_only": true
+        },
+        {
+          "type": "term",
+          "cmd": "python3 -m json.tool ~/.cursor/hooks.json",
+          "out": [
+            "{",
+            "    \"version\": 1,",
+            "    \"hooks\": {",
+            "        \"stop\": [",
+            "            {",
+            "                \"command\": \"/opt/homebrew/opt/python@3.13/bin/python3.13 ~/.cursor/budget/app/cbudget.py hook\",",
+            "                \"timeout\": 10",
+            "            }",
+            "        ],",
+            "        \"beforeSubmitPrompt\": [",
+            "            {",
+            "                \"command\": \"/opt/homebrew/opt/python@3.13/bin/python3.13 ~/.cursor/budget/app/cbudget.py hook\",",
+            "                \"timeout\": 10",
+            "            }",
+            "        ]",
+            "    }",
+            "}"
+          ],
+          "source": "real",
+          "cwd": "~",
+          "callouts": [
+            {
+              "kind": "box",
+              "match": "beforeSubmitPrompt",
+              "text": "antes de mandar: puede frenar"
+            },
+            {
+              "kind": "note",
+              "text": "**Dos momentos.** Después de cada turno cuenta; antes de cada prompt, decide si pasa."
+            }
+          ],
+          "notes": "Esto es todo lo que cambia en Cursor: dos entradas en hooks.json. stop corre al terminar cada turno y anota cuánto costó. beforeSubmitPrompt corre antes de mandar el prompt y puede frenarlo: si frena, no llega al modelo y no cuesta nada. Después de instalar, reiniciá Cursor para que los lea."
+        }
+      ]
+    },
+    {
+      "id": "caso-principal",
+      "title": "Caso principal",
+      "subtitle": "Cargar lo gastado, preguntar y bajar un tope, desde el chat",
+      "screen": "cursor-full",
+      "faq": [
+        {
+          "q": "¿Es exacto?",
+          "a": "Es una estimación con precios de lista: en lo medido dio ±5% contra la factura. El número que se paga es el de Cursor."
+        },
+        {
+          "q": "¿Y si no cargo lo gastado?",
+          "a": "Cuenta desde que lo instalaste, y los avisos lo dicen. Cuando quieras, le pasás el monto de la página de uso."
+        },
+        {
+          "q": "¿Puede el agente subirse el presupuesto?",
+          "a": "La skill tiene prohibido cambiar algo que no pediste. Igual, cada cambio te llega como notificación y queda anotado con quién lo hizo."
+        },
+        {
+          "q": "¿Tengo que exportar el CSV?",
+          "a": "No. El monto de la página alcanza. El CSV suma el detalle por modelo y por día."
+        }
+      ],
+      "steps": [
+        {
+          "type": "ask",
+          "text": "Cursor dice que llevo 84,30 de 200 este mes",
+          "source": "inferido",
+          "notes": "Primero le contamos lo que ya gastamos: el hook cuenta desde que lo instalaste y no sabe lo de antes. El número sale de cursor.com/dashboard, en Usage, «Your monthly usage»."
+        },
+        {
+          "type": "tool",
+          "label": "Read skill · cursor-budget",
+          "source": "inferido"
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.cursor/budget/app/cbudget.py seed --amount 84.30",
+          "out": [
+            "Ciclo desde 2026-10-01: $84.30 según la página de Cursor. Desde ahora suma lo que vean los hooks."
+          ],
+          "source": "real",
+          "cwd": "~/mi-servicio",
+          "callouts": [
+            {
+              "kind": "underline",
+              "match": "Desde ahora suma lo que vean los hooks."
+            }
+          ],
+          "notes": "seed guarda lo que dice Cursor como punto de partida del ciclo. Desde ahí, el total es eso más lo que estima el hook en cada turno."
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.cursor/budget/app/cbudget.py limits set cycle_limit 200",
+          "out": [
+            "cycle_limit = $200.00"
+          ],
+          "source": "real",
+          "cwd": "~/mi-servicio",
+          "callouts": [
+            {
+              "kind": "note",
+              "text": "**El tope del plan** lo dijiste vos («de 200»): por eso lo cambia."
+            }
+          ],
+          "notes": "El segundo número era el tope del plan. Viene en 225 por defecto; como el usuario lo dijo, la skill lo ajusta. La skill solo cambia lo que le pedís."
+        },
+        {
+          "type": "say",
+          "md": "Listo: el ciclo arranca en **$84.30 de $200**, desde el 1 de octubre. Desde ahora sumo lo que estimen los hooks en cada turno.",
+          "source": "inferido",
+          "notes": "Cerrá la idea: Cursor cobra, el hook estima. Con el seed, los dos números arrancan iguales."
+        },
+        {
+          "type": "term",
+          "cmd": "echo '{\"hook_event_name\":\"stop\",\"model\":\"claude-sonnet-5-5-high\",\"conversation_id\":\"a1\",\"input_tokens\":180000,\"cache_read_tokens\":150000,\"output_tokens\":6000}' | python3 ~/.cursor/budget/app/cbudget.py hook",
+          "out": [
+            "{}"
+          ],
+          "source": "real",
+          "cwd": "~",
+          "capture_only": true
+        },
+        {
+          "type": "term",
+          "cmd": "echo '{\"hook_event_name\":\"stop\",\"model\":\"claude-sonnet-5-5-high\",\"conversation_id\":\"a1\",\"input_tokens\":260000,\"cache_read_tokens\":240000,\"output_tokens\":9000}' | python3 ~/.cursor/budget/app/cbudget.py hook",
+          "out": [
+            "{}"
+          ],
+          "source": "real",
+          "cwd": "~",
+          "capture_only": true
+        },
+        {
+          "type": "term",
+          "cmd": "echo '{\"hook_event_name\":\"stop\",\"model\":\"auto-smart\",\"conversation_id\":\"b2\",\"input_tokens\":120000,\"cache_read_tokens\":90000,\"output_tokens\":4000}' | python3 ~/.cursor/budget/app/cbudget.py hook",
+          "out": [
+            "{}"
+          ],
+          "source": "real",
+          "cwd": "~",
+          "capture_only": true
+        },
+        {
+          "type": "ask",
+          "text": "¿cuánto llevo gastado en Cursor y cómo están mis límites?",
+          "source": "inferido",
+          "notes": "La pregunta de todos los días. La skill corre el reporte y los límites y contesta con lo que importa."
+        },
+        {
+          "type": "tool",
+          "label": "Ran cbudget report --color never",
+          "source": "inferido"
+        },
+        {
+          "type": "tool",
+          "label": "Ran cbudget limits --color never",
+          "source": "inferido",
+          "notes": "Corre el reporte y los límites, y contesta con lo que importa. La pantalla entera la vemos en el capítulo que sigue."
+        },
+        {
+          "type": "say",
+          "md": "**Ciclo:** $84.85 / $200: te quedan **$115.15** y 8 días (se reinicia el 1 de nov). Hoy: $0.55.\n\n**Límites activos:** aviso chat $2 / bloqueo $5 · aviso día $8 / bloqueo $15 · Opus high, xhigh y max bloqueados. Chequeo: sin problemas.\n\nEl total mezcla lo que decía Cursor más lo estimado por los hooks desde entonces.",
+          "source": "inferido",
+          "callouts": [
+            {
+              "kind": "underline",
+              "match": "lo estimado por los hooks"
+            }
+          ],
+          "notes": "Contesta con números, no con la pantalla entera. Remarcá «estimado»: el número que se paga es el de Cursor; este sirve para enterarte a tiempo."
+        },
+        {
+          "type": "ask",
+          "text": "bajá el tope diario a 12",
+          "source": "inferido",
+          "notes": "Un cambio, dicho como lo dirías a una persona."
+        },
+        {
+          "type": "tool",
+          "label": "Ran Set block_day to 12 outside sandbox",
+          "source": "inferido",
+          "callouts": [
+            {
+              "kind": "note",
+              "text": "**Fuera del sandbox:** escribe en `~/.cursor/budget`, así que Cursor te pide permiso."
+            }
+          ],
+          "notes": "Cursor corre los comandos del agente en un sandbox. Escribir en tu carpeta personal lo saca de ahí y te pide permiso. Es esperable: aceptalo."
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.cursor/budget/app/cbudget.py limits set block_day 12",
+          "out": [
+            "block_day = $12.00"
+          ],
+          "source": "real",
+          "cwd": "~/mi-servicio"
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.cursor/budget/app/cbudget.py limits check",
+          "out": [
+            "ok"
+          ],
+          "source": "real",
+          "cwd": "~/mi-servicio",
+          "notes": "Después de cada cambio revisa que los límites no se contradigan: por ejemplo, un aviso más alto que el bloqueo."
+        },
+        {
+          "type": "say",
+          "md": "Listo: `block_day` = **$12.00** (antes $15). Chequeo: ok.",
+          "source": "inferido",
+          "callouts": [
+            {
+              "kind": "note",
+              "text": "**Cada cambio te llega como notificación**, aunque lo haga el agente."
+            }
+          ],
+          "notes": "La regla de la skill: solo cambia lo que pediste y con tu valor. Nunca sube un límite ni levanta un bloqueo por su cuenta. Y cada cambio queda anotado con quién lo hizo.",
+          "pause": true
+        }
+      ]
+    },
+    {
+      "id": "en-la-terminal",
+      "title": "En la terminal",
+      "subtitle": "El reporte y los límites, enteros",
+      "screen": "terminal",
+      "faq": [
+        {
+          "q": "¿Puedo cambiar los límites desde acá?",
+          "a": "Sí: cbudget limits edit pregunta uno por uno y guarda solo si confirmás."
+        },
+        {
+          "q": "¿Por qué Opus High viene bloqueado?",
+          "a": "Porque es el que más rápido se come el ciclo. Si lo necesitás, pedí «desbloqueá Opus High»."
+        },
+        {
+          "q": "¿Sin color?",
+          "a": "Con --color never o la variable NO_COLOR, para copiarlo o pegarlo en un ticket."
+        }
+      ],
+      "steps": [
+        {
+          "type": "term",
+          "cmd": "python3 ~/.cursor/budget/app/cbudget.py report --color never --days 1",
+          "out": [
+            "",
+            " Uso de Cursor",
+            "╭──────────────────────────────────────────────────────────────────────────────────────────────────╮",
+            "│ Uso del ciclo                                                                                    │",
+            "│ $84.85 / $200.00                                                                                 │",
+            "│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ │",
+            "│ Se reinicia el 1 de nov de 2026  ·  Quedan 8 días                                                │",
+            "│ Lo que mostraba Cursor al cargarlo, más lo estimado desde entonces.                              │",
+            "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+            "╭──────────────────────────────╮  ╭──────────────────────────────╮  ╭──────────────────────────────╮",
+            "│ Total del ciclo              │  │ Disponible                   │  │ Hoy                          │",
+            "│ $84.85                       │  │ $115.15                      │  │ $0.55                        │",
+            "╰──────────────────────────────╯  ╰──────────────────────────────╯  ╰──────────────────────────────╯",
+            "╭──────────────────────────────────────────────────────────────────────────────────────────────────╮",
+            "│ Uso por día                                                                                      │",
+            "│ Tu uso por día en este ciclo                                                                     │",
+            "│                                                                                                  │",
+            "│ 24 oct  █████████████████████████████████████████████████████████████████████████████      $0.55 │",
+            "│                                                                                                  │",
+            "│ ● claude-sonnet-5-5-high   ● auto-smart                                                          │",
+            "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+            "╭──────────────────────────────────────────────────────────────────────────────────────────────────╮",
+            "│ Últimos turnos (último día)                                                                      │",
+            "│ Fecha            Modelo                    Chat         Tokens     Costo                         │",
+            "│ 24 oct, 19:37  ● claude-sonnet-5-5-high    a1           186.0K     $0.18                         │",
+            "│ 24 oct, 19:37  ● claude-sonnet-5-5-high    a1           269.0K     $0.22                         │",
+            "│ 24 oct, 19:37  ● auto-smart                b2           124.0K     $0.15                         │",
+            "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+            ""
+          ],
+          "source": "real",
+          "cwd": "~",
+          "callouts": [
+            {
+              "kind": "underline",
+              "match": "$115.15"
+            },
+            {
+              "kind": "note",
+              "text": "**Lo que queda del ciclo**, subrayado. En una terminal de verdad sale en color, con el diseño de la página de uso de Cursor."
+            }
+          ],
+          "notes": "El reporte entero: el ciclo y cuándo se reinicia, total, disponible y hoy, el gasto por día apilado por modelo y los últimos turnos con su chat. Con el alias es cbudget report."
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.cursor/budget/app/cbudget.py limits --color never",
+          "out": [
+            "",
+            " Límites de cursor-budget",
+            "╭──────────────────────────────────────────────────────────────────────────────────────────────────╮",
+            "│ Generales                                                                                        │",
+            "│ Límite                     Valor   Qué hace                                                      │",
+            "│ warn_conversation          $2.00   Avisa cuando un chat pasa este monto                          │",
+            "│ block_conversation         $5.00   Bloquea un chat que llegó a este monto                        │",
+            "│ warn_day                   $8.00   Avisa cuando el día pasa este monto                           │",
+            "│ block_day                 $12.00 * Bloquea el resto del día al llegar a este monto               │",
+            "│ cycle_limit              $200.00 * Tope del plan en el ciclo                                     │",
+            "│ cycle_day                      1   Día del mes en que se reinicia el ciclo                       │",
+            "│ model_warn                   80%   Parte del presupuesto de un modelo que dispara el aviso       │",
+            "│ notify_each_turn              sí   Notificación después de cada turno                            │",
+            "│                                                                                                  │",
+            "│ * cambiado en ~/.cursor/budget/config.json; el resto es el valor por defecto                     │",
+            "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+            "╭──────────────────────────────────────────────────────────────────────────────────────────────────╮",
+            "│ Presupuesto por modelo (ciclo)                                                                   │",
+            "│ Sin presupuestos por modelo. Agregá uno con `cbudget limits model <patrón> <usd>`.               │",
+            "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+            "╭──────────────────────────────────────────────────────────────────────────────────────────────────╮",
+            "│ Modelos bloqueados                                                                               │",
+            "│ claude-opus-*-high, *-xhigh, *-max                                                               │",
+            "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+            "╭──────────────────────────────────────────────────────────────────────────────────────────────────╮",
+            "│ Chequeo                                                                                          │",
+            "│ ● Sin problemas: los límites son coherentes entre sí.                                            │",
+            "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+            ""
+          ],
+          "source": "real",
+          "cwd": "~",
+          "callouts": [
+            {
+              "kind": "underline",
+              "match": "claude-opus-*-high, *-xhigh, *-max"
+            },
+            {
+              "kind": "note",
+              "text": "**Opus High, xhigh y max** vienen bloqueados de fábrica."
+            }
+          ],
+          "notes": "Los límites de fábrica: aviso a los 2 dólares por chat y bloqueo a los 5; aviso a los 8 por día y bloqueo a los 15, que acá ya bajamos a 12. Y los modelos más caros, bloqueados. El asterisco marca lo que cambiaste. Abajo, el chequeo: que los límites no se contradigan."
+        }
+      ]
+    },
+    {
+      "id": "cuando-te-frena",
+      "title": "Otro caso: cuando te frena",
+      "subtitle": "Un modelo bloqueado no llega a costar nada",
+      "screen": "terminal",
+      "faq": [
+        {
+          "q": "¿Qué frena, además de los modelos bloqueados?",
+          "a": "Un modelo que agotó su presupuesto del ciclo, un chat que llegó a $5 y un día que llegó a su tope."
+        },
+        {
+          "q": "¿Y si el hook se rompe?",
+          "a": "Deja pasar el prompt. Un freno roto no puede dejarte sin Cursor."
+        },
+        {
+          "q": "¿Por qué el chat caro se frena?",
+          "a": "Porque lo que más encarece cada turno es el contexto largo que se reenvía. Un chat nuevo cuesta mucho menos."
+        }
+      ],
+      "steps": [
+        {
+          "type": "term",
+          "cmd": "echo '{\"hook_event_name\":\"beforeSubmitPrompt\",\"model\":\"claude-opus-5-5-high\",\"conversation_id\":\"c1\"}' | python3 ~/.cursor/budget/app/cbudget.py hook",
+          "out": [
+            "{\"continue\": false, \"user_message\": \"cursor-budget: el modelo claude-opus-5-5-high est\\u00e1 bloqueado; eleg\\u00ed otro o corr\\u00e9 `cbudget allow`\"}"
+          ],
+          "source": "real",
+          "cwd": "~",
+          "callouts": [
+            {
+              "kind": "box",
+              "match": "\"continue\": false",
+              "text": "el prompt no se manda"
+            }
+          ],
+          "notes": "Esto es lo que pasa por dentro cuando mandás un prompt con Opus High. Cursor le pregunta al hook, y el hook contesta continue false. En el IDE se ve un aviso, «Submission blocked by hook», con este mensaje. El prompt no llega al modelo: costo cero."
+        },
+        {
+          "type": "term",
+          "cmd": "tail -n 1 ~/.cursor/budget/blocks.jsonl",
+          "out": [
+            "{\"t\": 1792881431, \"conversation_id\": \"c1\", \"model\": \"claude-opus-5-5-high\", \"reason\": \"el modelo claude-opus-5-5-high está bloqueado; elegí otro o corré `cbudget allow`\"}"
+          ],
+          "source": "real",
+          "cwd": "~",
+          "notes": "Cada bloqueo queda anotado, con el modelo y el motivo. Y sale una notificación, porque en la terminal de cursor-agent el mensaje no se ve."
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.cursor/budget/app/cbudget.py allow --minutes 30",
+          "out": [
+            "bloqueos levantados hasta las 20:07"
+          ],
+          "source": "real",
+          "cwd": "~",
+          "callouts": [
+            {
+              "kind": "note",
+              "text": "**Lo levantás vos.** La skill nunca corre `allow` por su cuenta."
+            }
+          ],
+          "notes": "Si de verdad hace falta, levantás todos los bloqueos un rato. Desde el chat: «levantá el bloqueo media hora». Es tu decisión, no la del agente."
+        },
+        {
+          "type": "term",
+          "cmd": "echo '{\"hook_event_name\":\"beforeSubmitPrompt\",\"model\":\"claude-opus-5-5-high\",\"conversation_id\":\"c1\"}' | python3 ~/.cursor/budget/app/cbudget.py hook",
+          "out": [
+            "{}"
+          ],
+          "source": "real",
+          "cwd": "~",
+          "notes": "Mismo prompt, ahora pasa: el hook contesta vacío y Cursor sigue."
+        }
+      ]
+    },
+    {
+      "id": "presupuesto-por-modelo",
+      "title": "Otro caso: presupuesto por modelo",
+      "subtitle": "Usar Opus a conciencia",
+      "screen": "cursor-agent",
+      "faq": [
+        {
+          "q": "¿Puedo poner varios?",
+          "a": "Sí, uno por patrón: claude-opus-*, auto*, gpt-*. Gana el primero que coincide."
+        },
+        {
+          "q": "¿Cuenta lo que gasté antes?",
+          "a": "Con el CSV de Cursor sí, por modelo. Con el monto solo, cuenta desde ese momento."
+        },
+        {
+          "q": "¿Cómo lo quito?",
+          "a": "«Sacale el presupuesto a Opus». Corre limits model con --remove."
+        }
+      ],
+      "steps": [
+        {
+          "type": "ask",
+          "text": "Poné un presupuesto de 40 dólares para Opus en este ciclo",
+          "source": "inferido",
+          "notes": "Un tope por modelo: avisa al 80% y, al agotarlo, bloquea ese modelo hasta el próximo ciclo."
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.cursor/budget/app/cbudget.py limits model 'claude-opus-*' 40",
+          "out": [
+            "claude-opus-* = $40.00 por ciclo"
+          ],
+          "source": "real",
+          "cwd": "~/mi-servicio"
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.cursor/budget/app/cbudget.py limits check",
+          "out": [
+            "warning: El patrón 'claude-opus-*' no coincide con ningún modelo usado este ciclo",
+            "1 problema(s)"
+          ],
+          "source": "real",
+          "cwd": "~/mi-servicio",
+          "callouts": [
+            {
+              "kind": "box",
+              "match": "no coincide con ningún modelo usado este ciclo",
+              "text": "un aviso, no un error"
+            }
+          ],
+          "notes": "El chequeo avisa que el patrón todavía no coincide con nada usado este ciclo. No es un error: en este ciclo de demo nadie usó Opus. Sirve para atrapar un patrón mal escrito."
+        },
+        {
+          "type": "say",
+          "md": "Listo: **Opus tiene $40 para el ciclo**. Te aviso al 80% y, si lo agota, lo bloqueo hasta el 1 de nov.\n\nEl chequeo da un aviso: todavía no usaste Opus este ciclo, así que `claude-opus-*` no coincide con nada. Si el nombre está bien, no hace falta hacer nada.",
+          "source": "inferido",
+          "callouts": [
+            {
+              "kind": "underline",
+              "match": "lo bloqueo hasta el 1 de nov"
+            }
+          ],
+          "notes": "Para qué sirve: decidir de antemano cuánto querés gastar en el modelo caro, en vez de enterarte a fin de mes.",
+          "pause": true
+        }
+      ]
+    },
+    {
+      "id": "si-algo-falla",
+      "title": "Si algo falla",
+      "subtitle": "Los tres tropiezos más comunes",
+      "screen": "terminal",
+      "faq": [
+        {
+          "q": "Instalé y Cursor no frena ni avisa",
+          "a": "Reiniciá Cursor: los hooks se leen al arrancar."
+        },
+        {
+          "q": "El total no coincide con Cursor",
+          "a": "Es una estimación. Volvé a cargar el monto de la página de uso."
+        },
+        {
+          "q": "cbudget: command not found",
+          "a": "Abrí una terminal nueva: el alias se carga al abrirla."
+        }
+      ],
+      "steps": [
+        {
+          "type": "term",
+          "cmd": "curl -fsSL https://raw.githubusercontent.com/josefigueredo/cursor-budget/main/bootstrap.sh | bash",
+          "out": [
+            "curl: (22) The requested URL returned error: 404"
+          ],
+          "source": "inferido",
+          "callouts": [
+            {
+              "kind": "box",
+              "match": "404",
+              "text": "el repo es interno: usá gh"
+            }
+          ],
+          "notes": "El clásico: copiar un curl de otro lado. El repo es interno y curl no lleva tu sesión, así que da 404. La línea con gh api sí. Paso inferido."
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.cursor/budget/app/cbudget.py limits set block_day doce",
+          "out": [
+            "block_day: esperaba un número, llegó 'doce'",
+            "# exit 2"
+          ],
+          "source": "real",
+          "cwd": "~",
+          "notes": "Un valor que no es un número: no cambia nada y dice por qué. Acepta 12, 12,5 o $12."
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.cursor/budget/app/cbudget.py notify-test",
+          "out": [
+            "Mandé una notificación de prueba. Si no la viste, los avisos no te van a llegar: abrí Configuración del Sistema → Notificaciones → Script Editor, activá «Permitir notificaciones» y probá de nuevo con `cbudget notify-test`."
+          ],
+          "source": "real",
+          "cwd": "~",
+          "callouts": [
+            {
+              "kind": "note",
+              "text": "**Sin notificaciones no hay avisos.** Se habilitan una vez, para Script Editor."
+            }
+          ],
+          "notes": "Si no llega ninguna notificación, macOS las tiene bloqueadas. notify-test manda una y dice dónde habilitarlas. Es lo primero a revisar si «no avisa nada»."
+        }
+      ]
+    },
+    {
+      "id": "cierre",
+      "title": "Cierre",
+      "subtitle": "Lo que te llevás y lo que sigue",
+      "screen": "cursor-agent",
+      "faq": [
+        {
+          "q": "¿Lo puedo usar en el equipo?",
+          "a": "Cada persona lo instala en su máquina y cuenta lo suyo. No ve el gasto de otros."
+        },
+        {
+          "q": "¿Es seguridad?",
+          "a": "No: es un freno para uno mismo. Quien usa la máquina puede editar los límites."
+        },
+        {
+          "q": "¿Qué necesito para la serie de Claude Code?",
+          "a": "Claude Code instalado. Cada episodio arranca instalando su skill."
+        }
+      ],
+      "steps": [
+        {
+          "type": "ask",
+          "text": "¿Qué me llevo de cursor-budget y qué sigue?",
+          "source": "inferido",
+          "notes": "Cerramos la serie de Cursor. Es un cierre doble: el de este episodio y el de toda la serie."
+        },
+        {
+          "type": "say",
+          "md": "#### Lo que te llevás\n- **Te enterás mientras trabajás:** cada turno te dice cuánto costó, y los avisos llegan antes del tope.\n- **Frena antes de gastar:** un modelo bloqueado o un tope agotado no llegan al modelo.\n- **Lo manejás conversando:** la skill solo cambia lo que le pedís, y cada cambio te llega como notificación.\n- **Es una estimación:** el número que se paga es el de Cursor.\n\n#### Fin de la serie de Cursor\nViste nueve herramientas con las mismas reglas: el agente prepara, vos aprobás, y ahora sabés cuánto cuesta.\n\n#### Próxima serie: Claude Code, episodio 1: wayofwork\nSiete skills que te guían para llevar una iniciativa de punta a punta, ahora desde Claude Code.",
+          "source": "inferido",
+          "callouts": [
+            {
+              "kind": "underline",
+              "match": "Frena antes de gastar"
+            }
+          ],
+          "notes": "Las cuatro ideas, sin repetir el episodio. La que más importa: lo que encarece no suele ser el modelo, sino el chat largo. Y el cierre de la serie: la regla se repite en todas, el agente prepara y la persona aprueba. Anticipá la serie nueva: lo mismo desde Claude Code, empezando por WayOfWork.",
+          "pause": true
+        }
+      ]
+    }
+  ]
+}

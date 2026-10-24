@@ -49,6 +49,7 @@ Serie Cursor:
 | 6 | local-board-skill | listo | `josefigueredo/teamwayofwork` |
 | 7 | install-unified-ci | listo | `josefigueredo/teamwayofwork` |
 | 8 | arq-review | listo | `arch-review` |
+| 9 | cursor-budget | listo | `cursor-budget` |
 
 Serie Claude Code:
 
