@@ -39,7 +39,7 @@ También podés usar los botones del control: es lo mismo. `AvPág` y `RePág` e
 
 ### Un episodio abierto desde su link, sin el control
 
-Si abrís la serie desde la portada (o con un link como `serie-cursor.html#antes-de-empezar/1`), la página anda sola: `→`/`AvPág`/`espacio` avanzan animando (si el paso todavía se anima, primero lo terminan), `←`/`RePág` retroceden, `⇧ →`/`⇧ ←` saltan de capítulo y `B` pone negro. La dirección se actualiza con el paso, así que si recargás seguís donde estabas. No hay notas, reloj ni play automático: para presentar en serio, usá el control.
+Si abrís la serie desde la portada (o con un link como `serie-cursor.html#antes-de-empezar/1`), la página anda sola: `→`/`AvPág`/`espacio` avanzan animando (si el paso todavía se anima, primero lo terminan), `←`/`RePág` retroceden, `⇧ →`/`⇧ ←` saltan de capítulo y `B` pone negro. La dirección se actualiza con el paso, así que si recargás seguís donde estabas. La placa del primer capítulo muestra al pie las teclas `←` y `→`, para quien abre el link sin saber cómo moverse. No hay notas, reloj ni play automático: para presentar en serio, usá el control.
 
 ## Durante la presentación
 

@@ -433,12 +433,12 @@ function fakeClock() {
     drain: function () { var n = 0; while (q.length && n < 10000) { q.shift().fn(); n++; } }
   };
 }
-function makeStage() {
+function makeStage(episodes) {
   var canvas = document.createElement("div");
   var blackout = document.createElement("div");
   var posted = [];
   var clock = fakeClock();
-  var st = Stage.create({canvas: canvas, blackout: blackout, episodes: protoEpisodes(),
+  var st = Stage.create({canvas: canvas, blackout: blackout, episodes: episodes || protoEpisodes(),
                          post: function (m) { posted.push(m); },
                          schedule: clock.schedule, unschedule: clock.unschedule});
   return {stage: st, canvas: canvas, blackout: blackout, posted: posted, clock: clock};
@@ -565,6 +565,26 @@ test("stage: fade class only while an animated card or approve runs", function (
     assert(!t.canvas.classList.contains("ws-fade-in"), "fade class removed at the end");
     var p = t.stage.handle(show(5, true));
     assert(!t.canvas.classList.contains("ws-fade-in"), "an ask does not fade");
+    t.clock.drain();
+    return p;
+  });
+});
+
+test("stage: a page right after another page does not fade", function () {
+  var ep = {id: "web", series: "cursor", order: 1, title: "web", skill: {repo: "web", commit: "abc1234", date: "2026-10-19"},
+            workspace: {repo: "r", files: [], chats: []},
+            chapters: [{id: "w", title: "Web", screen: "cursor-full", steps: [
+              {type: "page", title: "a.com", html: "<p>a</p>", source: "real"},
+              {type: "page", title: "b.com", html: "<p>b</p>", source: "real"}]}]};
+  var t = makeStage([ep]);
+  return t.stage.handle({type: "show", episode: "web", index: 0, animate: false}).then(function () {
+    var p = t.stage.handle({type: "show", episode: "web", index: 1, animate: true});
+    assert(t.canvas.classList.contains("ws-fade-in"), "the first page fades");
+    t.clock.drain();
+    return p;
+  }).then(function () {
+    var p = t.stage.handle({type: "show", episode: "web", index: 2, animate: true});
+    assert(!t.canvas.classList.contains("ws-fade-in"), "the second page fades the browser out and in");
     t.clock.drain();
     return p;
   });

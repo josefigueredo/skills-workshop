@@ -17,10 +17,11 @@
   #ws-canvas { width: 1600px; height: 900px; }
   #ws-blackout { position: absolute; inset: 0; background: #000; z-index: 10; }
   #ws-blackout[hidden] { display: none; }
-  /* Fade-in of a card or an approve window, only while that step animates. */
+  /* Fade-in of a card, an approve window or a page, only while that step animates. */
   @keyframes ws-fade-in { from { opacity: 0; } to { opacity: 1; } }
   .ws-fade-in > .ws-card,
-  .ws-fade-in > .ws-screen > .ws-approve:not([hidden]) {
+  .ws-fade-in > .ws-screen > .ws-approve:not([hidden]),
+  .ws-fade-in > .ws-screen > .ws-page:not([hidden]) {
     animation: ws-fade-in var(--ws-fade-ms, 250ms) ease-out forwards;
   }
 </style>
