@@ -184,7 +184,8 @@
               "match": "Desde ahora suma lo que vean los hooks."
             }
           ],
-          "notes": "seed guarda lo que dice Cursor como punto de partida del ciclo. Desde ahí, el total es eso más lo que estima el hook en cada turno."
+          "notes": "seed guarda lo que dice Cursor como punto de partida del ciclo. Desde ahí, el total es eso más lo que estima el hook en cada turno.",
+          "color": true
         },
         {
           "type": "term",
@@ -200,7 +201,8 @@
               "text": "**El tope del plan** lo dijiste vos («de 200»): por eso lo cambia."
             }
           ],
-          "notes": "El segundo número era el tope del plan. Viene en 225 por defecto; como el usuario lo dijo, la skill lo ajusta. La skill solo cambia lo que le pedís."
+          "notes": "El segundo número era el tope del plan. Viene en 225 por defecto; como el usuario lo dijo, la skill lo ajusta. La skill solo cambia lo que le pedís.",
+          "color": true
         },
         {
           "type": "say",
@@ -216,7 +218,8 @@
           ],
           "source": "real",
           "cwd": "~",
-          "capture_only": true
+          "capture_only": true,
+          "color": true
         },
         {
           "type": "term",
@@ -226,7 +229,8 @@
           ],
           "source": "real",
           "cwd": "~",
-          "capture_only": true
+          "capture_only": true,
+          "color": true
         },
         {
           "type": "term",
@@ -236,7 +240,8 @@
           ],
           "source": "real",
           "cwd": "~",
-          "capture_only": true
+          "capture_only": true,
+          "color": true
         },
         {
           "type": "ask",
@@ -292,7 +297,8 @@
             "block_day = $12.00"
           ],
           "source": "real",
-          "cwd": "~/mi-servicio"
+          "cwd": "~/mi-servicio",
+          "color": true
         },
         {
           "type": "term",
@@ -302,7 +308,8 @@
           ],
           "source": "real",
           "cwd": "~/mi-servicio",
-          "notes": "Después de cada cambio revisa que los límites no se contradigan: por ejemplo, un aviso más alto que el bloqueo."
+          "notes": "Después de cada cambio revisa que los límites no se contradigan: por ejemplo, un aviso más alto que el bloqueo.",
+          "color": true
         },
         {
           "type": "say",
@@ -341,36 +348,36 @@
       "steps": [
         {
           "type": "term",
-          "cmd": "python3 ~/.cursor/budget/app/cbudget.py report --color never --days 1",
+          "cmd": "python3 ~/.cursor/budget/app/cbudget.py report --days 1",
           "out": [
             "",
-            " Uso de Cursor",
-            "╭──────────────────────────────────────────────────────────────────────────────────────────────────╮",
-            "│ Uso del ciclo                                                                                    │",
-            "│ $84.85 / $200.00                                                                                 │",
-            "│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ │",
-            "│ Se reinicia el 1 de nov de 2026  ·  Quedan 8 días                                                │",
-            "│ Lo que mostraba Cursor al cargarlo, más lo estimado desde entonces.                              │",
-            "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
-            "╭──────────────────────────────╮  ╭──────────────────────────────╮  ╭──────────────────────────────╮",
-            "│ Total del ciclo              │  │ Disponible                   │  │ Hoy                          │",
-            "│ $84.85                       │  │ $115.15                      │  │ $0.55                        │",
-            "╰──────────────────────────────╯  ╰──────────────────────────────╯  ╰──────────────────────────────╯",
-            "╭──────────────────────────────────────────────────────────────────────────────────────────────────╮",
-            "│ Uso por día                                                                                      │",
-            "│ Tu uso por día en este ciclo                                                                     │",
-            "│                                                                                                  │",
-            "│ 24 oct  █████████████████████████████████████████████████████████████████████████████      $0.55 │",
-            "│                                                                                                  │",
-            "│ ● claude-sonnet-5-5-high   ● auto-smart                                                          │",
-            "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
-            "╭──────────────────────────────────────────────────────────────────────────────────────────────────╮",
-            "│ Últimos turnos (último día)                                                                      │",
-            "│ Fecha            Modelo                    Chat         Tokens     Costo                         │",
-            "│ 24 oct, 19:37  ● claude-sonnet-5-5-high    a1           186.0K     $0.18                         │",
-            "│ 24 oct, 19:37  ● claude-sonnet-5-5-high    a1           269.0K     $0.22                         │",
-            "│ 24 oct, 19:37  ● auto-smart                b2           124.0K     $0.15                         │",
-            "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+            " \u001b[1;38;2;236;236;236mUso de Cursor\u001b[0m",
+            "\u001b[38;2;58;58;58m╭────────────────────────────────────────────────────────────────────────────────────────────────────────────╮\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mUso del ciclo\u001b[0m                                                                                              \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[1;38;2;236;236;236m$84.85\u001b[0m\u001b[38;2;140;140;140m / $200.00\u001b[0m                                                                                           \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;122;162;204m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[38;2;48;48;48m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mSe reinicia el 1 de nov de 2026  ·  Quedan 7 días\u001b[0m                                                          \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mLo que mostraba Cursor al cargarlo, más lo estimado desde entonces.\u001b[0m                                        \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m╰────────────────────────────────────────────────────────────────────────────────────────────────────────────╯\u001b[0m",
+            "\u001b[38;2;58;58;58m╭─────────────────────────────────╮\u001b[0m  \u001b[38;2;58;58;58m╭─────────────────────────────────╮\u001b[0m  \u001b[38;2;58;58;58m╭──────────────────────────────────╮\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mTotal del ciclo\u001b[0m                 \u001b[38;2;58;58;58m│\u001b[0m  \u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mDisponible\u001b[0m                      \u001b[38;2;58;58;58m│\u001b[0m  \u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mHoy\u001b[0m                              \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[1;38;2;236;236;236m$84.85\u001b[0m                          \u001b[38;2;58;58;58m│\u001b[0m  \u001b[38;2;58;58;58m│\u001b[0m \u001b[1;38;2;22;160;92m$115.15\u001b[0m                         \u001b[38;2;58;58;58m│\u001b[0m  \u001b[38;2;58;58;58m│\u001b[0m \u001b[1;38;2;236;236;236m$0.55\u001b[0m                            \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m╰─────────────────────────────────╯\u001b[0m  \u001b[38;2;58;58;58m╰─────────────────────────────────╯\u001b[0m  \u001b[38;2;58;58;58m╰──────────────────────────────────╯\u001b[0m",
+            "\u001b[38;2;58;58;58m╭────────────────────────────────────────────────────────────────────────────────────────────────────────────╮\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mUso por día\u001b[0m                                                                                                \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mTu uso por día en este ciclo\u001b[0m                                                                               \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m                                                                                                            \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m25 oct  \u001b[0m\u001b[38;2;62;152;255m████████████████████████████████████████████████████████████████\u001b[0m\u001b[38;2;246;196;120m███████████████████████\u001b[0m\u001b[38;2;236;236;236m      $0.55\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m                                                                                                            \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;62;152;255m● \u001b[0m\u001b[38;2;140;140;140mclaude-sonnet-5-5-high\u001b[0m   \u001b[38;2;246;196;120m● \u001b[0m\u001b[38;2;140;140;140mauto-smart\u001b[0m                                                                    \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m╰────────────────────────────────────────────────────────────────────────────────────────────────────────────╯\u001b[0m",
+            "\u001b[38;2;58;58;58m╭────────────────────────────────────────────────────────────────────────────────────────────────────────────╮\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mÚltimos turnos (último día)\u001b[0m                                                                                \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mFecha            Modelo                    Chat         Tokens     Costo\u001b[0m                                   \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236m25 oct, 00:07  \u001b[0m\u001b[38;2;62;152;255m● \u001b[0m\u001b[38;2;236;236;236mclaude-sonnet-5-5-high\u001b[0m    \u001b[38;2;140;140;140ma1        \u001b[0m\u001b[38;2;236;236;236m   186.0K\u001b[0m\u001b[38;2;236;236;236m     $0.18\u001b[0m                                   \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236m25 oct, 00:07  \u001b[0m\u001b[38;2;62;152;255m● \u001b[0m\u001b[38;2;236;236;236mclaude-sonnet-5-5-high\u001b[0m    \u001b[38;2;140;140;140ma1        \u001b[0m\u001b[38;2;236;236;236m   269.0K\u001b[0m\u001b[38;2;236;236;236m     $0.22\u001b[0m                                   \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236m25 oct, 00:07  \u001b[0m\u001b[38;2;246;196;120m● \u001b[0m\u001b[38;2;236;236;236mauto-smart\u001b[0m                \u001b[38;2;140;140;140mb2        \u001b[0m\u001b[38;2;236;236;236m   124.0K\u001b[0m\u001b[38;2;236;236;236m     $0.15\u001b[0m                                   \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m╰────────────────────────────────────────────────────────────────────────────────────────────────────────────╯\u001b[0m",
             ""
           ],
           "source": "real",
@@ -382,43 +389,44 @@
             },
             {
               "kind": "note",
-              "text": "**Lo que queda del ciclo**, subrayado. En una terminal de verdad sale en color, con el diseño de la página de uso de Cursor."
+              "text": "**Lo que queda del ciclo**, subrayado. El mismo diseño y los mismos colores que la página de uso de Cursor."
             }
           ],
-          "notes": "El reporte entero: el ciclo y cuándo se reinicia, total, disponible y hoy, el gasto por día apilado por modelo y los últimos turnos con su chat. Con el alias es cbudget report."
+          "notes": "El reporte entero: el ciclo y cuándo se reinicia, total, disponible y hoy, el gasto por día apilado por modelo y los últimos turnos con su chat. Con el alias es cbudget report.",
+          "color": true
         },
         {
           "type": "term",
-          "cmd": "python3 ~/.cursor/budget/app/cbudget.py limits --color never",
+          "cmd": "python3 ~/.cursor/budget/app/cbudget.py limits",
           "out": [
             "",
-            " Límites de cursor-budget",
-            "╭──────────────────────────────────────────────────────────────────────────────────────────────────╮",
-            "│ Generales                                                                                        │",
-            "│ Límite                     Valor   Qué hace                                                      │",
-            "│ warn_conversation          $2.00   Avisa cuando un chat pasa este monto                          │",
-            "│ block_conversation         $5.00   Bloquea un chat que llegó a este monto                        │",
-            "│ warn_day                   $8.00   Avisa cuando el día pasa este monto                           │",
-            "│ block_day                 $12.00 * Bloquea el resto del día al llegar a este monto               │",
-            "│ cycle_limit              $200.00 * Tope del plan en el ciclo                                     │",
-            "│ cycle_day                      1   Día del mes en que se reinicia el ciclo                       │",
-            "│ model_warn                   80%   Parte del presupuesto de un modelo que dispara el aviso       │",
-            "│ notify_each_turn              sí   Notificación después de cada turno                            │",
-            "│                                                                                                  │",
-            "│ * cambiado en ~/.cursor/budget/config.json; el resto es el valor por defecto                     │",
-            "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
-            "╭──────────────────────────────────────────────────────────────────────────────────────────────────╮",
-            "│ Presupuesto por modelo (ciclo)                                                                   │",
-            "│ Sin presupuestos por modelo. Agregá uno con `cbudget limits model <patrón> <usd>`.               │",
-            "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
-            "╭──────────────────────────────────────────────────────────────────────────────────────────────────╮",
-            "│ Modelos bloqueados                                                                               │",
-            "│ claude-opus-*-high, *-xhigh, *-max                                                               │",
-            "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
-            "╭──────────────────────────────────────────────────────────────────────────────────────────────────╮",
-            "│ Chequeo                                                                                          │",
-            "│ ● Sin problemas: los límites son coherentes entre sí.                                            │",
-            "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+            " \u001b[1;38;2;236;236;236mLímites de cursor-budget\u001b[0m",
+            "\u001b[38;2;58;58;58m╭──────────────────────────────────────────────────────────────────────────────────────────────────╮\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mGenerales\u001b[0m                                                                                        \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mLímite                     Valor   Qué hace\u001b[0m                                                      \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236mwarn_conversation\u001b[0m     \u001b[1;38;2;236;236;236m     $2.00\u001b[0m   \u001b[38;2;140;140;140mAvisa cuando un chat pasa este monto\u001b[0m                          \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236mblock_conversation\u001b[0m    \u001b[1;38;2;236;236;236m     $5.00\u001b[0m   \u001b[38;2;140;140;140mBloquea un chat que llegó a este monto\u001b[0m                        \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236mwarn_day\u001b[0m              \u001b[1;38;2;236;236;236m     $8.00\u001b[0m   \u001b[38;2;140;140;140mAvisa cuando el día pasa este monto\u001b[0m                           \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236mblock_day\u001b[0m             \u001b[1;38;2;236;236;236m    $12.00\u001b[0m\u001b[38;2;246;196;120m *\u001b[0m \u001b[38;2;140;140;140mBloquea el resto del día al llegar a este monto\u001b[0m               \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236mcycle_limit\u001b[0m           \u001b[1;38;2;236;236;236m   $200.00\u001b[0m\u001b[38;2;246;196;120m *\u001b[0m \u001b[38;2;140;140;140mTope del plan en el ciclo\u001b[0m                                     \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236mcycle_day\u001b[0m             \u001b[1;38;2;236;236;236m         1\u001b[0m   \u001b[38;2;140;140;140mDía del mes en que se reinicia el ciclo\u001b[0m                       \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236mmodel_warn\u001b[0m            \u001b[1;38;2;236;236;236m       80%\u001b[0m   \u001b[38;2;140;140;140mParte del presupuesto de un modelo que dispara el aviso\u001b[0m       \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236mnotify_each_turn\u001b[0m      \u001b[1;38;2;236;236;236m        sí\u001b[0m   \u001b[38;2;140;140;140mNotificación después de cada turno\u001b[0m                            \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m                                                                                                  \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m* cambiado en ~/.cursor/budget/config.json; el resto es el valor por defecto\u001b[0m                     \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m╰──────────────────────────────────────────────────────────────────────────────────────────────────╯\u001b[0m",
+            "\u001b[38;2;58;58;58m╭──────────────────────────────────────────────────────────────────────────────────────────────────╮\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mPresupuesto por modelo (ciclo)\u001b[0m                                                                   \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mSin presupuestos por modelo. Agregá uno con `cbudget limits model <patrón> <usd>`.\u001b[0m               \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m╰──────────────────────────────────────────────────────────────────────────────────────────────────╯\u001b[0m",
+            "\u001b[38;2;58;58;58m╭──────────────────────────────────────────────────────────────────────────────────────────────────╮\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mModelos bloqueados\u001b[0m                                                                               \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236mclaude-opus-*-high, *-xhigh, *-max\u001b[0m                                                               \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m╰──────────────────────────────────────────────────────────────────────────────────────────────────╯\u001b[0m",
+            "\u001b[38;2;58;58;58m╭──────────────────────────────────────────────────────────────────────────────────────────────────╮\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mChequeo\u001b[0m                                                                                          \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;22;160;92m● \u001b[0m\u001b[38;2;236;236;236mSin problemas: los límites son coherentes entre sí.\u001b[0m                                            \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m╰──────────────────────────────────────────────────────────────────────────────────────────────────╯\u001b[0m",
             ""
           ],
           "source": "real",
@@ -433,7 +441,8 @@
               "text": "**Opus High, xhigh y max** vienen bloqueados de fábrica."
             }
           ],
-          "notes": "Los límites de fábrica: aviso a los 2 dólares por chat y bloqueo a los 5; aviso a los 8 por día y bloqueo a los 15, que acá ya bajamos a 12. Y los modelos más caros, bloqueados. El asterisco marca lo que cambiaste. Abajo, el chequeo: que los límites no se contradigan."
+          "notes": "Los límites de fábrica: aviso a los 2 dólares por chat y bloqueo a los 5; aviso a los 8 por día y bloqueo a los 15, que acá ya bajamos a 12. Y los modelos más caros, bloqueados. El asterisco marca lo que cambiaste. Abajo, el chequeo: que los límites no se contradigan.",
+          "color": true
         }
       ]
     },
@@ -472,13 +481,14 @@
               "text": "el prompt no se manda"
             }
           ],
-          "notes": "Esto es lo que pasa por dentro cuando mandás un prompt con Opus High. Cursor le pregunta al hook, y el hook contesta continue false. En el IDE se ve un aviso, «Submission blocked by hook», con este mensaje. El prompt no llega al modelo: costo cero."
+          "notes": "Esto es lo que pasa por dentro cuando mandás un prompt con Opus High. Cursor le pregunta al hook, y el hook contesta continue false. En el IDE se ve un aviso, «Submission blocked by hook», con este mensaje. El prompt no llega al modelo: costo cero.",
+          "color": true
         },
         {
           "type": "term",
           "cmd": "tail -n 1 ~/.cursor/budget/blocks.jsonl",
           "out": [
-            "{\"t\": 1792881431, \"conversation_id\": \"c1\", \"model\": \"claude-opus-5-5-high\", \"reason\": \"el modelo claude-opus-5-5-high está bloqueado; elegí otro o corré `cbudget allow`\"}"
+            "{\"t\": 1792897669, \"conversation_id\": \"c1\", \"model\": \"claude-opus-5-5-high\", \"reason\": \"el modelo claude-opus-5-5-high está bloqueado; elegí otro o corré `cbudget allow`\"}"
           ],
           "source": "real",
           "cwd": "~",
@@ -488,7 +498,7 @@
           "type": "term",
           "cmd": "python3 ~/.cursor/budget/app/cbudget.py allow --minutes 30",
           "out": [
-            "bloqueos levantados hasta las 20:07"
+            "bloqueos levantados hasta las 00:37"
           ],
           "source": "real",
           "cwd": "~",
@@ -498,7 +508,8 @@
               "text": "**Lo levantás vos.** La skill nunca corre `allow` por su cuenta."
             }
           ],
-          "notes": "Si de verdad hace falta, levantás todos los bloqueos un rato. Desde el chat: «levantá el bloqueo media hora». Es tu decisión, no la del agente."
+          "notes": "Si de verdad hace falta, levantás todos los bloqueos un rato. Desde el chat: «levantá el bloqueo media hora». Es tu decisión, no la del agente.",
+          "color": true
         },
         {
           "type": "term",
@@ -508,7 +519,8 @@
           ],
           "source": "real",
           "cwd": "~",
-          "notes": "Mismo prompt, ahora pasa: el hook contesta vacío y Cursor sigue."
+          "notes": "Mismo prompt, ahora pasa: el hook contesta vacío y Cursor sigue.",
+          "color": true
         }
       ]
     },
@@ -545,7 +557,8 @@
             "claude-opus-* = $40.00 por ciclo"
           ],
           "source": "real",
-          "cwd": "~/mi-servicio"
+          "cwd": "~/mi-servicio",
+          "color": true
         },
         {
           "type": "term",
@@ -563,7 +576,8 @@
               "text": "un aviso, no un error"
             }
           ],
-          "notes": "El chequeo avisa que el patrón todavía no coincide con nada usado este ciclo. No es un error: en este ciclo de demo nadie usó Opus. Sirve para atrapar un patrón mal escrito."
+          "notes": "El chequeo avisa que el patrón todavía no coincide con nada usado este ciclo. No es un error: en este ciclo de demo nadie usó Opus. Sirve para atrapar un patrón mal escrito.",
+          "color": true
         },
         {
           "type": "say",
@@ -625,7 +639,8 @@
           ],
           "source": "real",
           "cwd": "~",
-          "notes": "Un valor que no es un número: no cambia nada y dice por qué. Acepta 12, 12,5 o $12."
+          "notes": "Un valor que no es un número: no cambia nada y dice por qué. Acepta 12, 12,5 o $12.",
+          "color": true
         },
         {
           "type": "term",
@@ -641,7 +656,8 @@
               "text": "**Sin notificaciones no hay avisos.** Se habilitan una vez, para Script Editor."
             }
           ],
-          "notes": "Si no llega ninguna notificación, macOS las tiene bloqueadas. notify-test manda una y dice dónde habilitarlas. Es lo primero a revisar si «no avisa nada»."
+          "notes": "Si no llega ninguna notificación, macOS las tiene bloqueadas. notify-test manda una y dice dónde habilitarlas. Es lo primero a revisar si «no avisa nada».",
+          "color": true
         }
       ]
     },
