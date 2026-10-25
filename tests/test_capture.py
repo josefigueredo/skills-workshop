@@ -395,6 +395,19 @@ class PrepareHomeTests(unittest.TestCase):
             self.assertEqual(capture.skill_source(Path("/a/b/ws"), "only-second"), two / "only-second")
             self.assertEqual(capture.skill_source(Path("/a/b/ws"), "both"), one / "both")
 
+    def test_skill_source_finds_a_clone_without_the_team_prefix(self):
+        make_skill_repo(self.tmp / "skills", "cursor-budget")
+        with mock.patch.dict(os.environ, {"WS_SKILLS_ROOT": str(self.tmp / "skills")}):
+            got = capture.skill_source(Path("/a/b/ws"), "cursor-budget")
+        self.assertEqual(got, self.tmp / "skills" / "cursor-budget")
+
+    def test_skill_source_prefers_the_full_repo_name_over_the_short_one(self):
+        make_skill_repo(self.tmp / "skills", "cursor-budget")
+        make_skill_repo(self.tmp / "skills", "cursor-budget")
+        with mock.patch.dict(os.environ, {"WS_SKILLS_ROOT": str(self.tmp / "skills")}):
+            got = capture.skill_source(Path("/a/b/ws"), "cursor-budget")
+        self.assertEqual(got, self.tmp / "skills" / "cursor-budget")
+
     def test_skill_source_without_a_hit_falls_back_to_the_default(self):
         with mock.patch.dict(os.environ, {"WS_SKILLS_ROOT": str(self.tmp / "nope")}):
             self.assertEqual(capture.skill_source(self.workshop(), "x"), (self.tmp / "a" / "b" / "x").resolve())

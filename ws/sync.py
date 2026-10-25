@@ -48,7 +48,12 @@ def dist_is_fresh(content: Path) -> bool:
 
 
 def sync_repo(root: Path, repo: str, check: bool, emit: Callable) -> int:
-    content = capture.skill_source(root, repo) / "workshop"
+    source = capture.find_skill(root, repo)
+    if source is None:
+        emit("%s: cannot verify its workshop/dist: no clone in %s (set WS_SKILLS_ROOT to the folder that holds it)"
+             % (repo, ", ".join(str(c) for c in capture.skill_candidates(root, repo))))
+        return 1
+    content = source / "workshop"
     if not (content / "episodes").is_dir():
         emit("%s: no workshop/episodes in %s (is the skill's branch with its episodes checked out?)"
              % (repo, content.parent))
