@@ -30,6 +30,14 @@
   opacity: var(--ws-k-kicker-op); margin-bottom: var(--ws-k-pitch-gap); }
 .ws-card-pitch-ask, .ws-card-pitch-does { font-size: var(--ws-k-fs-pitch); line-height: var(--ws-k-lh-pitch); }
 .ws-card-pitch-ask { font-style: italic; margin-bottom: var(--ws-k-pitch-row-gap); }
+.ws-card-keys { position: absolute; left: var(--ws-k-pad); bottom: var(--ws-k-keys-bottom); display: flex;
+  align-items: center; gap: var(--ws-k-keys-gap); }
+.ws-card-key { display: flex; align-items: center; gap: var(--ws-k-key-label-gap); }
+.ws-key { display: inline-flex; align-items: center; justify-content: center; width: var(--ws-k-key); height: var(--ws-k-key);
+  border: 2px solid var(--ws-k-key-border); border-bottom-width: 5px; border-radius: var(--ws-k-key-radius);
+  background: var(--ws-k-pitch-bg); font-size: var(--ws-k-fs-key); font-weight: 700; line-height: 1; }
+.ws-card-key-t, .ws-card-keys-t { font-size: var(--ws-k-fs-keys); opacity: var(--ws-k-sub-op); }
+.ws-card-keys-t { margin-left: var(--ws-k-keys-gap); }
 
 /* ---------- Cursor ---------- */
 .ws-cursor { display: flex; background: var(--ws-c-bg); color: var(--ws-c-tx); font-size: var(--ws-fs); line-height: var(--ws-lh); }

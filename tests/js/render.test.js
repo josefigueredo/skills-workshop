@@ -73,6 +73,16 @@ test("the first card shows the pitch; other cards and pitchless episodes do not"
   assert(!render(0, ep).querySelector(".ws-card-pitch"), "pitch without data");
 });
 
+test("the episode's first card shows the arrow keys that move between screens; later cards do not", function () {
+  var keys = render(0).querySelector(".ws-card-keys");
+  assert(keys, "no arrow keys hint on the first card");
+  var caps = Array.prototype.map.call(keys.querySelectorAll(".ws-key"), function (k) { return k.textContent; });
+  assertEqual(caps, ["←", "→"]);
+  assert(keys.textContent.indexOf("teclado") >= 0, "hint text: " + keys.textContent);
+  assertEqual(stepIds(render(0)), []);
+  assert(!render(3).querySelector(".ws-card-keys"), "hint on a later card");
+});
+
 test("term on cursor-full without 'in' is the agent's: a Ran chip in the conversation", function () {
   var ep = fixtureEpisode();
   delete ep.chapters[1].steps[3].in;

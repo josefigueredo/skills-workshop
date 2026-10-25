@@ -42,6 +42,8 @@
 // `text`, a small tag after it). A `match` that is not found renders nothing.
 // The first chapter card also shows the episode pitch («Le decís al agente…» /
 // «Y la skill…») under its title; it is part of the card, not a separate index.
+// It also shows, at its foot, the two arrow keys that move between screens: whoever opens
+// the episode from its link learns how to move before the first step.
 var Render = (function () {
   var USER = "Persona del equipo";
   var TEAM = "Equipo";
@@ -386,7 +388,15 @@ var Render = (function () {
         ch.subtitle ? el("p", "ws-card-sub", ch.subtitle) : null,
         ci === 0 ? pitch(ep) : null);
     root.appendChild(inner);
+    if (ci === 0) root.appendChild(arrowKeys());
     return root;
+  }
+  function arrowKeys() {
+    var keys = el("div", "ws-card-keys");
+    add(keys, add(el("div", "ws-card-key"), el("span", "ws-key", "←"), el("span", "ws-card-key-t", "vuelve")),
+        add(el("div", "ws-card-key"), el("span", "ws-key", "→"), el("span", "ws-card-key-t", "avanza")),
+        el("div", "ws-card-keys-t", "Usá las flechas del teclado para moverte entre pantallas"));
+    return keys;
   }
   function pitch(ep) {
     var p = ep.pitch;

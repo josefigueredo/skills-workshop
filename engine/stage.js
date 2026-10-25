@@ -57,7 +57,7 @@ var Stage = (function () {
 
     function fades(ep, index) {
       var e = Nav.flatten(ep)[index];
-      return !!e && (e.kind === "card" || e.kind === "approve" || e.kind === "page");
+      return !!e && (e.kind === "card" || e.kind === "approve" || e.kind === "page") && !Animate.continuesWindow(ep, index);
     }
 
     function onShow(msg) {

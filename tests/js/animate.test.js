@@ -186,6 +186,48 @@ test("approve fades in through opacity on the scheduler", function () {
   assertEqual(p.clock.total, 250);
 });
 
+// A chapter with two browser pages in a row, then an ask: 0 card, 1 page, 2 page, 3 ask.
+function pagesEpisode() {
+  return {
+    id: "pages", series: "cursor", order: 1, title: "demo-skill",
+    skill: {repo: "demo-skill", commit: "abc1234", date: "2026-10-19"},
+    workspace: {repo: "mi-servicio", files: [], chats: []},
+    chapters: [
+      {id: "web", title: "En la web", screen: "cursor-full",
+       steps: [
+         {type: "page", title: "ejemplo.com/uno", html: "<p>uno</p>", source: "real"},
+         {type: "page", title: "ejemplo.com/dos", html: "<p>dos</p>", source: "real"},
+         {type: "ask", text: "Listo", source: "inferido"}
+       ]}
+    ]
+  };
+}
+
+test("the first page of a run fades in; the next page shows at once with the browser in place", function () {
+  var ep = pagesEpisode(), c = document.createElement("div"), clock = fakeClock();
+  Animate.run(c, ep, 1, clock.opts(1));
+  assertEqual(q(c, '[data-step="0"]').style.opacity, "0");
+  clock.flush();
+  var c2 = document.createElement("div"), clock2 = fakeClock();
+  Animate.run(c2, ep, 2, clock2.opts(1));
+  assert(shown(q(c2, '[data-step="1"]')), "the browser disappears between two pages");
+  assertEqual(Animate.continuesWindow(ep, 2), true);
+  assertEqual(Animate.continuesWindow(ep, 1), false);
+  assertEqual(Animate.continuesWindow(ep, 3), false);
+});
+
+test("a page's frame is not rebuilt when its animation ends", function () {
+  var ep = pagesEpisode();
+  [1, 2].forEach(function (i) {
+    var c = document.createElement("div"), clock = fakeClock();
+    Animate.run(c, ep, i, clock.opts(1));
+    var frame = q(c, '[data-step="' + (i - 1) + '"] iframe');
+    clock.flush();
+    assert(q(c, '[data-step="' + (i - 1) + '"] iframe') === frame, "frame rebuilt at the end of index " + i);
+    assertEqual(c.innerHTML, finalHTML(ep, i), "final DOM at index " + i);
+  });
+});
+
 test("a card fades in with a single scheduled reveal and no typing", function () {
   var p = play(4);
   var card = q(p.c, ".ws-card");
