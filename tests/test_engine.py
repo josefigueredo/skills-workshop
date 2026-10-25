@@ -14,9 +14,9 @@ from ws.chrome import chrome_available, chrome_path
 CHROME = chrome_path()
 HARNESS = ROOT / "tests" / "js" / "harness.html"
 HAVE_CHROME = chrome_available()
-RENDER_TESTS = 31  # exact count: a test that silently fails to register must show up
+RENDER_TESTS = 36  # exact count: a test that silently fails to register must show up
 ANIMATE_TESTS = 23
-PROTOCOL_TESTS = 59
+PROTOCOL_TESTS = 65
 CONTROL_JS = ROOT / "engine" / "control.js"
 SKIP_MSG = "Chrome not found at %s (set CHROME to run the JS suites)" % CHROME
 

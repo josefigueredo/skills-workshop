@@ -453,3 +453,57 @@ test("worked shows minutes and hours once a step runs that long", function () {
   steps[1].seconds = 42;
   assert(render(5, ep).textContent.indexOf("Worked for 42s") >= 0, "seconds stay as they were");
 });
+
+// ---- colour: SGR codes captured from a `color: true` term step ----
+function colorEpisode(out, callouts) {
+  var ep = fixtureEpisode();
+  var st = ep.chapters[0].steps[0];
+  st.color = true;
+  st.out = out;
+  if (callouts) st.callouts = callouts;
+  return ep;
+}
+
+test("SGR codes in term output render as coloured runs, never as escape text", function () {
+  var ep = colorEpisode(["Disponible \x1b[1;38;2;62;152;255m$115.15\x1b[0m de $200"]);
+  var line = render(1, ep).querySelector('[data-step="0"] .ws-out');
+  assertEqual(line.textContent, "Disponible $115.15 de $200");
+  var spans = line.querySelectorAll("span");
+  assertEqual(spans.length, 1);
+  assertEqual(spans[0].textContent, "$115.15");
+  assertEqual(spans[0].style.color, "rgb(62, 152, 255)");
+  assertEqual(spans[0].style.fontWeight, "700");
+});
+
+test("16, 256 and background colours, and resets", function () {
+  var ep = colorEpisode(["\x1b[31ma\x1b[39m b \x1b[38;5;196mc\x1b[0m \x1b[48;2;1;2;3md\x1b[49m e \x1b[38;5;244mf\x1b[m"]);
+  var line = render(1, ep).querySelector('[data-step="0"] .ws-out');
+  assertEqual(line.textContent, "a b c d e f");
+  var s = line.querySelectorAll("span");
+  assertEqual(s.length, 4);
+  assert(s[0].style.color, "basic red has a colour");
+  assertEqual(s[1].style.color, "rgb(255, 0, 0)");
+  assertEqual(s[2].style.backgroundColor, "rgb(1, 2, 3)");
+  assertEqual(s[3].style.color, "rgb(128, 128, 128)");
+});
+
+test("a plain output line stays one text node", function () {
+  var line = render(1, fixtureEpisode()).querySelector('[data-step="0"] .ws-out');
+  assertEqual(line.childNodes.length, 1);
+  assertEqual(line.firstChild.nodeType, 3);
+});
+
+test("a callout matches inside a coloured run", function () {
+  var ep = colorEpisode(["Disponible \x1b[32m$115.15\x1b[0m de $200"], [{kind: "underline", match: "$115.15"}]);
+  var u = render(1, ep).querySelector('[data-step="0"] .ws-co-underline');
+  assert(u, "no underline");
+  assertEqual(u.textContent, "$115.15");
+});
+
+test("colour also renders in the agent's Ran block and in Claude Code", function () {
+  var ep = fixtureEpisode();
+  ep.chapters[2].steps[1].out = ["\x1b[32mok\x1b[0m"];
+  var cc = render(13, ep).querySelector('[data-step="1"]');
+  assertEqual(cc.textContent.indexOf("\x1b"), -1);
+  assert(cc.querySelector("span[style]"), "claude-code output has a coloured run");
+});

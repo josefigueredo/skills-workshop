@@ -56,6 +56,8 @@ function live(eps) {
               [{kind: "stage-opened", now: 0}, {kind: "message", msg: {type: "ready"}}]).state;
 }
 function key(k, shift) { return {kind: "key", key: k, shift: !!shift}; }
+// The stage's answer once the animation of step i ends: until then → finishes the step instead of moving on.
+function done(i) { return {kind: "message", msg: {type: "done-animating", index: i}}; }
 function show(index, animate, speed, episode) {
   return {type: "show", episode: episode || "uno", index: index, animate: animate, speed: speed || 1};
 }
@@ -100,7 +102,7 @@ test("→ from a card emits show animate:true", function () {
 });
 
 test("← emits show animate:false", function () {
-  var r = feed(live(), [key("ArrowRight"), key("ArrowRight"), key("ArrowLeft")]);
+  var r = feed(live(), [key("ArrowRight"), done(1), key("ArrowRight"), key("ArrowLeft")]);
   assertEqual(r.state.index, 1);
   assertEqual(stageMsgs(r.outbox).pop(), show(1, false));
 });
@@ -108,7 +110,7 @@ test("← emits show animate:false", function () {
 test("← at the start and → at the end send nothing", function () {
   var r = feed(live(), [key("ArrowLeft")]);
   assertEqual(r.outbox, []);
-  var s = feed(live(), [{kind: "select-chapter", i: 1}, key("ArrowRight"), key("ArrowRight")]).state;
+  var s = feed(live(), [{kind: "select-chapter", i: 1}, key("ArrowRight"), done(5), key("ArrowRight"), done(6)]).state;
   assertEqual(s.index, 6);
   r = feed(s, [key("ArrowRight")]);
   assertEqual(r.outbox, []);
@@ -165,7 +167,7 @@ test("while playing, done-animating asks the stage to wait, then advance shows t
 });
 
 test("autoplay stop (pause step) turns playing off", function () {
-  var r = feed(feed(live(), [key("ArrowRight"), key(" ")]).state,
+  var r = feed(feed(live(), [key("ArrowRight"), done(1), key(" ")]).state,
                [{kind: "message", msg: {type: "done-animating", index: 2}}]);
   assertEqual(r.state.index, 2);
   assertEqual(r.state.playing, false);
@@ -191,6 +193,42 @@ test("a manual → during autoplay invalidates the pending advance", function ()
   assertEqual(stageMsgs(r.outbox), [show(2, true)]);
 });
 
+test("→ while the step still animates finishes it in place; the next → advances", function () {
+  var r = feed(live(), [key("ArrowRight")]);
+  assertEqual(r.state.animating, true);
+  r = feed(r.state, [key("ArrowRight")]);
+  assertEqual(r.state.index, 1);
+  assertEqual(r.state.animating, false);
+  assertEqual(stageMsgs(r.outbox), [show(1, false)]);
+  r = feed(r.state, [key("ArrowRight")]);
+  assertEqual(r.state.index, 2);
+  assertEqual(stageMsgs(r.outbox), [show(2, true)]);
+});
+
+test("space while the step still animates finishes it and starts playing from there", function () {
+  var ep = protoEpisodes()[0];
+  var r = feed(live(), [key("ArrowRight"), key(" ")]);
+  assertEqual(r.state.index, 1);
+  assertEqual(r.state.playing, true);
+  assertEqual(stageMsgs(r.outbox).pop(), show(1, false));
+  r = feed(r.state, [done(1)]);
+  assertEqual(stageMsgs(r.outbox), [{type: "wait", delay: Animate.autoplay(ep, 1, 1).delay, seq: r.state.seq}]);
+});
+
+test("after done-animating, → advances right away", function () {
+  var r = feed(live(), [key("ArrowRight"), {kind: "message", msg: {type: "done-animating", index: 1}}]);
+  assertEqual(r.state.animating, false);
+  r = feed(r.state, [key("ArrowRight")]);
+  assertEqual(stageMsgs(r.outbox), [show(2, true)]);
+});
+
+test("a stage that is not live never traps → on an unfinished step", function () {
+  var r = feed(live(), [key("ArrowRight"), {kind: "stage-closed"}, key("ArrowRight")]);
+  assertEqual(r.state.index, 2);
+  r = feed(live(), [key("ArrowRight"), {kind: "message", msg: {type: "ready"}}, key("ArrowRight")]);
+  assertEqual(r.state.index, 2, "a resend shows the step finished, so → moves on");
+});
+
 test("done-animating for another index is ignored", function () {
   var r = feed(feed(live(), [key(" ")]).state, [{kind: "message", msg: {type: "done-animating", index: 0}}]);
   assertEqual(stageMsgs(r.outbox), []);
@@ -198,7 +236,7 @@ test("done-animating for another index is ignored", function () {
 });
 
 test("space at the last index does not start playing", function () {
-  var s = feed(live(), [{kind: "select-chapter", i: 1}, key("ArrowRight"), key("ArrowRight")]).state;
+  var s = feed(live(), [{kind: "select-chapter", i: 1}, key("ArrowRight"), done(5), key("ArrowRight"), done(6)]).state;
   var r = feed(s, [key(" ")]);
   assertEqual(r.state.playing, false);
   assertEqual(r.outbox, []);
@@ -313,7 +351,7 @@ test("a late tick after a gap does not judge a ping sent before it", function ()
 
 function lostAt(index) {
   var s = live();
-  for (var i = 0; i < index; i++) s = feed(s, [key("ArrowRight")]).state;
+  for (var i = 0; i < index; i++) s = feed(s, [key("ArrowRight"), done(i + 1)]).state;
   s = feed(s, [{kind: "tick", now: 2000}, {kind: "tick", now: 4000}, {kind: "tick", now: 7000}]).state;
   assertEqual(s.stageLost, true);
   return s;
@@ -591,7 +629,7 @@ test("stage: control keys are forwarded as key messages", function () {
 });
 
 test("control: PageDown and PageUp move like the arrows (presenter clickers)", function () {
-  var r = feed(live(), [key("PageDown"), key("PageDown"), key("PageUp")]);
+  var r = feed(live(), [key("PageDown"), done(1), key("PageDown"), key("PageUp")]);
   assertEqual(r.state.index, 1);
   var shows = r.outbox.filter(function (o) { return o.msg.type === "show"; });
   assertEqual(shows.map(function (o) { return [o.msg.index, o.msg.animate]; }), [[1, true], [2, true], [1, false]]);
@@ -609,6 +647,34 @@ test("stage alone: localMove steps forward animated and back finished", function
   assertEqual(Stage.localMove(ep, 0, " ", false), {index: 1, animate: true});
   assertEqual(Stage.localMove(ep, 2, "ArrowLeft", false), {index: 1, animate: false});
   assertEqual(Stage.localMove(ep, 2, "PageUp", false), {index: 1, animate: false});
+});
+
+test("stage alone: → or space while the step animates finishes it; ← and ⇧ jumps still move", function () {
+  var ep = protoEpisodes()[0];
+  assertEqual(Stage.localMove(ep, 1, "ArrowRight", false, true), {index: 1, animate: false});
+  assertEqual(Stage.localMove(ep, 1, " ", false, true), {index: 1, animate: false});
+  assertEqual(Stage.localMove(ep, 6, "ArrowRight", false, true), {index: 6, animate: false});
+  assertEqual(Stage.localMove(ep, 2, "ArrowLeft", false, true), {index: 1, animate: false});
+  assertEqual(Stage.localMove(ep, 1, "ArrowRight", true, true), {index: 4, animate: false});
+  assertEqual(Stage.localMove(ep, 1, "ArrowRight", false, false), {index: 2, animate: true});
+});
+
+test("stage: animating() is true only while an animation runs", function () {
+  var t = makeStage();
+  return t.stage.handle(show(0, false)).then(function () {
+    assertEqual(t.stage.animating(), false);
+    var p = t.stage.handle(show(1, true));
+    assertEqual(t.stage.animating(), true);
+    t.clock.drain();
+    return p;
+  }).then(function () {
+    assertEqual(t.stage.animating(), false);
+    t.stage.handle(show(2, true));
+    assertEqual(t.stage.animating(), true);
+    return t.stage.handle(show(2, false));
+  }).then(function () {
+    assertEqual(t.stage.animating(), false, "a finished show stops it");
+  });
 });
 
 test("stage alone: localMove jumps chapters with shift and stops at the ends", function () {

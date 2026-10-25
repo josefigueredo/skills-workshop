@@ -25,6 +25,7 @@ GENERIC = {
 
 EXCERPT_MAX = 20
 _JSON_ESCAPE = re.compile(r"\\u([0-9a-fA-F]{4})")
+_SGR = re.compile(r"\x1b\[[0-9;]*m")
 # Always this repo's list, also under `build.py --root <other>`: the names are the ones this workshop teaches.
 ALLOW_FILE = Path(__file__).resolve().parent.parent / "privacy-allow.txt"
 
@@ -125,6 +126,8 @@ def scan_text(text: str, where: str) -> List[str]:
         # The bundle embeds pages as JSON with \uXXXX escapes: read them as the characters they stand for, so an
         # escaped `>` before a cited `@decorator` is not taken for an address and an escaped `<a@b.io>` still is.
         line = _JSON_ESCAPE.sub(lambda m: chr(int(m.group(1), 16)), line)
+        # A `color` term step keeps SGR colour codes: drop them, so one cannot split an address or a secret.
+        line = _SGR.sub("", line)
         spans = _allowed_spans(line, names) if names else []
         for label, rx in rs.items():
             for m in rx.finditer(line):

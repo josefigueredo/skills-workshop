@@ -98,6 +98,18 @@ class TestGenericRules(Tmp):
         self.assertIn(": email: ", out[0])
 
 
+    def test_colour_codes_do_not_hide_a_hit(self):
+        # A `color` term step keeps SGR codes in its output, raw or JSON-escaped in the bundle: one in the middle of
+        # an address or a secret must not split it out of the rules' reach.
+        BS = chr(92)
+        with _env():
+            raw = privacy.scan_text("by jane.doe@\x1b[1mcorp.io\x1b[0m", "a")
+            self.assertEqual(len(raw), 1, raw)
+            self.assertIn(": email: ", raw[0])
+            escaped = privacy.scan_text("key AKIA" + BS + "u001b[32m" + "A" * 16, "a")
+            self.assertEqual(len(escaped), 1, escaped)
+
+
 class TestLeakTerms(Tmp):
     def test_external_terms_file_adds_patterns(self):
         terms = self.put("terms.txt", "# comment\n\nacme-secret\\d+\n")

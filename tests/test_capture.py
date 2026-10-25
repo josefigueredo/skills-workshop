@@ -60,8 +60,9 @@ class RunTests(unittest.TestCase):
         self.home = Path(self._tmp.name) / "home"
         self.home.mkdir()
 
-    def out_of(self, cmd, cwd="~", **kw):
-        ep = capture.run(ep_with([real(cmd, cwd=cwd)]), self.home, **kw)
+    def out_of(self, cmd, cwd="~", color=None, **kw):
+        extra = {} if color is None else {"color": color}
+        ep = capture.run(ep_with([real(cmd, cwd=cwd, **extra)]), self.home, **kw)
         return ep["chapters"][0]["steps"][0]["out"]
 
     def test_home_is_normalised_to_tilde(self):
@@ -78,6 +79,26 @@ class RunTests(unittest.TestCase):
     def test_ansi_is_stripped(self):
         self.assertEqual(self.out_of(r"printf '\033[31mred\033[0m ok\n\033]0;title\007done\n'"),
                          ["red ok", "done"])
+
+    def test_color_step_runs_in_a_terminal_and_keeps_only_sgr(self):
+        cmd = r"[ -t 1 ] && printf '\033[1;38;2;1;2;3mhi\033[0m \033]0;title\007\033[2Kok\n' || echo notty"
+        self.assertEqual(self.out_of(cmd, color=True), ["\x1b[1;38;2;1;2;3mhi\x1b[0m ok"])
+
+    def test_color_step_sees_a_truecolor_terminal_without_no_color(self):
+        self.assertEqual(self.out_of('echo "[$NO_COLOR|$COLORTERM|$TERM]"', color=True),
+                         ["[|truecolor|xterm-256color]"])
+
+    def test_color_step_keeps_exit_code_and_normalises_home(self):
+        self.assertEqual(self.out_of("echo $HOME/x; exit 3", color=True), ["~/x", "# exit 3"])
+
+    def test_color_step_times_out_like_any_step(self):
+        self.assertEqual(self.out_of("sleep 5", color=True, timeout=0.5), ["# timeout"])
+
+    def test_color_step_that_closes_its_output_and_keeps_running_still_times_out(self):
+        self.assertEqual(self.out_of("echo hi; exec >&- 2>&-; sleep 5", color=True, timeout=0.5), ["hi", "# timeout"])
+
+    def test_plain_step_is_not_a_terminal(self):
+        self.assertEqual(self.out_of("[ -t 1 ] && echo tty || echo notty"), ["notty"])
 
     def test_stderr_is_merged_and_exit_code_kept(self):
         self.assertEqual(self.out_of("echo hi; echo oops >&2; exit 3"), ["hi", "oops", "# exit 3"])

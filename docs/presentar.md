@@ -28,7 +28,7 @@ Funcionan en el control **y también cuando estás haciendo clic o escribiendo e
 
 | Tecla | Qué hace |
 |---|---|
-| `→` o `AvPág` | Adelante un paso (se anima: tipeo, respuesta que va saliendo) |
+| `→` o `AvPág` | Adelante un paso (se anima: tipeo, respuesta que va saliendo). Si el paso todavía se está animando, lo termina ahí (salida completa y sus notas) y el próximo `→` avanza |
 | `←` o `RePág` | Atrás un paso (muestra el paso anterior ya terminado, sin animar; frena el play) |
 | `espacio` | Play / pausa: avanza solo; frena en los pasos marcados con pausa |
 | `⇧ →` | Salta al principio del capítulo siguiente |
@@ -39,7 +39,7 @@ También podés usar los botones del control: es lo mismo. `AvPág` y `RePág` e
 
 ### Un episodio abierto desde su link, sin el control
 
-Si abrís la serie desde la portada (o con un link como `serie-cursor.html#antes-de-empezar/1`), la página anda sola: `→`/`AvPág`/`espacio` avanzan animando, `←`/`RePág` retroceden, `⇧ →`/`⇧ ←` saltan de capítulo y `B` pone negro. La dirección se actualiza con el paso, así que si recargás seguís donde estabas. No hay notas, reloj ni play automático: para presentar en serio, usá el control.
+Si abrís la serie desde la portada (o con un link como `serie-cursor.html#antes-de-empezar/1`), la página anda sola: `→`/`AvPág`/`espacio` avanzan animando (si el paso todavía se anima, primero lo terminan), `←`/`RePág` retroceden, `⇧ →`/`⇧ ←` saltan de capítulo y `B` pone negro. La dirección se actualiza con el paso, así que si recargás seguís donde estabas. No hay notas, reloj ni play automático: para presentar en serio, usá el control.
 
 ## Durante la presentación
 
