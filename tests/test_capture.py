@@ -94,6 +94,9 @@ class RunTests(unittest.TestCase):
     def test_color_step_times_out_like_any_step(self):
         self.assertEqual(self.out_of("sleep 5", color=True, timeout=0.5), ["# timeout"])
 
+    def test_color_step_that_closes_its_output_and_keeps_running_still_times_out(self):
+        self.assertEqual(self.out_of("echo hi; exec >&- 2>&-; sleep 5", color=True, timeout=0.5), ["hi", "# timeout"])
+
     def test_plain_step_is_not_a_terminal(self):
         self.assertEqual(self.out_of("[ -t 1 ] && echo tty || echo notty"), ["notty"])
 

@@ -250,14 +250,19 @@ def _exec_tty(cmd: str, cwd: Path, env: dict, timeout: float):
             chunks.append(data)
     finally:
         os.close(master)
-    if timed_out:
+    text = b"".join(chunks).decode("utf-8", "replace")
+    if not timed_out:
+        # The output can close while the command keeps running: the deadline still holds.
         try:
-            os.killpg(proc.pid, signal.SIGKILL)
-        except OSError:
+            return text, proc.wait(timeout=max(deadline - time.monotonic(), 0))
+        except subprocess.TimeoutExpired:
             pass
-        proc.wait()
-        return b"".join(chunks).decode("utf-8", "replace"), None
-    return b"".join(chunks).decode("utf-8", "replace"), proc.wait()
+    try:
+        os.killpg(proc.pid, signal.SIGKILL)
+    except OSError:
+        pass
+    proc.wait()
+    return text, None
 
 
 def _lines(text: str) -> List[str]:
