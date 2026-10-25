@@ -36,6 +36,10 @@
 // renders in the conversation exactly as on cursor-agent ("▸ Ran · cmd" chip + output
 // block). With `in: "zsh"` it is a command the person types and renders in the
 // integrated zsh (prompt, typed command, output lines).
+// Callouts: a step's optional `callouts` show only while it is the current index, so they
+// leave with the next step. "note" adds a bubble (inline markdown) at the end of the step;
+// "box" and "underline" wrap the first text node holding `match` inside the step (with
+// `text`, a small tag after it). A `match` that is not found renders nothing.
 // The first chapter card also shows the episode pitch («Le decís al agente…» /
 // «Y la skill…») under its title; it is part of the card, not a separate index.
 var Render = (function () {
@@ -148,7 +152,11 @@ var Render = (function () {
   }
 
   // ---- shared pieces ----
-  function workedText(st) { return "Worked for " + (st.seconds || 0) + "s"; }
+  // "42s", "13m 22s", "1h 50m 20s": long runs read like the host shows them.
+  function workedText(st) {
+    var t = Math.round(st.seconds || 0), h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), sec = t % 60;
+    return "Worked for " + (h ? h + "h " + m + "m " + sec + "s" : m ? m + "m " + sec + "s" : sec + "s");
+  }
   function inRepo(cwd, repo) {
     var home = "~/" + repo;
     return cwd === home || cwd.indexOf(home + "/") === 0;
@@ -266,6 +274,33 @@ var Render = (function () {
   }
   function chapterSteps(ch, last) { return (ch.steps || []).slice(0, last + 1); }
 
+  // ---- callouts ----
+  function wrapMatch(root, match, cls) {
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false), t;
+    while ((t = walker.nextNode())) {
+      var i = t.data.indexOf(match);
+      if (i < 0) continue;
+      var mid = t.splitText(i);
+      mid.splitText(match.length);
+      var span = el("span", cls);
+      mid.parentNode.replaceChild(span, mid);
+      span.appendChild(mid);
+      return span;
+    }
+    return null;
+  }
+  function applyCallouts(node, st, j, last) {
+    if (!node || j !== last || !st.callouts) return;
+    st.callouts.forEach(function (co) {
+      if (co.kind === "note") {
+        node.appendChild(anim(inline(el("div", "ws-co-note"), co.text), "node"));
+      } else if ((co.kind === "box" || co.kind === "underline") && co.match) {
+        var span = wrapMatch(node, String(co.match), "ws-co-" + co.kind);
+        if (span && co.text) span.parentNode.insertBefore(inline(el("span", "ws-co-tag"), co.text), span.nextSibling);
+      }
+    });
+  }
+
   // ---- card ----
   function card(ep, ci) {
     var ch = ep.chapters[ci];
@@ -365,31 +400,33 @@ var Render = (function () {
     add(root, cursorSidebar(ep, ch), m.main, full ? right.rp : openTabs(ep));
     var cwd = "~/" + repo, overlays = [];
     chapterSteps(ch, last).forEach(function (st, j) {
+      var n = null;
       if (st.type === "ask") {
-        var a = stepNode("div", "ws-ask", j);
-        add(a, anim(el("div", "ws-ask-text", st.text), "type"), modelRow(ep));
-        m.flow.appendChild(a);
+        n = stepNode("div", "ws-ask", j);
+        add(n, anim(el("div", "ws-ask-text", st.text), "type"), modelRow(ep));
+        m.flow.appendChild(n);
       } else if (st.type === "worked") {
-        m.flow.appendChild(add(stepNode("div", "ws-worked", j, "node"), document.createTextNode(workedText(st))));
+        m.flow.appendChild(n = add(stepNode("div", "ws-worked", j, "node"), document.createTextNode(workedText(st))));
       } else if (st.type === "tool") {
-        m.flow.appendChild(add(stepNode("div", "ws-tool", j, "node"), document.createTextNode("▸ " + st.label)));
+        m.flow.appendChild(n = add(stepNode("div", "ws-tool", j, "node"), document.createTextNode("▸ " + st.label)));
       } else if (st.type === "say") {
-        m.flow.appendChild(add(stepNode("div", "ws-say", j), markdown(st.md)));
+        m.flow.appendChild(n = add(stepNode("div", "ws-say", j), markdown(st.md)));
       } else if (st.type === "term" && full && st["in"] === "zsh") {
         if (st.cwd) cwd = st.cwd;
-        right.flow.appendChild(shellStep(st, j, cwd, repo));
+        right.flow.appendChild(n = shellStep(st, j, cwd, repo));
       } else if (st.type === "term") {
-        var r = stepNode("div", "ws-ran", j);
-        r.appendChild(anim(el("div", "ws-tool", "▸ Ran · " + st.cmd), "node"));
+        n = stepNode("div", "ws-ran", j);
+        n.appendChild(anim(el("div", "ws-tool", "▸ Ran · " + st.cmd), "node"));
         var out = el("div", "ws-ran-out");
         (st.out || []).forEach(function (o) { out.appendChild(anim(el("div", "ws-out", o), "line")); });
-        if (out.firstChild) r.appendChild(out);
-        m.flow.appendChild(r);
+        if (out.firstChild) n.appendChild(out);
+        m.flow.appendChild(n);
       } else if (st.type === "approve") {
-        overlays.push(approveOverlay(st, j, last));
+        overlays.push(n = approveOverlay(st, j, last));
       } else if (st.type === "page") {
-        overlays.push(pageOverlay(st, j, last));
+        overlays.push(n = pageOverlay(st, j, last));
       }
+      applyCallouts(n, st, j, last);
     });
     if (full) idlePrompt(right.flow, cwd, repo);
     overlays.forEach(function (o) { root.appendChild(o); });
@@ -410,22 +447,24 @@ var Render = (function () {
     add(root, termBar("▭ " + cwd), body.outer);
     cwd = "~";
     steps.forEach(function (st, j) {
+      var n = null;
       if (st.type === "term") {
         if (st.cwd) cwd = st.cwd;
-        body.flow.appendChild(shellStep(st, j, cwd, repo));
+        body.flow.appendChild(n = shellStep(st, j, cwd, repo));
       } else if (st.type === "ask") {
-        body.flow.appendChild(add(stepNode("div", "ws-out ws-plain", j), anim(el("span", null, st.text), "type")));
+        body.flow.appendChild(n = add(stepNode("div", "ws-out ws-plain", j), anim(el("span", null, st.text), "type")));
       } else if (st.type === "tool") {
-        body.flow.appendChild(add(stepNode("div", "ws-out ws-plain", j, "node"), document.createTextNode(st.label)));
+        body.flow.appendChild(n = add(stepNode("div", "ws-out ws-plain", j, "node"), document.createTextNode(st.label)));
       } else if (st.type === "worked") {
-        body.flow.appendChild(add(stepNode("div", "ws-out ws-plain", j, "node"), document.createTextNode(workedText(st))));
+        body.flow.appendChild(n = add(stepNode("div", "ws-out ws-plain", j, "node"), document.createTextNode(workedText(st))));
       } else if (st.type === "say") {
-        body.flow.appendChild(add(stepNode("div", "ws-plain-say", j), markdown(st.md)));
+        body.flow.appendChild(n = add(stepNode("div", "ws-plain-say", j), markdown(st.md)));
       } else if (st.type === "approve") {
-        overlays.push(approveOverlay(st, j, last));
+        overlays.push(n = approveOverlay(st, j, last));
       } else if (st.type === "page") {
-        overlays.push(pageOverlay(st, j, last));
+        overlays.push(n = pageOverlay(st, j, last));
       }
+      applyCallouts(n, st, j, last);
     });
     idlePrompt(body.flow, cwd, repo);
     overlays.forEach(function (o) { root.appendChild(o); });
@@ -479,11 +518,12 @@ var Render = (function () {
         n = add(stepNode("div", "ws-cc-line ws-cc-worked", j, "node"), el("span", "ws-cc-g", "✻ "),
                 document.createTextNode(workedText(st)));
       } else if (st.type === "approve") {
-        overlays.push(approveOverlay(st, j, last));
+        overlays.push(n = approveOverlay(st, j, last));
       } else if (st.type === "page") {
-        overlays.push(pageOverlay(st, j, last));
+        overlays.push(n = pageOverlay(st, j, last));
       }
-      if (n) body.flow.appendChild(n);
+      applyCallouts(n, st, j, last);
+      if (n && !n.classList.contains("ws-approve") && !n.classList.contains("ws-page")) body.flow.appendChild(n);
     });
     overlays.forEach(function (o) { root.appendChild(o); });
     return root;

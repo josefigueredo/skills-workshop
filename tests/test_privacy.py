@@ -62,6 +62,20 @@ class TestGenericRules(Tmp):
             self.assertTrue(any(r.search(s) for r in rules.values()), s)
         self.assertFalse(any(r.search("AKIA short") for r in rules.values()))
 
+    def test_json_escaped_markup_is_read_as_markup(self):
+        # The bundle stores pages as JSON with < and > escaped: a cited Python decorator after a line number,
+        # `<i>19</i>@router.post(...)`, becomes `</i>@router.post(...)` (backslash, u, four hex digits),
+        # which is not an address. BS keeps the backslash out of this file's own escapes.
+        BS = chr(92)
+        lt, gt, q = BS + "u003c", BS + "u003e", BS + "u0022"
+        with _env():
+            ok = privacy.scan_text("x " + lt + "i" + gt + "19" + lt + "/i" + gt + "@router.post(&quot;/chat&quot;) y", "a")
+            self.assertEqual(ok, [])
+            self.assertEqual(privacy.scan_text(lt + "/i" + gt + "@pytest.mark.skipif(", "a"), [])
+            bad = privacy.scan_text("authors = [" + q + "Jane " + lt + "jane.doe@corp.io" + gt + q + "]", "a")
+            self.assertEqual(len(bad), 1, bad)
+            self.assertIn(": email: ", bad[0])
+
     def test_github_ssh_remote_is_not_an_email(self):
         # Every skill episode clones over SSH; `git@github.com` is GitHub's transport
         # user, not a person. Only that exact address passes.

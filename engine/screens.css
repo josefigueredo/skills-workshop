@@ -265,3 +265,26 @@
 @media (prefers-color-scheme: dark) {
   .ws-approve-real { --ws-r-bg: #1e1e1e; --ws-r-tx: #f5f5f7; --ws-r-bar-tx: #c7c7cc; --ws-r-btn-bg: #3a3a3c; --ws-r-btn-line: #3a3a3c; }
 }
+
+/* callouts: only the current step carries them (render.js) */
+.ws-co-box { outline: var(--ws-co-box-w) solid var(--ws-co-mark); outline-offset: 2px; border-radius: var(--ws-radius-xs); }
+.ws-co-underline {
+  text-decoration: underline var(--ws-co-mark); text-decoration-thickness: var(--ws-co-under-w); text-underline-offset: 4px;
+}
+.ws-co-tag {
+  display: inline-block; margin-left: .6em; padding: 0 .55em; border-radius: 999px; background: var(--ws-co-mark);
+  color: var(--ws-co-tag-fg); font-family: var(--ws-font-ui); font-size: .85em; font-weight: 600; white-space: nowrap;
+}
+.ws-co-note {
+  position: relative; display: block; width: fit-content; max-width: var(--ws-co-note-w); margin: var(--ws-gap) 0 var(--ws-pad-sm) auto;
+  padding: var(--ws-pad-sm) var(--ws-gap); background: var(--ws-co-note-bg); color: var(--ws-co-note-tx);
+  border: var(--ws-line) solid var(--ws-co-note-line); border-radius: var(--ws-radius); box-shadow: var(--ws-co-note-shadow);
+  font-family: var(--ws-font-ui); font-size: var(--ws-co-note-fs); line-height: var(--ws-lh-tight); transform: rotate(-1deg);
+}
+.ws-co-note::before {
+  content: ""; position: absolute; top: -9px; right: 28px; width: 16px; height: 16px; background: var(--ws-co-note-bg);
+  border-left: var(--ws-line) solid var(--ws-co-note-line); border-top: var(--ws-line) solid var(--ws-co-note-line);
+  transform: rotate(45deg);
+}
+.ws-co-note code { font-family: var(--ws-font-mono); font-size: .9em; }
+.ws-page > .ws-co-note, .ws-approve > .ws-co-note { position: absolute; top: 6%; right: 6%; margin: 0; z-index: 2; }
