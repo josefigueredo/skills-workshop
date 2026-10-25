@@ -13,16 +13,18 @@
 // episode; anything else cancels the running animation and renders the finished state.
 // The stage never shows notes, sources or the skill commit: it only calls Render.step.
 //
-// Stage.create(opts) -> {handle(msg) -> Promise, current()} is the testable core:
+// Stage.create(opts) -> {handle(msg) -> Promise, current(), animating()} is the testable core;
+//   animating() is true from an animated show until its animation ends or another show replaces it:
 //   opts: {canvas (Render container), blackout (element toggled with .hidden), episodes,
 //          post(msg), schedule?, unschedule? (passed to Animate.run)}.
 // Stage.tickClock(canvas) sets the idle prompt's time text (.ws-time inside
 //   [data-anim="idle"]) to Render.now(); it touches nothing else, so it never re-renders
 //   a step or disturbs a running animation. The page calls it every second.
-// Stage.localMove(ep, index, key, shift) -> {index, animate} | null: where the presenter
-//   keys go when no control drives the page (opened from its link). → / PageDown / space
-//   step forward animated, ← / PageUp step back finished, shift jumps chapters; null at
-//   the ends or for any other key. Stage.hashFor(id, index) is the "#id/N" parseHash reads.
+// Stage.localMove(ep, index, key, shift, animating) -> {index, animate} | null: where the
+//   presenter keys go when no control drives the page (opened from its link). → / PageDown /
+//   space step forward animated, ← / PageUp step back finished, shift jumps chapters; null at
+//   the ends or for any other key. While the current step still animates, → / space show it
+//   finished instead (the same index), so a long output is never skipped. Stage.hashFor(id, index) is the "#id/N" parseHash reads.
 // The DOM bootstrap at the end runs only on the page with #ws-stage-root. The page is
 // driven when the control opened it (window "ws-stage" with an opener); otherwise it
 // navigates by itself and keeps the step in the hash, so a reload stays put.
@@ -36,6 +38,7 @@ var Stage = (function () {
     (opts.episodes || []).forEach(function (ep) { if (ep && ep.id) byId[ep.id] = ep; });
     var cur = null;   // {episode, index} of the latest show
     var seq = 0;      // id of the latest show; older runs stay silent
+    var running = false;  // an animated show has not finished yet
     var schedule = opts.schedule || function (fn, ms) { return setTimeout(fn, ms); };
     var unschedule = opts.unschedule || function (id) { clearTimeout(id); };
     var waiting = null;  // timer id of the pending wait
@@ -66,6 +69,7 @@ var Stage = (function () {
       var animate = msg.animate === true && cur !== null && cur.episode === ep.id && index === cur.index + 1;
       cur = {episode: ep.id, index: index};
       canvas.classList.remove(FADE);
+      running = animate;
       if (!animate) {
         Animate.stop(canvas);
         Render.step(canvas, ep, index);
@@ -82,6 +86,7 @@ var Stage = (function () {
       post({type: "shown", episode: ep.id, index: index});
       return run.done.then(function () {
         if (id !== seq) return;
+        running = false;
         // Same task as Animate's final render: the fresh node never starts the fade.
         canvas.classList.remove(FADE);
         post({type: "done-animating", index: index});
@@ -98,7 +103,7 @@ var Stage = (function () {
       return Promise.resolve();
     }
 
-    return {handle: handle, current: function () { return cur; }};
+    return {handle: handle, current: function () { return cur; }, animating: function () { return running; }};
   }
 
   // Refresh only the idle prompt's clock text; returns how many were updated.
@@ -125,8 +130,9 @@ var Stage = (function () {
     return n >= 1 ? {episode: m[1], index: n - 1} : null;
   }
 
-  function localMove(ep, index, key, shift) {
+  function localMove(ep, index, key, shift, animating) {
     var k = Nav.keyAction(key), last = Nav.flatten(ep).length - 1, target;
+    if ((k === "right" || k === "space") && !shift && animating) return {index: index, animate: false};
     if ((k === "right" || k === "left") && shift) {
       target = k === "right" ? Nav.nextChapter(ep, index) : Nav.prevChapter(ep, index);
       return target === index ? null : {index: target, animate: false};
@@ -179,7 +185,7 @@ var Stage = (function () {
       if (Nav.keyAction(msg.key) === "b") { blackout.hidden = !blackout.hidden; return; }
       var cur = stage.current(), ep = null;
       episodes.forEach(function (e) { if (cur && e.id === cur.episode) ep = e; });
-      var to = ep && localMove(ep, cur.index, msg.key, msg.shift);
+      var to = ep && localMove(ep, cur.index, msg.key, msg.shift, stage.animating());
       if (!to) return;
       history.replaceState(null, "", hashFor(ep.id, to.index));
       stage.handle({type: "show", episode: ep.id, index: to.index, animate: to.animate, speed: 1});

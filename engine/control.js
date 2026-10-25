@@ -12,6 +12,9 @@
 //   outbox: {to:"stage", msg}                content messages go only while the stage is
 //                                            live (opened, ready, not lost); pings go while
 //                                            it is opened, lost or not
+// Finishing first: → while the stage still animates the current step (no done-animating for it yet)
+// shows that same step finished instead of moving on; the next → advances. A resend shows the step
+// finished too, so a stage that was down or reloaded never holds → back.
 // Playback: space toggles `playing`. While playing, each done-animating for the current
 // index asks Animate.autoplay; if it does not stop, the control sends the stage
 // {type:"wait", delay, seq} and the STAGE times the delay (its window is visible, so its
@@ -45,7 +48,7 @@ var Control = (function () {
     var eps = episodes || [];
     var ep = eps[0] || {id: null, series: "cursor", chapters: []};
     return {
-      episodes: eps, episodeId: ep.id, index: 0, speed: 1, playing: false, blackout: false,
+      episodes: eps, episodeId: ep.id, index: 0, speed: 1, playing: false, blackout: false, animating: false,
       seq: 0, stageFile: stageFile(ep.series), stageSeries: null,
       needsOpen: true, stageLost: false, ready: false, stageIndex: null,
       now: 0, lastPing: 0, lastHeard: 0, pingPendingSince: null, lastTick: null,
@@ -68,6 +71,7 @@ var Control = (function () {
 
   function go(s, index, animate, patch) {
     var n = assign(s, assign({index: index, seq: s.seq + 1, started: true}, patch || {}));
+    n = assign(n, {animating: !!animate && isLive(n)});
     return {state: n, outbox: toStage(n, showMsg(n, animate))};
   }
 
@@ -85,6 +89,7 @@ var Control = (function () {
       target = Nav.prevChapter(ep, s.index);
       return target === s.index ? none(s) : go(s, target, false, {playing: false});
     }
+    if (k === "right" && s.animating && isLive(s)) return go(s, s.index, false);
     if (k === "right") return s.index >= last ? none(s) : go(s, s.index + 1, true);
     if (k === "left") return s.index <= 0 ? none(s) : go(s, s.index - 1, false, {playing: false});
     if (k === "space") {
@@ -109,6 +114,7 @@ var Control = (function () {
     var wasDown = s.stageLost || !s.ready;
     var n = assign(s, {ready: true, stageLost: false, lastHeard: now, pingPendingSince: null});
     var out = (wasDown || msg.type === "ready") ? resend(n) : [];
+    if (out.length) n = assign(n, {animating: false});
     var r = handleMessage(n, msg);
     return {state: r.state, outbox: out.concat(r.outbox)};
   }
@@ -117,6 +123,7 @@ var Control = (function () {
     if (msg.type === "shown") return none(assign(s, {stageIndex: msg.index}));
     if (msg.type === "key") return onKey(s, msg.key, msg.shift);
     if (msg.type === "done-animating") {
+      if (msg.index === s.index && s.animating) s = assign(s, {animating: false});
       if (!s.playing || msg.index !== s.index) return none(s);
       var a = Animate.autoplay(episodeOf(s), s.index, s.speed);
       if (a.stop) return none(pause(s));
