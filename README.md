@@ -42,6 +42,7 @@ Serie Cursor:
 |---|---|---|---|
 | 0 | Antes de empezar | listo | este repo |
 | 1 | inherited-audit | listo | `inherited-audit` |
+| 1 | inherited-fix | listo | `inherited-audit` |
 | 2 | jira-team-kit | listo | `jira-team-kit` |
 | 3 | confluence-team-kit | listo | `confluence-skill-mcp` |
 | 4 | product-brain-mcp | listo | `product-brain-skill-mcp` (en `/taller/` de su sitio) |

@@ -822,7 +822,7 @@
         },
         {
           "type": "say",
-          "md": "#### Lo que te llevás\n- **Un pedido de una frase** alcanza: la skill trae el checklist y el orden.\n- **Cada bug viene probado** con un test que falla, en una rama local. Nada se publica.\n- **Dos reportes** para el equipo dueño, que dicen cuánto muestran de cuánto.\n\n#### Próximo episodio: jira-team-kit\nCómo crear épicas en Jira desde la conversación, con una ventana que te pide aprobar cada cambio.",
+          "md": "#### Lo que te llevás\n- **Un pedido de una frase** alcanza: la skill trae el checklist y el orden.\n- **Cada bug viene probado** con un test que falla, en una rama local. Nada se publica.\n- **Dos reportes** para el equipo dueño, que dicen cuánto muestran de cuánto.\n\n#### Próximo episodio: inherited-fix\nCon el permiso del equipo dueño, cómo llevar uno de esos tests rojos hasta un **PR de fix revisado por otro modelo**, listo para que lo publiques vos.",
           "source": "inferido",
           "notes": "Las tres ideas son el porqué de adoptarla: poco esfuerzo, evidencia y nada sale de tu máquina sin vos. Si el orden de la serie cambia, cambiá la línea del próximo episodio.",
           "pause": true
