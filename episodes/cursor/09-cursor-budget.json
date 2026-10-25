@@ -13,7 +13,7 @@
   },
   "skill": {
     "repo": "cursor-budget",
-    "commit": "577f375",
+    "commit": "0530a0a",
     "date": "2026-10-25"
   },
   "workspace": {
@@ -63,7 +63,9 @@
             "copiado en ~/.cursor/budget/app",
             "hook instalado",
             "alias agregado en ~/.zshrc; abrí otra terminal o corré: source ~/.zshrc",
+            "statusLine de cursor-agent apuntada a cbudget; cerrá y volvé a abrir cursor-agent para verla",
             "skill: cursor-budget (Cursor, Claude Code, Codex) -> ~/.cursor/budget/app",
+            "extensión de Cursor instalada: el gasto aparece en la barra de estado del editor (IDE ↗; si no, Developer: Reload Window)",
             "Mandé una notificación de prueba. Si no la viste, los avisos no te van a llegar: abrí Configuración del Sistema → Notificaciones → Script Editor, activá «Permitir notificaciones» y probá de nuevo con `cbudget notify-test`.",
             "Listo. Abrí una terminal nueva y probá: cbudget report"
           ],
@@ -76,11 +78,29 @@
             },
             {
               "kind": "box",
+              "match": "statusLine de cursor-agent apuntada a cbudget",
+              "text": "el pie de cursor-agent"
+            },
+            {
+              "kind": "box",
+              "match": "extensión de Cursor instalada",
+              "text": "la barra del editor"
+            },
+            {
+              "kind": "box",
               "match": "Mandé una notificación de prueba.",
               "text": "¿la viste?"
             }
           ],
-          "notes": "Una sola línea. gh pone tu sesión de GitHub porque el repo es interno: un curl suelto recibe 404. El instalador copia el programa a su propia carpeta, suma dos hooks a Cursor sin tocar los que ya tenías, agrega el alias cbudget y deja la skill a mano de Cursor, Claude Code y Codex. Al final manda una notificación de prueba: preguntá si la vieron, porque todos los avisos llegan así. Paso inferido: necesita red."
+          "notes": "Una sola línea. gh pone tu sesión de GitHub porque el repo es interno: un curl suelto recibe 404. El instalador copia el programa a su propia carpeta, suma dos hooks a Cursor sin tocar los que ya tenías, agrega el alias cbudget y deja la skill a mano de Cursor, Claude Code y Codex. Además instala dos cosas para ver el gasto sin preguntar: una extensión que lo muestra en la barra de estado del editor de Cursor (en Cursor 3, el botón IDE; la ventana de Agentes no tiene barra), y el pie de cursor-agent, si lo usás. No hay que instalar nada aparte. Al final manda una notificación de prueba: preguntá si la vieron, porque todos los avisos llegan así. Paso inferido: necesita red; la salida es la del instalador real."
+        },
+        {
+          "type": "term",
+          "cmd": "mkdir -p ~/.cursor && echo '{\"version\": 1}' > ~/.cursor/cli-config.json",
+          "out": [],
+          "source": "real",
+          "cwd": "~",
+          "capture_only": true
         },
         {
           "type": "term",
@@ -89,6 +109,7 @@
             "copiado en ~/.cursor/budget/app",
             "hook instalado",
             "alias agregado en ~/.zshrc; abrí otra terminal o corré: source ~/.zshrc",
+            "statusLine de cursor-agent apuntada a cbudget; cerrá y volvé a abrir cursor-agent para verla",
             "skill: cursor-budget (Cursor, Claude Code, Codex) -> ~/.cursor/budget/app",
             "extensión de Cursor instalada: el gasto aparece en la barra de estado del editor (IDE ↗; si no, Developer: Reload Window)",
             "Mandé una notificación de prueba. Si no la viste, los avisos no te van a llegar: abrí Configuración del Sistema → Notificaciones → Script Editor, activá «Permitir notificaciones» y probá de nuevo con `cbudget notify-test`."
@@ -469,9 +490,9 @@
             "\u001b[38;2;58;58;58m╭────────────────────────────────────────────────────────────────────────────────────────────────────────────╮\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mÚltimos turnos (último día)\u001b[0m                                                                                \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mFecha            Modelo                    Chat         Tokens     Costo\u001b[0m                                   \u001b[38;2;58;58;58m│\u001b[0m",
-            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236m25 oct, 17:16  \u001b[0m\u001b[38;2;62;152;255m● \u001b[0m\u001b[38;2;236;236;236mclaude-sonnet-5-5-high\u001b[0m    \u001b[38;2;140;140;140ma1        \u001b[0m\u001b[38;2;236;236;236m   268.0K\u001b[0m\u001b[38;2;236;236;236m     $0.23\u001b[0m                                   \u001b[38;2;58;58;58m│\u001b[0m",
-            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236m25 oct, 17:16  \u001b[0m\u001b[38;2;246;196;120m● \u001b[0m\u001b[38;2;236;236;236mauto-smart\u001b[0m                \u001b[38;2;140;140;140mb2        \u001b[0m\u001b[38;2;236;236;236m   124.0K\u001b[0m\u001b[38;2;236;236;236m     $0.15\u001b[0m                                   \u001b[38;2;58;58;58m│\u001b[0m",
-            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236m25 oct, 17:16  \u001b[0m\u001b[38;2;62;152;255m● \u001b[0m\u001b[38;2;236;236;236mclaude-sonnet-5-5-high\u001b[0m    \u001b[38;2;140;140;140ma1        \u001b[0m\u001b[38;2;236;236;236m   186.0K\u001b[0m\u001b[38;2;236;236;236m     $0.18\u001b[0m                                   \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236m25 oct, 17:34  \u001b[0m\u001b[38;2;62;152;255m● \u001b[0m\u001b[38;2;236;236;236mclaude-sonnet-5-5-high\u001b[0m    \u001b[38;2;140;140;140ma1        \u001b[0m\u001b[38;2;236;236;236m   186.0K\u001b[0m\u001b[38;2;236;236;236m     $0.18\u001b[0m                                   \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236m25 oct, 17:34  \u001b[0m\u001b[38;2;62;152;255m● \u001b[0m\u001b[38;2;236;236;236mclaude-sonnet-5-5-high\u001b[0m    \u001b[38;2;140;140;140ma1        \u001b[0m\u001b[38;2;236;236;236m   268.0K\u001b[0m\u001b[38;2;236;236;236m     $0.23\u001b[0m                                   \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236m25 oct, 17:34  \u001b[0m\u001b[38;2;246;196;120m● \u001b[0m\u001b[38;2;236;236;236mauto-smart\u001b[0m                \u001b[38;2;140;140;140mb2        \u001b[0m\u001b[38;2;236;236;236m   124.0K\u001b[0m\u001b[38;2;236;236;236m     $0.15\u001b[0m                                   \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m╰────────────────────────────────────────────────────────────────────────────────────────────────────────────╯\u001b[0m",
             ""
           ],
@@ -582,7 +603,7 @@
           "type": "term",
           "cmd": "python3 ~/.cursor/budget/app/cbudget.py version",
           "out": [
-            "instalado: 577f375"
+            "instalado: 0530a0a"
           ],
           "source": "real",
           "cwd": "~",
@@ -596,9 +617,37 @@
         },
         {
           "type": "term",
+          "cmd": "python3 ~/.cursor/budget/app/cbudget.py update",
+          "out": [
+            "copiado en ~/.cursor/budget/app",
+            "el hook ya estaba instalado",
+            "el alias ya estaba en ~/.zshrc",
+            "la statusLine de cursor-agent ya era la de cbudget",
+            "skill: cursor-budget (Cursor, Claude Code, Codex) -> ~/.cursor/budget/app",
+            "extensión de Cursor instalada: el gasto aparece en la barra de estado del editor (IDE ↗; si no, Developer: Reload Window)",
+            "Mandé una notificación de prueba. Si no la viste, los avisos no te van a llegar: abrí Configuración del Sistema → Notificaciones → Script Editor, activá «Permitir notificaciones» y probá de nuevo con `cbudget notify-test`.",
+            "Listo. Abrí una terminal nueva y probá: cbudget report"
+          ],
+          "source": "inferido",
+          "cwd": "~",
+          "notes": "Cuando sale una versión nueva te llega una notificación: Hay una versión nueva de cursor-budget. Para actualizar, le decís al agente actualizá cursor-budget, o corrés cbudget update. Es la misma instalación: reemplaza el programa, la extensión y el pie, y respeta tus límites, tu registro y lo cargado del ciclo. Después recargá Cursor para que tome la extensión nueva. Paso inferido: necesita red; la salida es la del instalador real.",
+          "callouts": [
+            {
+              "kind": "note",
+              "text": "**Llegó el aviso de versión nueva.** Esto mismo hace el agente si le decís «actualizá cursor-budget»."
+            },
+            {
+              "kind": "box",
+              "match": "el hook ya estaba instalado",
+              "text": "tus límites y tu registro no se tocan"
+            }
+          ]
+        },
+        {
+          "type": "term",
           "cmd": "python3 ~/.cursor/budget/app/cbudget.py allow --minutes 30",
           "out": [
-            "bloqueos levantados hasta las 17:46"
+            "bloqueos levantados hasta las 18:04"
           ],
           "source": "real",
           "cwd": "~",
@@ -663,7 +712,7 @@
           "type": "term",
           "cmd": "tail -n 1 ~/.cursor/budget/blocks.jsonl",
           "out": [
-            "{\"t\": 1792959411, \"conversation_id\": \"c1\", \"model\": \"claude-opus-5-5-high\", \"reason\": \"el modelo claude-opus-5-5-high está bloqueado; elegí otro o corré `cbudget allow`\"}"
+            "{\"t\": 1792960486, \"conversation_id\": \"c1\", \"model\": \"claude-opus-5-5-high\", \"reason\": \"el modelo claude-opus-5-5-high está bloqueado; elegí otro o corré `cbudget allow`\"}"
           ],
           "source": "real",
           "cwd": "~",
@@ -673,7 +722,7 @@
           "type": "term",
           "cmd": "python3 ~/.cursor/budget/app/cbudget.py allow --minutes 30",
           "out": [
-            "bloqueos levantados hasta las 17:46"
+            "bloqueos levantados hasta las 18:04"
           ],
           "source": "real",
           "cwd": "~",
