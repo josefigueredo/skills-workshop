@@ -1,0 +1,442 @@
+{
+  "id": "inherited-fix",
+  "series": "cursor",
+  "order": 1,
+  "title": "inherited-fix",
+  "pitch": {
+    "ask": "Arreglá el C-01 que dejó la auditoría de mi-servicio",
+    "does": "Agrega el fix a la rama del test rojo, lo prueba sobre el merge con la base del PR, lo hace revisar por otro modelo y te deja los comandos para pasar el PR de draft a fix."
+  },
+  "skill": {
+    "repo": "inherited-audit",
+    "commit": "a4c8267",
+    "date": "2026-10-25"
+  },
+  "workspace": {
+    "repo": "mi-servicio",
+    "files": [
+      "api",
+      "web",
+      "docs",
+      "README.md"
+    ],
+    "chats": [
+      {
+        "title": "Auditar mi-servicio",
+        "age": "1d"
+      }
+    ],
+    "model": "GPT-5.6 Terra"
+  },
+  "minutes": [
+    4,
+    8
+  ],
+  "chapters": [
+    {
+      "id": "instalar",
+      "title": "Instalar",
+      "subtitle": "Viene con inherited-audit",
+      "screen": "terminal",
+      "faq": [
+        {
+          "q": "¿Tengo que clonar otro repo?",
+          "a": "No. inherited-fix vive en el mismo repo que inherited-audit. Si ya lo tenés, hacé git pull y volvé a correr el instalador."
+        },
+        {
+          "q": "¿Por qué tienen que ir juntas?",
+          "a": "Porque inherited-fix usa la parte mecánica de inherited-audit, el ia.py, como su carpeta vecina. El instalador las deja siempre en la misma carpeta de skills."
+        },
+        {
+          "q": "Abrí Cursor y no aparece inherited-fix",
+          "a": "Cerrá el chat y abrí uno nuevo: una sesión que ya estaba abierta no ve skills nuevas."
+        }
+      ],
+      "steps": [
+        {
+          "type": "term",
+          "cmd": "~/skills/inherited-audit/install.sh --cursor",
+          "out": [
+            "skill: ~/.cursor/skills/inherited-audit -> ~/skills/inherited-audit/skill",
+            "skill: ~/.cursor/skills/inherited-fix -> ~/skills/inherited-audit/fix-skill"
+          ],
+          "source": "real",
+          "cwd": "~",
+          "notes": "El mismo instalador del episodio anterior, ahora con dos líneas: la segunda es inherited-fix. Igual que antes, no copia nada: deja enlaces al clon, así que un git pull las actualiza a las dos.",
+          "pause": true
+        }
+      ]
+    },
+    {
+      "id": "caso-principal",
+      "title": "Caso principal",
+      "subtitle": "Del test rojo al PR listo para revisar",
+      "screen": "cursor-full",
+      "faq": [
+        {
+          "q": "¿Por qué no lo arregló la auditoría?",
+          "a": "Porque cambiar el código de otro equipo es decisión de ese equipo. La auditoría se queda en el test que falla y la propuesta escrita; el fix llega cuando el equipo dice que sí."
+        },
+        {
+          "q": "¿Por qué lo prueba contra main y no contra la rama?",
+          "a": "Porque el PR se va a mergear en main, y main se movió desde la auditoría. Prueba el resultado del merge, que es lo que de verdad va a quedar."
+        },
+        {
+          "q": "¿Quién revisa el fix?",
+          "a": "Otro agente con otro modelo: ni el que lo escribió ni el que ya había confirmado el bug en la auditoría. Un test en verde dice que el test pasa, no que la causa se fue."
+        },
+        {
+          "q": "¿Hace push?",
+          "a": "No. Deja un script con los comandos y vos lo corrés. El script solo hace push si la rama no cambió desde el fix."
+        }
+      ],
+      "steps": [
+        {
+          "type": "ask",
+          "text": "Arreglá el C-01 de la auditoría de mi-servicio (~/auditorias/mi-servicio). Su PR es el draft que abrimos con el test rojo.",
+          "source": "inferido",
+          "notes": "El pedido es una frase. El C-01 es el bug del episodio anterior: un descuento de más del 100% deja el total negativo. Su rama tiene un solo commit, el test que falla, y su PR está en draft."
+        },
+        {
+          "type": "tool",
+          "label": "Read · ~/.cursor/skills/inherited-fix/SKILL.md",
+          "source": "inferido",
+          "notes": "Cursor carga la skill nueva. De acá en adelante el agente sigue su procedimiento."
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.cursor/skills/inherited-audit/ia.py fix plan --run mi-servicio",
+          "out": [
+            "note: fix.authorized_by is not set: confirm with the person that the owner team agreed to receive fixes, then `ia.py set --run mi-servicio fix.authorized_by=<who>`; `fix start` needs it",
+            "API fix/c-01-descuento-sin-tope  PR #12 (open) base main",
+            "  C-01 medium: Limitar el descuento entre 0 y 100.",
+            "    prod_files: mi_servicio/orders.py"
+          ],
+          "source": "inferido",
+          "cwd": "~/auditorias",
+          "notes": "El plan lee el PR en GitHub: número, estado y en qué rama se mergea. Paso inferido porque necesita red; la forma de la salida es la real. La unidad de trabajo es el PR, no el hallazgo.",
+          "callouts": [
+            {
+              "kind": "box",
+              "match": "PR #12 (open) base main",
+              "text": "lo lee de GitHub"
+            }
+          ]
+        },
+        {
+          "type": "say",
+          "md": "El C-01 es su propio PR: **#12**, que se mergea en `main`.\n\nAntes de tocar código de otro equipo, una sola pregunta: ¿el equipo dueño aceptó recibir el fix, o lo decidís vos?",
+          "source": "inferido",
+          "notes": "Este es el corazón de la skill: no arregla nada del equipo dueño sin que alguien lo haya autorizado, y deja escrito quién.",
+          "pause": true
+        },
+        {
+          "type": "ask",
+          "text": "Sí, el equipo de pedidos dijo que sí por Slack.",
+          "source": "inferido",
+          "notes": "La persona responde una vez por corrida. La skill no vuelve a preguntar."
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.cursor/skills/inherited-audit/ia.py set --run mi-servicio 'fix.authorized_by=Equipo de pedidos, por Slack (2026-10-25)'",
+          "out": [
+            "set fix.authorized_by"
+          ],
+          "source": "real",
+          "cwd": "~/auditorias",
+          "notes": "Queda escrito en la corrida quién autorizó y cómo. Sin esto, el paso siguiente se niega a arrancar."
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.cursor/skills/inherited-audit/ia.py fix start C-01 --run mi-servicio",
+          "out": [
+            "worktree ~/auditorias/mi-servicio/fix/wt-fix-c-01-descuento-sin-tope on fix/c-01-descuento-sin-tope",
+            "PR #12 merges into main",
+            "proving on a throwaway merge of origin/main into fix/c-01-descuento-sin-tope (61109e4e38); suite: python3 -m unittest discover -s tests",
+            "suite at start: 7 of 8 pass (compared later by counts: the plan has no readable junit reports)",
+            "  C-01: started; context ~/auditorias/mi-servicio/fix/fix-c-01-descuento-sin-tope/C-01.md"
+          ],
+          "source": "inferido",
+          "cwd": "~/auditorias",
+          "notes": "Arma una copia de trabajo aparte en la rama del PR y corre la suite sobre el merge con main: 7 de 8, y el que falla es justo el test rojo. Paso inferido porque lee la base del PR en GitHub; el resto de la salida es la real.",
+          "callouts": [
+            {
+              "kind": "underline",
+              "match": "suite at start: 7 of 8 pass"
+            }
+          ]
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.cursor/skills/inherited-audit/ia.py fix start C-01 --run mi-servicio --base-ref origin/main",
+          "out": [
+            "worktree ~/auditorias/mi-servicio/fix/wt-fix-c-01-descuento-sin-tope on fix/c-01-descuento-sin-tope",
+            "proving on a throwaway merge of origin/main into fix/c-01-descuento-sin-tope (61109e4e38); suite: python3 -m unittest discover -s tests",
+            "suite at start: 7 of 8 pass (compared later by counts: the plan has no readable junit reports)",
+            "  C-01: started; context ~/auditorias/mi-servicio/fix/fix-c-01-descuento-sin-tope/C-01.md"
+          ],
+          "source": "real",
+          "cwd": "~/auditorias",
+          "capture_only": true
+        },
+        {
+          "type": "tool",
+          "label": "Ran · subagente que arregla · en su propia copia de trabajo · C-01",
+          "source": "inferido",
+          "notes": "Un subagente escribe el fix en esa copia, y solo ahí. No puede tocar el test rojo: es la especificación y está congelado."
+        },
+        {
+          "type": "term",
+          "cmd": "python3 -c \"import pathlib; p = pathlib.Path('api/mi_servicio/orders.py'); p.write_text(p.read_text().replace('    order = ORDERS[order_id]\\n', '    order = ORDERS[order_id]\\n    discount_pct = min(max(discount_pct, 0), 100)\\n'))\" && git add -A && git -c commit.gpgsign=false commit -q -m 'fix(orders): cap the discount between 0 and 100 percent' -m 'order_total() subtracted any percentage, so a 150% discount turned an order of 100 into -50. It now clamps the discount to 0..100 before computing the total.' && cd api && python3 -m unittest tests.test_discount_cap > ~/auditorias/mi-servicio/outputs/C-01-green.txt 2>&1",
+          "out": [],
+          "source": "real",
+          "cwd": "~/auditorias/mi-servicio/fix/wt-fix-c-01-descuento-sin-tope",
+          "capture_only": true
+        },
+        {
+          "type": "term",
+          "cmd": "git -C ~/auditorias/mi-servicio/fix/wt-fix-c-01-descuento-sin-tope diff HEAD~1 -- api/mi_servicio/orders.py",
+          "out": [
+            "diff --git a/api/mi_servicio/orders.py b/api/mi_servicio/orders.py",
+            "index 66702c4..98aa8e5 100644",
+            "--- a/api/mi_servicio/orders.py",
+            "+++ b/api/mi_servicio/orders.py",
+            "@@ -12,5 +12,6 @@ def create_order(order_id, items):",
+            " def order_total(order_id, discount_pct=0):",
+            "     \"\"\"Total of an order after a percentage discount.\"\"\"",
+            "     order = ORDERS[order_id]",
+            "+    discount_pct = min(max(discount_pct, 0), 100)",
+            "     gross = sum(price * qty for price, qty in order[\"items\"])",
+            "     return gross - gross * discount_pct / 100"
+          ],
+          "source": "real",
+          "cwd": "~/auditorias",
+          "notes": "El fix entero es una línea: el descuento queda entre 0 y 100 antes de calcular. Chico a propósito: la skill rechaza refactors y cambios que no hacen al bug.",
+          "callouts": [
+            {
+              "kind": "box",
+              "match": "discount_pct = min(max(discount_pct, 0), 100)",
+              "text": "el fix"
+            }
+          ]
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.cursor/skills/inherited-audit/ia.py fix check C-01 --run mi-servicio",
+          "out": [
+            "suite on the merge of origin/main + d11bb3eb70: 8 of 8 pass (compared by counts: no junit names); output outputs/C-01-fix-suite.txt",
+            "check C-01: passed"
+          ],
+          "source": "real",
+          "cwd": "~/auditorias",
+          "notes": "El chequeo mecánico: que el test rojo no se tocó, que no hay archivos fuera del alcance, y que la suite completa pasa sobre el merge con main. Ojo con «by counts»: este proyecto no deja reportes junit, así que compara cantidades y no nombres, y la skill lo dice.",
+          "callouts": [
+            {
+              "kind": "box",
+              "match": "compared by counts: no junit names",
+              "text": "lo tiene que avisar"
+            }
+          ]
+        },
+        {
+          "type": "tool",
+          "label": "Ran · agent -p --mode ask --trust --workspace … --model gemini-3.1-pro · revisión de solo lectura",
+          "source": "inferido",
+          "notes": "Revisa otro agente, con otro modelo y en modo de solo lectura: ni GPT, que escribió el fix, ni Sonnet, que confirmó el bug en la auditoría. Responde tres preguntas con evidencia: si ataca la causa, si abre un riesgo nuevo y si es mínimo."
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.cursor/skills/inherited-audit/ia.py finding set --run mi-servicio C-01 'fix.review={\"model\": \"gemini-3.1-pro (requested; Cursor does not report it)\", \"sha\": \"'\"$(git -C ~/auditorias/mi-servicio/fix/wt-fix-c-01-descuento-sin-tope rev-parse HEAD)\"'\", \"claims\": {\"targeted\": {\"state\": \"CONFIDENT\", \"evidence\": \"api/mi_servicio/orders.py:15 limita discount_pct a 0..100 antes del cálculo, que es la causa del total negativo; no toca el test ni su entrada.\"}, \"no_new_risk\": {\"state\": \"CONFIDENT\", \"evidence\": \"order_total() es el único lugar que usa discount_pct; un descuento entre 0 y 100 da el mismo total que antes.\"}, \"minimal\": {\"state\": \"CONFIDENT\", \"evidence\": \"El diff es una línea en orders.py; ningún otro archivo cambia.\"}}}'",
+          "out": [
+            "C-01"
+          ],
+          "source": "real",
+          "cwd": "~/auditorias",
+          "capture_only": true
+        },
+        {
+          "type": "say",
+          "md": "La revisión dio **CONFIDENT** en las tres:\n- **targeted**: limita el descuento antes del cálculo, que es la causa; no toca el test.\n- **no_new_risk**: `order_total()` es el único que usa el descuento.\n- **minimal**: una línea en `orders.py`.",
+          "source": "inferido",
+          "notes": "Si alguna no hubiera dado CONFIDENT, hay una sola vuelta de corrección; si sigue sin convencer, el fix se descarta y no sale nada."
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.cursor/skills/inherited-audit/ia.py fix done C-01 --run mi-servicio",
+          "out": [
+            "C-01: done (sha_fix d11bb3eb70, suite 8 of 8 pass)",
+            "worktree removed: ~/auditorias/mi-servicio/fix/wt-fix-c-01-descuento-sin-tope"
+          ],
+          "source": "real",
+          "cwd": "~/auditorias",
+          "notes": "Recién ahora lo registra como hecho: con el chequeo y la revisión sobre el mismo commit. Y borra la copia de trabajo."
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.cursor/skills/inherited-audit/ia.py fix publish --run mi-servicio",
+          "out": [
+            "fix/c-01-descuento-sin-tope: ready (C-01)",
+            "prepared ~/auditorias/mi-servicio/fix/commands.sh  (nothing was executed; review it, then run it yourself)"
+          ],
+          "source": "real",
+          "cwd": "~/auditorias",
+          "notes": "Escribe los comandos, no los corre. «nothing was executed» es literal."
+        },
+        {
+          "type": "term",
+          "cmd": "grep -E 'push origin|--title|pr ready' ~/auditorias/mi-servicio/fix/commands.sh",
+          "out": [
+            "git -C ~/mi-servicio push origin fix/c-01-descuento-sin-tope",
+            "gh pr edit \"$PR\" --repo demo-org/mi-servicio --title 'fix(orders): cap the discount between 0 and 100 percent'",
+            "gh pr ready \"$PR\" --repo demo-org/mi-servicio"
+          ],
+          "source": "real",
+          "cwd": "~/auditorias",
+          "notes": "Lo que va a hacer el script cuando lo corras vos: push de la rama, título nuevo en formato conventional commits y sacar el PR de draft. También cambia en el cuerpo del PR «Refs #N» por «Closes #N»."
+        },
+        {
+          "type": "say",
+          "md": "#### Listo para que lo publiques\n- **PR #12** (base `main`): **C-01 hecho** con `fix(orders): cap the discount between 0 and 100 percent`.\n- Suite: **8 de 8** sobre el merge con `main`, comparada **por cantidades** porque el proyecto no deja reportes junit.\n- Revisó **gemini-3.1-pro** (pedido; Cursor no informa el modelo): las tres en CONFIDENT.\n- Sin conflicto con la base.\n- Comandos en `~/auditorias/mi-servicio/fix/commands.sh`. **No los corrí**: corrélos vos.",
+          "source": "inferido",
+          "notes": "Este es el formato de reporte de la skill: PR y base, estado de cada hallazgo, cómo se comparó la suite, quién revisó y dónde están los comandos.",
+          "pause": true
+        },
+        {
+          "type": "term",
+          "cmd": "sh ~/auditorias/mi-servicio/fix/commands.sh",
+          "out": [
+            "fix/c-01-descuento-sin-tope: PR #12 updated"
+          ],
+          "source": "inferido",
+          "cwd": "~/mi-servicio",
+          "notes": "La persona corre el script. Paso inferido: hace push y edita el PR en GitHub.",
+          "in": "zsh"
+        }
+      ]
+    },
+    {
+      "id": "otros-casos",
+      "title": "Otros casos",
+      "subtitle": "Grupos, bugs ya arreglados y fixes que no salen",
+      "screen": "cursor-agent",
+      "faq": [
+        {
+          "q": "¿Por qué los de un grupo no van en paralelo?",
+          "a": "Porque comparten archivos: por eso la auditoría los agrupó. Uno por uno en la misma rama evita conflictos entre fixes."
+        },
+        {
+          "q": "¿Bloqueado es un fracaso?",
+          "a": "No. Es una respuesta válida: el fix necesita una decisión del equipo dueño. Se lo contás y no se fuerza nada."
+        },
+        {
+          "q": "¿Y si main ya no mergea con la rama?",
+          "a": "La skill frena y te pregunta: rebasear primero la rama del test rojo, o arreglar sobre la base vieja y dejar el conflicto para el PR."
+        }
+      ],
+      "steps": [
+        {
+          "type": "ask",
+          "text": "¿Y si el PR agrupa varios hallazgos, o el bug ya lo arreglaron en main?",
+          "source": "inferido",
+          "notes": "Las dos dudas que más aparecen."
+        },
+        {
+          "type": "say",
+          "md": "#### Un PR con varios hallazgos\nLa rama es `audit/pr-N`. Los arreglo **en orden, en una sola copia de trabajo**: un commit por hallazgo, cada uno con su chequeo y su revisión. El PR se publica cuando están todos.\n\n#### Ya arreglado en main\nSi el test rojo ya pasa sobre `main`, el hallazgo queda **moot**: te lo digo y no lo toco.\n\n#### Fixes que no salen\n- **blocked**: necesita una decisión de diseño, una migración, un cambio de contrato o tocar otro repo. Paro sin commitear.\n- **declined**: la revisión no quedó convencida después de una vuelta. Descarto el commit local; no se publicó nada.",
+          "source": "inferido",
+          "notes": "Remarcá que bloqueado y descartado son resultados válidos. La skill nunca agranda el alcance para llegar al verde.",
+          "pause": true
+        }
+      ]
+    },
+    {
+      "id": "si-algo-falla",
+      "title": "Si algo falla",
+      "subtitle": "Los frenos que vas a ver",
+      "screen": "terminal",
+      "faq": [
+        {
+          "q": "¿Puedo saltear la autorización?",
+          "a": "No. Si la decisión es tuya, decílo y queda escrito así: «la decido yo, sin consultar al equipo»."
+        },
+        {
+          "q": "El chequeo falla, ¿lo arreglo a mano?",
+          "a": "No: el agente le devuelve los problemas al subagente que arregla. Nunca se edita el registro para pasar el chequeo."
+        }
+      ],
+      "steps": [
+        {
+          "type": "term",
+          "cmd": "python3 ~/.cursor/skills/inherited-audit/ia.py fix start C-01 --run mi-servicio",
+          "out": [
+            "error: fix.authorized_by is not set: confirm with the person that the owner team agreed to receive fixes (or that the person takes that decision), then `ia.py set --run ~/auditorias/mi-servicio fix.authorized_by=<who>`"
+          ],
+          "source": "inferido",
+          "cwd": "~/auditorias",
+          "notes": "Primer freno: nadie dijo quién autorizó. Se resuelve contestando la pregunta del agente. Paso inferido, con la salida real del CLI en ese caso."
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.cursor/skills/inherited-audit/ia.py fix check C-01 --run mi-servicio",
+          "out": [
+            "suite on the merge of origin/main + 289ddde285: 8 of 8 pass (compared by counts: no junit names); output outputs/C-01-fix-suite.txt",
+            "FAIL out of scope: api/mi_servicio/stats.py (not in prod_files; name it with its reason in fix.extra_files)",
+            "FAIL existing test file changed: api/tests/test_discount_cap.py (only new tests may be added)",
+            "check C-01: 2 problems"
+          ],
+          "source": "inferido",
+          "cwd": "~/auditorias",
+          "notes": "El más importante: un fix que «hizo pasar» el test cambiándolo. La suite da 8 de 8 y aun así el chequeo falla, porque el test rojo está congelado. También marca un archivo que no estaba en el alcance. Paso inferido, con la salida real del CLI en ese caso.",
+          "callouts": [
+            {
+              "kind": "box",
+              "match": "FAIL existing test file changed: api/tests/test_discount_cap.py (only new tests may be added)",
+              "text": "8 de 8 y falla igual"
+            }
+          ]
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.cursor/skills/inherited-audit/ia.py fix done C-01 --run mi-servicio",
+          "out": [
+            "error: C-01 cannot be recorded as done: no review of HEAD d11bb3eb70 (fix.review.sha); review claims not CONFIDENT: targeted, no_new_risk, minimal (one revision round, then fix.status=declined with fix.reason); fix.review.model is empty: record which agent reviewed"
+          ],
+          "source": "inferido",
+          "cwd": "~/auditorias",
+          "notes": "Sin revisión no hay «hecho». El que escribió el fix nunca se aprueba solo. Paso inferido, con la salida real del CLI en ese caso."
+        }
+      ]
+    },
+    {
+      "id": "cierre",
+      "title": "Cierre",
+      "subtitle": "Lo que te llevás",
+      "screen": "cursor-agent",
+      "faq": [
+        {
+          "q": "¿Cuándo la uso?",
+          "a": "Cuando el equipo dueño acepta recibir el fix de un hallazgo que la auditoría ya probó con un test rojo."
+        },
+        {
+          "q": "¿Sirve para un bug que no viene de la auditoría?",
+          "a": "No. Necesita la rama con el test rojo y el PR que deja inherited-audit."
+        }
+      ],
+      "steps": [
+        {
+          "type": "ask",
+          "text": "¿Qué me llevo de esto?",
+          "source": "inferido",
+          "notes": "Cerrá con las tres ideas; no repitas el episodio."
+        },
+        {
+          "type": "say",
+          "md": "#### Lo que te llevás\n- **Nada se toca sin autorización**, y queda escrito quién la dio.\n- **El test rojo es la especificación**: no se cambia, y el fix se prueba sobre el merge con la base del PR.\n- **Otro modelo revisa** y **vos publicás**: la skill deja los comandos, nunca hace push.\n\n#### Próximo episodio: jira-team-kit\nCómo crear épicas en Jira desde la conversación, con una ventana que te pide aprobar cada cambio.",
+          "source": "inferido",
+          "notes": "Las tres ideas son el porqué de confiar en el fix: permiso, evidencia y una segunda mirada. Si el orden de la serie cambia, cambiá la línea del próximo episodio.",
+          "pause": true
+        }
+      ]
+    }
+  ]
+}
