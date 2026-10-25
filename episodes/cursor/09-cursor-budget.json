@@ -92,7 +92,7 @@
               "text": "¿la viste?"
             }
           ],
-          "notes": "Una sola línea. gh pone tu sesión de GitHub porque el repo es interno: un curl suelto recibe 404. El instalador copia el programa a su propia carpeta, suma dos hooks a Cursor sin tocar los que ya tenías, agrega el alias cbudget y deja la skill a mano de Cursor, Claude Code y Codex. Además instala dos cosas para ver el gasto sin preguntar: una extensión que lo muestra en la barra de estado del editor de Cursor (en Cursor 3, el botón IDE; la ventana de Agentes no tiene barra), y el pie de cursor-agent, si lo usás. No hay que instalar nada aparte. Al final manda una notificación de prueba: preguntá si la vieron, porque todos los avisos llegan así. Paso inferido: necesita red; la salida es la del instalador real."
+          "notes": "Una sola línea; gh pone tu sesión porque el repo es interno. Copia el programa, suma dos hooks a Cursor sin tocar los tuyos, agrega el alias y la skill, e instala la barra del editor y el pie de cursor-agent: nada aparte. Preguntá si vieron la notificación de prueba. Paso inferido: necesita red; la salida es la del instalador real."
         },
         {
           "type": "term",
@@ -305,16 +305,55 @@
         },
         {
           "type": "page",
+          "title": "Cursor — ventana de Agentes",
+          "src": "pages/cursor-budget-agentes.html",
+          "source": "inferido",
+          "callouts": [
+            {
+              "kind": "note",
+              "text": "**Paso 1.** La ventana de Agentes no tiene barra de estado. Tocá **IDE ↗**, arriba a la derecha."
+            }
+          ],
+          "notes": "Cursor 3 abre la ventana de Agentes, que no tiene barra de estado. El gasto a la vista está en el editor: el botón IDE, arriba a la derecha, lo abre. Maqueta con los datos del ejemplo."
+        },
+        {
+          "type": "page",
           "title": "Cursor (editor) — barra de estado",
           "src": "pages/cursor-budget-barra.html",
           "source": "inferido",
           "callouts": [
             {
               "kind": "note",
-              "text": "**En el editor de Cursor.** Abajo a la derecha: lo de hoy y lo del ciclo. Amarillo cerca de un aviso, rojo en un bloqueo."
+              "text": "**Paso 2.** Abajo a la derecha: lo de hoy y lo del ciclo. Amarillo cerca de un aviso, rojo en un bloqueo. Hacé clic."
             }
           ],
-          "notes": "Esto lo instala cursor-budget solo: una extensión chica en la barra de estado del editor de Cursor. Ojo: Cursor 3 abre la ventana de Agentes, que no tiene barra de estado; el botón IDE, arriba a la derecha, abre el editor y ahí está. Muestra lo que gastaste hoy contra el tope diario, y lo del ciclo contra el tope del plan. Se pone amarilla cuando pasás un aviso y roja cuando llegás a un bloqueo. Un clic abre el reporte. En la ventana de Agentes, el gasto te llega en la notificación de cada turno."
+          "notes": "En el editor, abajo a la derecha, está el gasto de hoy contra el tope diario y el del ciclo contra el tope del plan. Lo pone una extensión que instala cursor-budget. Se pinta amarillo cerca de un aviso y rojo en un bloqueo. Un clic abre el detalle."
+        },
+        {
+          "type": "page",
+          "title": "Cursor (editor) — cursor-budget: Detalle",
+          "src": "pages/cursor-budget-panel-detalle.html",
+          "source": "inferido",
+          "callouts": [
+            {
+              "kind": "note",
+              "text": "**Paso 3. Detalle:** el ciclo, hoy, por modelo, por día y los chats más caros. **Ver el reporte en texto** abre el reporte completo."
+            }
+          ],
+          "notes": "La pestaña Detalle: el ciclo con su fecha de reinicio, hoy contra el aviso y el bloqueo, el gasto por modelo y por día, y los chats más caros. El botón de abajo abre el mismo reporte que en la terminal."
+        },
+        {
+          "type": "page",
+          "title": "Cursor (editor) — cursor-budget: Límites",
+          "src": "pages/cursor-budget-panel-limites.html",
+          "source": "inferido",
+          "callouts": [
+            {
+              "kind": "note",
+              "text": "**Paso 4. Límites:** cambiás un valor y tocás **Guardar**. Se valida, queda registrado y te llega la notificación."
+            }
+          ],
+          "notes": "La pestaña Límites: cada límite con su valor y qué hace, los modelos bloqueados, los presupuestos por modelo y los extras. Cambiás un valor y Guardar: pasa por el mismo comando que usa el agente, así que se valida, queda registrado y te llega la notificación."
         },
         {
           "type": "ask",
@@ -630,7 +669,7 @@
           ],
           "source": "inferido",
           "cwd": "~",
-          "notes": "Cuando sale una versión nueva te llega una notificación: Hay una versión nueva de cursor-budget. Para actualizar, le decís al agente actualizá cursor-budget, o corrés cbudget update. Es la misma instalación: reemplaza el programa, la extensión y el pie, y respeta tus límites, tu registro y lo cargado del ciclo. Después recargá Cursor para que tome la extensión nueva. Paso inferido: necesita red; la salida es la del instalador real.",
+          "notes": "Cuando sale una versión nueva llega una notificación. Para actualizar, le pedís al agente «actualizá cursor-budget» o corrés cbudget update: tus límites y tu registro no se tocan. Paso inferido: necesita red.",
           "callouts": [
             {
               "kind": "note",

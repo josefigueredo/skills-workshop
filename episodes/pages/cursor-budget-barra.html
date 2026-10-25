@@ -1,21 +1,26 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Cursor — barra de estado</title><style>
-*{box-sizing:border-box}
-html,body{margin:0;height:100%;background:#fbfbfc;color:#1f1f1f;
- font:14px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
-.app{display:flex;flex-direction:column;height:100%}
-.editor{flex:1;display:flex}
-.side{width:240px;background:#f3f3f5;border-right:1px solid #e3e3e6;padding:16px 14px;color:#4b4b52;font-size:13px;line-height:2}
-.code{flex:1;padding:22px 30px;font:13px/1.8 Menlo,monospace;color:#6b6b72}
-.code b{color:#7a3fbf;font-weight:400}.code i{color:#2f6fb3;font-style:normal}
-.legend{position:absolute;right:36px;bottom:70px;width:470px;background:#fff;border:1px solid #e3e3e6;border-radius:10px;padding:14px 16px;font-size:13px;color:#4b4b52;box-shadow:0 6px 20px rgba(0,0,0,.06)}
-.legend div{display:flex;align-items:center;justify-content:space-between;margin:6px 0}
-.status{height:28px;background:#f0f0f2;border-top:1px solid #dcdce0;display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-size:12.5px;color:#4b4b52}
-.status span{padding:2px 8px;border-radius:4px;margin-left:4px}
-.item{background:#e3e3e8;color:#1d1d1f;font-weight:500}.warn{background:#f5c542;color:#2b2200}.err{background:#d64545;color:#fff}
-</style></head><body><div class="app">
-<div class="editor"><div class="side">mi-servicio<br>▸ api<br>▸ web<br>▸ docs<br>README.md</div>
-<div class="code"><b>export</b> <b>async function</b> <i>reembolsar</i>(pedido) {<br>&nbsp;&nbsp;…<br>}</div></div>
-<div class="legend"><div><span>Pasaste un aviso</span><span class="warn">∿ hoy $9.10 de $15 · ciclo $96 de $150</span></div>
-<div><span>Llegaste a un bloqueo</span><span class="err">∿ hoy $15.20 de $15 · ciclo $102 de $150</span></div></div>
-<div class="status"><div>⑂ main &nbsp; ⊗ 0 ⚠ 0</div><div><span>Ln 12, Col 4</span><span>TypeScript</span><span class="item" id="today">∿ hoy $0.56 de $15 · ciclo $85 de $150</span></div></div>
-</div></body></html>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Cursor (editor) — barra de estado</title><style>*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:#f3f3f3;color:#1f1f1f;
+font:13px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif}
+.win{display:flex;flex-direction:column;height:100%}
+.top{height:34px;display:flex;align-items:center;justify-content:center;position:relative;background:#ececec;
+border-bottom:1px solid #dcdcdc;color:#555}
+.top .go{position:absolute;right:12px;top:6px;background:#1f6fc5;color:#fff;border-radius:6px;padding:2px 10px;font-size:12px}
+.main{flex:1;display:flex;min-height:0}
+.side{width:230px;background:#f3f3f3;border-right:1px solid #e3e3e3;padding:12px;color:#444;line-height:1.9}
+.side b{font-size:11px;letter-spacing:.06em;color:#777}
+.center{flex:1;display:flex;flex-direction:column;min-width:0;background:#f8f8f8}
+.tabs{height:34px;display:flex;align-items:flex-end;border-bottom:1px solid #e5e5e5;background:#efefef}
+.tabs span{padding:7px 14px;border-right:1px solid #e0e0e0;color:#666}.tabs span.on{background:#f8f8f8;color:#1f1f1f}
+.code{padding:20px 26px;font:13px/1.8 Menlo,monospace;color:#555}
+.chat{width:330px;border-left:1px solid #e3e3e3;background:#fafafa;padding:14px;color:#333}
+.bubble{background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:9px 12px;margin-bottom:12px}
+.mut{color:#888}
+.status{height:24px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-size:12px;
+color:#444;background:#f3f3f3;border-top:1px solid #dcdcdc}
+.status span{margin-left:14px;padding:1px 6px;border-radius:3px}
+.ring{outline:3px solid #ff6b2c;outline-offset:2px;border-radius:5px}
+iframe{flex:1;border:0;width:100%}
+.agents{flex:1;display:flex}.asb{width:260px;background:#ececec;padding:16px;line-height:2.1;color:#333}
+.aconv{flex:1;padding:24px 60px;background:#f7f7f7}
+.ask{background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:10px 14px;margin:0 0 14px;max-width:760px}
+.composer{position:absolute;left:300px;right:40px;bottom:30px;background:#fff;border:1px solid #e3e3e3;border-radius:12px;
+padding:14px;color:#999}</style></head><body><div class="win"><div class="top">mi-servicio<span class="go">Agents Window ↗</span></div><div class="main"><div class="side"><b>MI-SERVICIO</b><br>› api<br>› web<br>› docs<br>README.md</div><div class="center"><div class="tabs"><span class="on">README.md</span></div><div class="code"># mi-servicio<br><br>Servicio de pagos y devoluciones.</div></div><div class="chat"><div class="bubble">¿Cuánto llevo gastado en Cursor?</div><p>Ciclo: <b>$84.86</b> de $150. Hoy: <b>$0.56</b>.</p><p class="mut">Worked for 9s</p></div></div><div class="status"><div>⑂ main &nbsp; ⊗ 0 ⚠ 0</div><div><span>Cursor Tab</span><span class="ring">∿ hoy $0.56 de $15 · ciclo $85 de $150</span><span>Tab Stats: 0/0</span></div></div></div></body></html>
