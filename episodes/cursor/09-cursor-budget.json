@@ -13,7 +13,7 @@
   },
   "skill": {
     "repo": "cursor-budget",
-    "commit": "0530a0a",
+    "commit": "5e4413b",
     "date": "2026-10-25"
   },
   "workspace": {
@@ -60,35 +60,43 @@
           "type": "term",
           "cmd": "gh api repos/josefigueredo/cursor-budget/contents/bootstrap.sh -H \"Accept: application/vnd.github.raw\" | bash",
           "out": [
-            "copiado en ~/.cursor/budget/app",
-            "hook instalado",
-            "alias agregado en ~/.zshrc; abrí otra terminal o corré: source ~/.zshrc",
-            "statusLine de cursor-agent apuntada a cbudget; cerrá y volvé a abrir cursor-agent para verla",
-            "skill: cursor-budget (Cursor, Claude Code, Codex) -> ~/.cursor/budget/app",
-            "extensión de Cursor instalada: el gasto aparece en la barra de estado del editor (IDE ↗; si no, Developer: Reload Window)",
-            "Mandé una notificación de prueba. Si no la viste, los avisos no te van a llegar: abrí Configuración del Sistema → Notificaciones → Script Editor, activá «Permitir notificaciones» y probá de nuevo con `cbudget notify-test`.",
-            "Listo. Abrí una terminal nueva y probá: cbudget report"
+            "",
+            "cursor-budget 5e4413b · instalación nueva",
+            "",
+            "  ✓ Programa         en ~/.cursor/budget/app",
+            "  ✓ Hooks            stop y beforeSubmitPrompt sumados a ~/.cursor/hooks.json, sin tocar los demás",
+            "  ✓ Alias            cbudget agregado en ~/.zshrc (abrí una terminal nueva)",
+            "  ✓ Skill            para Cursor, Claude Code y Codex",
+            "  ✓ cursor-agent     el gasto en el pie (cerrá y volvé a abrir cursor-agent)",
+            "  ✓ Barra de Cursor  extensión con el gasto en la barra del editor",
+            "  ✓ Avisos           te mandé una notificación de prueba",
+            "",
+            "Listo. Qué sigue:",
+            "  1. Abrí una terminal nueva y probá: cbudget report",
+            "  2. En Cursor: Cmd+Shift+P → Developer: Reload Window. El gasto queda abajo a la derecha del editor (botón IDE ↗).",
+            "  3. ¿No viste la notificación? Configuración del Sistema → Notificaciones → Script Editor → Permitir notificaciones.",
+            "  4. Para cargar lo que ya gastaste este mes, pedíselo al agente: «cargá mi CSV de uso de Cursor»."
           ],
           "source": "inferido",
           "callouts": [
             {
               "kind": "box",
-              "match": "hook instalado",
+              "match": "stop y beforeSubmitPrompt sumados",
               "text": "dos hooks globales de Cursor"
             },
             {
               "kind": "box",
-              "match": "statusLine de cursor-agent apuntada a cbudget",
+              "match": "el gasto en el pie",
               "text": "el pie de cursor-agent"
             },
             {
               "kind": "box",
-              "match": "extensión de Cursor instalada",
+              "match": "extensión con el gasto en la barra del editor",
               "text": "la barra del editor"
             },
             {
               "kind": "box",
-              "match": "Mandé una notificación de prueba.",
+              "match": "te mandé una notificación de prueba",
               "text": "¿la viste?"
             }
           ],
@@ -106,13 +114,22 @@
           "type": "term",
           "cmd": "bash ~/skills/cursor-budget/install.sh",
           "out": [
-            "copiado en ~/.cursor/budget/app",
-            "hook instalado",
-            "alias agregado en ~/.zshrc; abrí otra terminal o corré: source ~/.zshrc",
-            "statusLine de cursor-agent apuntada a cbudget; cerrá y volvé a abrir cursor-agent para verla",
-            "skill: cursor-budget (Cursor, Claude Code, Codex) -> ~/.cursor/budget/app",
-            "extensión de Cursor instalada: el gasto aparece en la barra de estado del editor (IDE ↗; si no, Developer: Reload Window)",
-            "Mandé una notificación de prueba. Si no la viste, los avisos no te van a llegar: abrí Configuración del Sistema → Notificaciones → Script Editor, activá «Permitir notificaciones» y probá de nuevo con `cbudget notify-test`."
+            "",
+            "cursor-budget 5e4413b · instalación nueva",
+            "",
+            "  ✓ Programa         en ~/.cursor/budget/app",
+            "  ✓ Hooks            stop y beforeSubmitPrompt sumados a ~/.cursor/hooks.json, sin tocar los demás",
+            "  ✓ Alias            cbudget agregado en ~/.zshrc (abrí una terminal nueva)",
+            "  ✓ Skill            para Cursor, Claude Code y Codex",
+            "  ✓ cursor-agent     el gasto en el pie (cerrá y volvé a abrir cursor-agent)",
+            "  ✓ Barra de Cursor  extensión con el gasto en la barra del editor",
+            "  ✓ Avisos           te mandé una notificación de prueba",
+            "",
+            "Listo. Qué sigue:",
+            "  1. Abrí una terminal nueva y probá: cbudget report",
+            "  2. En Cursor: Cmd+Shift+P → Developer: Reload Window. El gasto queda abajo a la derecha del editor (botón IDE ↗).",
+            "  3. ¿No viste la notificación? Configuración del Sistema → Notificaciones → Script Editor → Permitir notificaciones.",
+            "  4. Para cargar lo que ya gastaste este mes, pedíselo al agente: «cargá mi CSV de uso de Cursor»."
           ],
           "source": "real",
           "cwd": "~",
@@ -519,7 +536,7 @@
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m18 oct  \u001b[0m\u001b[38;2;246;196;120m██████████████████████████████\u001b[0m                                                         \u001b[38;2;236;236;236m      $3.10\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m20 oct  \u001b[0m\u001b[38;2;160;124;245m█████████████████████████████████\u001b[0m                                                      \u001b[38;2;236;236;236m      $3.40\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m21 oct  \u001b[0m\u001b[38;2;160;124;245m███████████████████████████\u001b[0m                                                            \u001b[38;2;236;236;236m      $2.80\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
-            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m22 oct  \u001b[0m\u001b[38;2;236;120;180m████████████████████\u001b[0m                                                                   \u001b[38;2;236;236;236m      $2.10\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m23 oct  \u001b[0m\u001b[38;2;236;120;180m████████████████████\u001b[0m                                                                   \u001b[38;2;236;236;236m      $2.10\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m24 oct  \u001b[0m\u001b[38;2;236;120;180m████████████████\u001b[0m                                                                       \u001b[38;2;236;236;236m      $1.70\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m25 oct  \u001b[0m\u001b[38;2;62;152;255m████\u001b[0m\u001b[38;2;246;196;120m█\u001b[0m                                                                                  \u001b[38;2;236;236;236m      $0.56\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m                                                                                                            \u001b[38;2;58;58;58m│\u001b[0m",
@@ -529,9 +546,9 @@
             "\u001b[38;2;58;58;58m╭────────────────────────────────────────────────────────────────────────────────────────────────────────────╮\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mÚltimos turnos (último día)\u001b[0m                                                                                \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mFecha            Modelo                    Chat         Tokens     Costo\u001b[0m                                   \u001b[38;2;58;58;58m│\u001b[0m",
-            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236m25 oct, 17:34  \u001b[0m\u001b[38;2;62;152;255m● \u001b[0m\u001b[38;2;236;236;236mclaude-sonnet-5-5-high\u001b[0m    \u001b[38;2;140;140;140ma1        \u001b[0m\u001b[38;2;236;236;236m   186.0K\u001b[0m\u001b[38;2;236;236;236m     $0.18\u001b[0m                                   \u001b[38;2;58;58;58m│\u001b[0m",
-            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236m25 oct, 17:34  \u001b[0m\u001b[38;2;62;152;255m● \u001b[0m\u001b[38;2;236;236;236mclaude-sonnet-5-5-high\u001b[0m    \u001b[38;2;140;140;140ma1        \u001b[0m\u001b[38;2;236;236;236m   268.0K\u001b[0m\u001b[38;2;236;236;236m     $0.23\u001b[0m                                   \u001b[38;2;58;58;58m│\u001b[0m",
-            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236m25 oct, 17:34  \u001b[0m\u001b[38;2;246;196;120m● \u001b[0m\u001b[38;2;236;236;236mauto-smart\u001b[0m                \u001b[38;2;140;140;140mb2        \u001b[0m\u001b[38;2;236;236;236m   124.0K\u001b[0m\u001b[38;2;236;236;236m     $0.15\u001b[0m                                   \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236m25 oct, 19:14  \u001b[0m\u001b[38;2;62;152;255m● \u001b[0m\u001b[38;2;236;236;236mclaude-sonnet-5-5-high\u001b[0m    \u001b[38;2;140;140;140ma1        \u001b[0m\u001b[38;2;236;236;236m   268.0K\u001b[0m\u001b[38;2;236;236;236m     $0.23\u001b[0m                                   \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236m25 oct, 19:14  \u001b[0m\u001b[38;2;246;196;120m● \u001b[0m\u001b[38;2;236;236;236mauto-smart\u001b[0m                \u001b[38;2;140;140;140mb2        \u001b[0m\u001b[38;2;236;236;236m   124.0K\u001b[0m\u001b[38;2;236;236;236m     $0.15\u001b[0m                                   \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236m25 oct, 19:14  \u001b[0m\u001b[38;2;62;152;255m● \u001b[0m\u001b[38;2;236;236;236mclaude-sonnet-5-5-high\u001b[0m    \u001b[38;2;140;140;140ma1        \u001b[0m\u001b[38;2;236;236;236m   186.0K\u001b[0m\u001b[38;2;236;236;236m     $0.18\u001b[0m                                   \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m╰────────────────────────────────────────────────────────────────────────────────────────────────────────────╯\u001b[0m",
             ""
           ],
@@ -642,7 +659,7 @@
           "type": "term",
           "cmd": "python3 ~/.cursor/budget/app/cbudget.py version",
           "out": [
-            "instalado: 0530a0a"
+            "instalado: 5e4413b"
           ],
           "source": "real",
           "cwd": "~",
@@ -658,14 +675,21 @@
           "type": "term",
           "cmd": "python3 ~/.cursor/budget/app/cbudget.py update",
           "out": [
-            "copiado en ~/.cursor/budget/app",
-            "el hook ya estaba instalado",
-            "el alias ya estaba en ~/.zshrc",
-            "la statusLine de cursor-agent ya era la de cbudget",
-            "skill: cursor-budget (Cursor, Claude Code, Codex) -> ~/.cursor/budget/app",
-            "extensión de Cursor instalada: el gasto aparece en la barra de estado del editor (IDE ↗; si no, Developer: Reload Window)",
-            "Mandé una notificación de prueba. Si no la viste, los avisos no te van a llegar: abrí Configuración del Sistema → Notificaciones → Script Editor, activá «Permitir notificaciones» y probá de nuevo con `cbudget notify-test`.",
-            "Listo. Abrí una terminal nueva y probá: cbudget report"
+            "",
+            "cursor-budget 5e4413b · actualización de 9f253b4 a 5e4413b",
+            "",
+            "  ✓ Programa         en ~/.cursor/budget/app (tus límites, registro y seed quedan como estaban)",
+            "  ✓ Hooks            stop y beforeSubmitPrompt, ya estaban en ~/.cursor/hooks.json",
+            "  ✓ Alias            cbudget, ya estaba en ~/.zshrc",
+            "  ✓ Skill            para Cursor, Claude Code y Codex",
+            "  ✓ cursor-agent     el gasto en el pie, ya estaba",
+            "  ✓ Barra de Cursor  extensión con el gasto en la barra del editor",
+            "  ✓ Avisos           te mandé una notificación de prueba",
+            "",
+            "Listo. Qué sigue:",
+            "  1. Abrí una terminal nueva y probá: cbudget report",
+            "  2. En Cursor: Cmd+Shift+P → Developer: Reload Window. El gasto queda abajo a la derecha del editor (botón IDE ↗).",
+            "  3. ¿No viste la notificación? Configuración del Sistema → Notificaciones → Script Editor → Permitir notificaciones."
           ],
           "source": "inferido",
           "cwd": "~",
@@ -677,8 +701,13 @@
             },
             {
               "kind": "box",
-              "match": "el hook ya estaba instalado",
-              "text": "tus límites y tu registro no se tocan"
+              "match": "actualización de 9f253b4 a 5e4413b",
+              "text": "de qué versión a cuál"
+            },
+            {
+              "kind": "box",
+              "match": "tus límites, registro y seed quedan como estaban",
+              "text": "no se toca nada tuyo"
             }
           ]
         },
@@ -686,7 +715,7 @@
           "type": "term",
           "cmd": "python3 ~/.cursor/budget/app/cbudget.py allow --minutes 30",
           "out": [
-            "bloqueos levantados hasta las 18:04"
+            "bloqueos levantados hasta las 19:44"
           ],
           "source": "real",
           "cwd": "~",
@@ -751,7 +780,7 @@
           "type": "term",
           "cmd": "tail -n 1 ~/.cursor/budget/blocks.jsonl",
           "out": [
-            "{\"t\": 1792960486, \"conversation_id\": \"c1\", \"model\": \"claude-opus-5-5-high\", \"reason\": \"el modelo claude-opus-5-5-high está bloqueado; elegí otro o corré `cbudget allow`\"}"
+            "{\"t\": 1792966485, \"conversation_id\": \"c1\", \"model\": \"claude-opus-5-5-high\", \"reason\": \"el modelo claude-opus-5-5-high está bloqueado; elegí otro o corré `cbudget allow`\"}"
           ],
           "source": "real",
           "cwd": "~",
@@ -761,7 +790,7 @@
           "type": "term",
           "cmd": "python3 ~/.cursor/budget/app/cbudget.py allow --minutes 30",
           "out": [
-            "bloqueos levantados hasta las 18:04"
+            "bloqueos levantados hasta las 19:44"
           ],
           "source": "real",
           "cwd": "~",
