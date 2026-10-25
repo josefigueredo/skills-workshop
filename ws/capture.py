@@ -40,27 +40,38 @@ class CaptureError(Exception):
     """A capture could not run (bad prepare, missing cwd, ...). Others keep going."""
 
 
+REPO_PREFIX = ""
+
+
 def skill_candidates(root: Path, repo: str) -> List[Path]:
     """Every `<dir>/<repo>` to look in: each folder of $WS_SKILLS_ROOT (split on os.pathsep),
-    else the workshop repo's parent (this workshop's for a skill's content root)."""
+    else the workshop repo's parent (this workshop's for a skill's content root). Then the same
+    folders without the `` prefix, the name several skills are cloned under."""
     env = os.environ.get("WS_SKILLS_ROOT")
     dirs = [Path(d) for d in env.split(os.pathsep) if d] if env else []
     if not dirs:
         dirs = [paths.workshop_root(root).resolve().parent]
-    return [d / repo for d in dirs]
+    names = [repo]
+    if repo.startswith(REPO_PREFIX) and len(repo) > len(REPO_PREFIX):
+        names.append(repo[len(REPO_PREFIX):])
+    return [d / name for name in names for d in dirs]
 
 
 def _is_git(path: Path) -> bool:
     return (path / ".git").exists() or (path / "HEAD").exists()
 
 
-def skill_source(root: Path, repo: str) -> Path:
-    """The first candidate holding a git dir, else the default `root.parent/<repo>`."""
-    cands = skill_candidates(root, repo)
-    for c in cands:
+def find_skill(root: Path, repo: str) -> Optional[Path]:
+    """The first candidate holding a git dir, or None."""
+    for c in skill_candidates(root, repo):
         if _is_git(c):
             return c
-    return paths.workshop_root(root).resolve().parent / repo
+    return None
+
+
+def skill_source(root: Path, repo: str) -> Path:
+    """The first candidate holding a git dir, else the default `root.parent/<repo>`."""
+    return find_skill(root, repo) or paths.workshop_root(root).resolve().parent / repo
 
 
 def _under(path: str, base: str) -> bool:

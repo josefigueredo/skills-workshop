@@ -93,7 +93,7 @@ Regla: si corre sin red y sin efectos externos, es `real`. Los pasos de red (`gi
 
 ### Preparar la demo para los pasos `real`
 
-`build.py capture` arma un HOME falso con la demo en `~/mi-servicio` (la construye `demo/setup.sh`) y la skill del episodio clonada en `~/skills/<skill.repo>` en `skill.commit`. La skill se lee de `$WS_SKILLS_ROOT/<skill.repo>`; `WS_SKILLS_ROOT` puede tener varias carpetas separadas por `:` y se usa la primera que tenga el repo. Si no definís la variable, de la carpeta de al lado del repo del taller.
+`build.py capture` arma un HOME falso con la demo en `~/mi-servicio` (la construye `demo/setup.sh`) y la skill del episodio clonada en `~/skills/<skill.repo>` en `skill.commit`. La skill se lee de `$WS_SKILLS_ROOT/<skill.repo>`; `WS_SKILLS_ROOT` puede tener varias carpetas separadas por `:` y se usa la primera que tenga el repo. Si no definís la variable, de la carpeta de al lado del repo del taller. Si ninguna tiene `<skill.repo>`, prueba el mismo nombre sin el prefijo `` (`cursor-budget` para `cursor-budget`), que es como se clonan varias skills.
 
 Si tu episodio necesita estado extra (una rama, un reporte), ponelo en `demo/prep/<id-del-episodio>.sh`: capture lo corre después de armar el HOME y recibe la ruta del HOME como único argumento. Mirá `demo/prep/inherited-audit.sh`.
 
@@ -123,7 +123,7 @@ python3 build.py check                          # revisa privacidad de episodes/
 python3 build.py sync [--repo R] [--check]      # trae los guiones de las skills a episodes/
 ```
 
-`sync` busca cada skill como `capture` (`$WS_SKILLS_ROOT`, o al lado del taller) y lee su copia de trabajo, así que tiene que estar en una rama que tenga `workshop/`. Sin `--repo`, recorre los repos de la copia. Copia los guiones y sus páginas, borra de la copia los episodios que la skill ya no tiene y vuelve a armar el `dist/` de la skill en memoria: si el commiteado quedó viejo (porque cambió el guion o el motor), lo dice y sale con 1. `--check` no escribe nada: lista lo que difiere y sale con 1 si hay algo.
+`sync` busca cada skill como `capture` (`$WS_SKILLS_ROOT`, o al lado del taller) y lee su copia de trabajo, así que tiene que estar en una rama que tenga `workshop/`. Si no encuentra ningún clon, sale con 1 y dice que no pudo verificar el `dist/` de esa skill, con las carpetas que probó: agregá la que la tiene a `WS_SKILLS_ROOT` (por ejemplo, `~/CurrentCode` para un repo que vive fuera de `Harness/`). Sin `--repo`, recorre los repos de la copia. Copia los guiones y sus páginas, borra de la copia los episodios que la skill ya no tiene y vuelve a armar el `dist/` de la skill en memoria: si el commiteado quedó viejo (porque cambió el guion o el motor), lo dice y sale con 1. `--check` no escribe nada: lista lo que difiere y sale con 1 si hay algo.
 
 `capture` sin `--episode` los corre todos. Escribe en los JSON solo si pasan las reglas de privacidad. `build` no escribe nada en `dist/` si algo falla.
 

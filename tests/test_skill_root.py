@@ -240,6 +240,14 @@ class SyncTests(unittest.TestCase):
         self.assertEqual(code, 1, out)
         self.assertIn("workshop/episodes", out)
 
+    def test_a_skill_without_a_clone_says_its_dist_was_not_verified(self):
+        code, out = self.sync("--check", "--repo", "ghost-skill")
+        self.assertEqual(code, 1, out)
+        self.assertIn("ghost-skill: cannot verify its workshop/dist", out)
+        self.assertIn(str(self.skill.skills / "ghost-skill"), out)
+        self.assertIn("WS_SKILLS_ROOT", out)
+        self.assertNotIn("checked out", out)
+
     def test_episodes_of_the_workshop_itself_are_kept(self):
         self.built_skill(minimal_episode())
         own = minimal_episode(id="antes", order=0, skill={"repo": paths.WORKSHOP_REPO, "commit": "a", "date": "x"})
