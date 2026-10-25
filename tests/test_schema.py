@@ -167,6 +167,22 @@ class SchemaTests(unittest.TestCase):
         self.assertEqual(len(msgs), 1, msgs)
         self.assertIn("only valid on a real term step", msgs[0])
 
+    def test_color_is_a_flag_of_term_steps(self):
+        ep = minimal_episode()
+        step_of(ep, 0)["color"] = True
+        self.assertEqual(schema.validate(ep, "x.json"), [])
+        cases = [
+            (lambda s: s.update(color="yes"), 0, "'color' must be true or false"),
+            (lambda s: s.update(color=True), 1, "'color' is only valid on a term step"),
+        ]
+        for mutate, i, text in cases:
+            with self.subTest(text=text, step=i):
+                e = minimal_episode()
+                mutate(step_of(e, i))
+                msgs = schema.validate(e, "x.json")
+                self.assertEqual(len(msgs), 1, msgs)
+                self.assertIn("step %d: %s" % (i, text), msgs[0])
+
     def test_top_level_and_chapter_requirements(self):
         for field in ("id", "series", "order", "title", "pitch", "skill", "workspace", "chapters"):
             with self.subTest(field=field):
@@ -346,6 +362,18 @@ class TreeTests(unittest.TestCase):
         ep["chapters"][0]["steps"].append(say)
         self.assertEqual(schema.validate(ep, "x.json"), [])
         say["callouts"] = [{"kind": "box", "match": "a1b2c3d con npm ci"}]
+        msgs = schema.validate(ep, "x.json")
+        self.assertEqual(len(msgs), 1, msgs)
+        self.assertIn("not in the step", msgs[0])
+
+    def test_a_callout_match_in_colored_output_sits_in_one_color_run(self):
+        # Each SGR colour code starts a new run on the stage; `match` is checked against the text without them.
+        ep = minimal_episode()
+        term = step_of(ep, 0)
+        term.update(color=True, out=["Disponible \x1b[1;38;2;62;152;255m$115.15\x1b[0m de $200"])
+        term["callouts"] = [{"kind": "underline", "match": "$115.15"}, {"kind": "box", "match": " de $200"}]
+        self.assertEqual(schema.validate(ep, "x.json"), [])
+        term["callouts"] = [{"kind": "underline", "match": "$115.15 de"}]
         msgs = schema.validate(ep, "x.json")
         self.assertEqual(len(msgs), 1, msgs)
         self.assertIn("not in the step", msgs[0])

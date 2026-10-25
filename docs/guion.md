@@ -60,6 +60,7 @@ Opcionales solo de `term`:
 
 - `in: "zsh"`: el comando lo tipea la persona, no el agente. En `cursor-full` sale en la terminal integrada de Cursor; en `claude-code` sale como `! comando` (el modo bash de Claude Code), que es como la persona corre lo que el agente le deja listo, por ejemplo un `--apply`. Sin `in`, el comando sale como si lo corriera el agente. **Solo vale en `cursor-full` y `claude-code`**: en las otras pantallas `validate` lo rechaza.
 - `cwd` (obligatorio si es `real`): carpeta desde donde corre, siempre `~` o `~/algo` (relativa al HOME falso, sin `..`).
+- `color: true`: la salida se ve con sus colores, como en una terminal de verdad. En un paso `real`, `capture` lo corre en una pseudo-terminal de 120 columnas con `TERM=xterm-256color`, `COLORTERM=truecolor` y sin `NO_COLOR`, y guarda en `out` los códigos de color (SGR) y nada más; el escenario los pinta (16 colores, 256 y truecolor, negrita, tenue, cursiva, subrayado). Sirve para herramientas que solo pintan cuando escriben en una terminal, sin agregarle al comando un `--color always` que el público no tipearía. El `match` de las notas se busca en el texto sin códigos, y un tramo de color corta el texto como la negrita en `say`.
 - `capture_only: true` (solo en `term` `real`): el paso corre durante `capture` para avanzar el estado de la demo (por ejemplo crear un archivo que el siguiente paso necesita), pero el `build` lo saca: el escenario y el control nunca lo ven.
 
 ### El markdown mínimo de `say`

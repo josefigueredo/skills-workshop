@@ -2,16 +2,22 @@
 from __future__ import annotations
 
 import copy
+import fcntl
 import getpass
 import json
 import os
+import pty
 import pwd
 import re
+import select
 import signal
 import socket
+import struct
 import subprocess
 import sys
 import tempfile
+import termios
+import time
 from pathlib import Path
 from typing import List, Optional
 
@@ -25,6 +31,9 @@ FAKE_HOST = "mi-mac"
 SYSTEM_PATH_DIRS = ("/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/bin", "/usr/sbin", "/sbin")
 
 _ANSI = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)|\x1b[@-Z\\-_]")
+_SGR = re.compile(r"\x1b\[[0-9;]*m")
+# The terminal a `color` step runs in: as wide as the stage's terminal fits.
+TTY_COLS, TTY_ROWS = 120, 40
 
 
 class CaptureError(Exception):
@@ -157,10 +166,11 @@ _BOUND = r"(?![A-Za-z0-9_-])"
 
 
 def normalise(text: str, home: Path, roots: Optional[List[Path]] = None,
-              user: Optional[str] = None) -> str:
-    """Strip ANSI; fake HOME / temp roots / real home -> `~`; real login names -> `persona`;
+              user: Optional[str] = None, keep_sgr: bool = False) -> str:
+    """Strip ANSI (all of it, or all but the SGR colour codes with keep_sgr); fake HOME / temp roots / real home -> `~`; real login names -> `persona`;
     hostname -> `mi-mac`. Matches end at a boundary (`/Users/x` never eats `/Users/xavier`)."""
-    text = _ANSI.sub("", text).replace("\r\n", "\n").replace("\r", "\n")
+    strip = (lambda m: m.group(0) if _SGR.fullmatch(m.group(0)) else "") if keep_sgr else ""
+    text = _ANSI.sub(strip, text).replace("\r\n", "\n").replace("\r", "\n")
     paths = [home] + list(roots or [])
     paths.append(Path(os.path.expanduser("~")))
     for p in paths:
@@ -203,6 +213,53 @@ def _exec(cmd: str, cwd: Path, env: dict, timeout: float):
         return data.decode("utf-8", "replace"), None
 
 
+def color_env(env: dict) -> dict:
+    """A `color` step's environment: the scratch one as a truecolor terminal, with NO_COLOR unset."""
+    out = {k: v for k, v in env.items() if k != "NO_COLOR"}
+    out.update({"TERM": "xterm-256color", "COLORTERM": "truecolor"})
+    return out
+
+
+def _exec_tty(cmd: str, cwd: Path, env: dict, timeout: float):
+    """Like _exec, but stdout and stderr are a pseudo-terminal, so the tool paints as in a real one."""
+    master, slave = pty.openpty()
+    fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack("HHHH", TTY_ROWS, TTY_COLS, 0, 0))
+    try:
+        proc = subprocess.Popen(["bash", "--noprofile", "--norc", "-c", cmd], cwd=str(cwd), env=color_env(env),
+                                stdin=subprocess.DEVNULL, stdout=slave, stderr=slave, start_new_session=True)
+    finally:
+        os.close(slave)
+    chunks, deadline, timed_out = [], time.monotonic() + timeout, False
+    try:
+        while True:
+            left = deadline - time.monotonic()
+            if left <= 0:
+                timed_out = True
+                break
+            ready, _, _ = select.select([master], [], [], min(left, 0.2))
+            if not ready:
+                if proc.poll() is not None:
+                    break
+                continue
+            try:
+                data = os.read(master, 65536)
+            except OSError:  # Linux: EIO once every writer closed the terminal
+                break
+            if not data:
+                break
+            chunks.append(data)
+    finally:
+        os.close(master)
+    if timed_out:
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except OSError:
+            pass
+        proc.wait()
+        return b"".join(chunks).decode("utf-8", "replace"), None
+    return b"".join(chunks).decode("utf-8", "replace"), proc.wait()
+
+
 def _lines(text: str) -> List[str]:
     if text.endswith("\n"):
         text = text[:-1]
@@ -220,8 +277,9 @@ def run(episode: dict, home: Path, timeout: float = STEP_TIMEOUT) -> dict:
             if step.get("type") != "term" or step.get("source") != "real":
                 continue
             cwd = _resolve_cwd(step["cwd"], home)
-            text, code = _exec(step["cmd"], cwd, env, timeout)
-            lines = _lines(normalise(text, home, roots))
+            color = step.get("color") is True
+            text, code = (_exec_tty if color else _exec)(step["cmd"], cwd, env, timeout)
+            lines = _lines(normalise(text, home, roots, keep_sgr=color))
             if code is None:
                 lines.append("# timeout")
             elif code != 0:

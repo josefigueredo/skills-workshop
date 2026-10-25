@@ -24,8 +24,8 @@ PAGE_SRC_RE = re.compile(r"^pages/[a-z0-9][a-z0-9-]*\.html$")
 
 
 # Keys allowed besides the required ones, so a misspelt key fails instead of being ignored.
-# `in` and `capture_only` are accepted on any step so their own, clearer message reports a misplacement.
-STEP_COMMON = ("type", "source", "notes", "pause", "in", "capture_only", "callouts")
+# `in`, `capture_only` and `color` are accepted on any step so their own, clearer message reports a misplacement.
+STEP_COMMON = ("type", "source", "notes", "pause", "in", "capture_only", "callouts", "color")
 STEP_EXTRA = {"term": ("cwd",), "approve": ("lines", "src", "window", "width", "height"), "page": ("capture",)}
 TOP_KEYS = ("id", "series", "order", "title", "pitch", "skill", "workspace", "minutes", "chapters")
 CHAPTER_KEYS = ("id", "title", "subtitle", "screen", "faq", "steps")
@@ -134,6 +134,12 @@ def _validate_step(step, prefix, out, screen=None):
             out.append("%s: 'capture_only' must be true when present" % prefix)
         elif stype != "term" or source != "real":
             out.append("%s: 'capture_only' is only valid on a real term step" % prefix)
+    # `color: true` term steps are captured in a truecolor terminal and keep their SGR colour codes.
+    if "color" in step:
+        if not isinstance(step["color"], bool):
+            out.append("%s: 'color' must be true or false" % prefix)
+        elif stype != "term":
+            out.append("%s: 'color' is only valid on a term step" % prefix)
     if stype == "approve":
         _validate_approve(step, prefix, out)
     if "callouts" in step:
@@ -158,14 +164,16 @@ def _validate_step(step, prefix, out, screen=None):
 CALLOUT_KINDS = ("note", "box", "underline")
 CALLOUT_KEYS = ("kind", "text", "match")
 _INLINE_RE = re.compile(r"(\*\*[^*]+?\*\*|`[^`]+`)")
+_SGR_RE = re.compile(r"\x1b\[[0-9;]*m")
 
 
 def _text_runs(step) -> list:
     """The text runs the stage renders for a step, each one text node: `match` must fall inside one of them."""
     stype = step.get("type")
     if stype == "term":
-        runs = [str(step.get("cmd", ""))] + [str(o) for o in step.get("out") or []]
-        return runs + ["▸ Ran · " + runs[0]]
+        cmd = str(step.get("cmd", ""))
+        runs = [r for o in step.get("out") or [] for r in _SGR_RE.split(str(o)) if r]
+        return [cmd] + runs + ["▸ Ran · " + cmd]
     if stype == "ask":
         return [str(step.get("text", ""))]
     if stype == "tool":
