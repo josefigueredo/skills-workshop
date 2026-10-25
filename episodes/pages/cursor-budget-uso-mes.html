@@ -1,0 +1,54 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>cursor.com/dashboard/usage</title><style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#f6f6f5;color:#1f1f1f;
+ font:14px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.app{display:flex;height:100%}
+nav{width:270px;flex:none;background:#efefee;border-right:1px solid #e3e3e1;padding:14px 10px;display:flex;flex-direction:column;gap:2px}
+nav .back{color:#555;padding:4px 10px 14px;font-size:13.5px}
+nav a{display:block;padding:6px 10px;border-radius:7px;color:#2b2b2b;text-decoration:none;font-size:13.5px}
+nav a.on{background:#e2e2e0;font-weight:500}
+nav .gap{height:14px}
+nav .me{margin-top:auto;display:flex;gap:10px;align-items:center;padding:10px;font-size:13px;color:#333}
+nav .av{width:28px;height:28px;border-radius:50%;background:#c9c9c6;display:grid;place-items:center;font-weight:600;color:#fff}
+main{flex:1;overflow:hidden;padding:34px 60px 0;position:relative}
+.wrap{max-width:1075px}
+h1{font-size:21px;font-weight:500;margin:6px 0 22px}
+.card{background:#fff;border:1px solid #e6e6e4;border-radius:10px;padding:18px 16px}
+.muted{color:#777;font-size:13px}
+.big{font-size:20px;margin:6px 0 10px}
+.big b{font-weight:500}
+.bar{height:3px;background:#eee;border-radius:2px;margin:10px 0 14px}
+.bar i{display:block;height:100%;width:56%;background:#7f9cb8;border-radius:2px}
+.range{display:flex;gap:6px;align-items:center;margin:22px 0 14px;font-size:13px;color:#444}
+.range .pick{border:1px solid #ddd;background:#fff;border-radius:7px;padding:6px 10px}
+.range .chip{padding:5px 9px;border-radius:7px}
+.range .chip.on{background:#e7e7e5;font-weight:500}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stats .card{padding:16px}
+.stats .v{font-size:19px;margin-top:12px}
+.chart{margin-top:12px}
+.chart h3{margin:0;font-size:15px;font-weight:500}
+.plot{display:flex;align-items:flex-end;gap:16px;height:150px;margin:18px 10px 6px 40px;border-bottom:1px solid #eee}
+.plot span{flex:1;border-radius:4px 4px 0 0;min-height:2px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:#444;margin:12px 10px 4px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.exp{display:flex;justify-content:flex-end;margin:14px 0 10px}
+.btn{border:1px solid #ddd;background:#fff;border-radius:7px;padding:6px 11px;font-size:13px}
+.btn.hl{outline:3px solid #f5b94a;outline-offset:2px}
+.ok{background:#e3f1e8;border:1px solid #9cc9ab;border-radius:10px;padding:16px 18px;color:#2e7d4f}
+.ok b{display:block;margin-bottom:4px;font-weight:600}
+.pop{position:absolute;left:60px;top:290px;width:245px;background:#fff;border:1px solid #ddd;border-radius:10px;
+ box-shadow:0 8px 28px rgba(0,0,0,.14);padding:14px;font-size:13px}
+.pop .hd{display:flex;justify-content:space-between;margin-bottom:10px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}
+.cal span{padding:6px 0;border-radius:5px}
+.cal .d{background:#ebebe9;font-weight:600}
+.cal .s{background:#7f9cb8;color:#fff}
+.cal .x{color:#bbb}
+.pop .act{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.hl2{outline:3px solid #f5b94a;outline-offset:2px;border-radius:7px}
+</style></head><body><div class="app"><nav><div class="back">‹ Back</div>
+<a>Overview</a><a>My Settings</a><div class="gap"></div><a>Cloud Agents</a><div class="gap"></div>
+<a>Plugins &amp; MCPs</a><a>Integrations</a><a>Rules, Commands, Hooks</a><a>API &amp; SSH Keys</a>
+<div class="gap"></div><a>Team Settings</a><a>Analytics</a><a>Members &amp; Groups</a><a class="on">Usage</a>
+<div class="me"><span class="av">D</span><span>Demo<br><span class="muted">Equipo demo</span></span></div></nav><main><div class="wrap"><h1>Usage</h1><div class="card"><div class="muted">Your monthly usage</div><div class="big"><b>$84.30</b><span class="muted" style="font-size:20px"> / $150</span></div><div class="bar"><i></i></div><div class="muted">Resets Nov 1, 2026</div></div><div class="range"><span class="pick">Oct 01 - Oct 25 ⌄</span><span class="chip">1d</span><span class="chip">7d</span><span class="chip">30d</span><span class="chip on hl2">MTD</span><span class="chip">Last month</span></div><div class="stats"><div class="card"><div class="muted">Total usage</div><div class="v">$84.30</div></div><div class="card"><div class="muted">Included</div><div class="v">$84.30</div></div><div class="card"><div class="muted">On-demand</div><div class="v">$0</div></div></div><div class="card chart"><h3>Your Usage</h3><div class="muted">Your usage per day across this billing period</div><div class="plot"><span style="height:76px;background:#f2c46b"></span><span style="height:20px;background:#2f7de1"></span><span style="height:4px;background:#e57fb7"></span><span style="height:92px;background:#8a5cf6"></span><span style="height:28px;background:#5fcfc2"></span><span style="height:40px;background:#f2c46b"></span><span style="height:60px;background:#2f7de1"></span><span style="height:16px;background:#e57fb7"></span><span style="height:4px;background:#8a5cf6"></span><span style="height:4px;background:#5fcfc2"></span><span style="height:48px;background:#f2c46b"></span><span style="height:36px;background:#2f7de1"></span><span style="height:24px;background:#e57fb7"></span><span style="height:68px;background:#8a5cf6"></span><span style="height:124px;background:#5fcfc2"></span><span style="height:108px;background:#f2c46b"></span><span style="height:32px;background:#2f7de1"></span><span style="height:20px;background:#e57fb7"></span><span style="height:52px;background:#8a5cf6"></span><span style="height:40px;background:#5fcfc2"></span><span style="height:64px;background:#f2c46b"></span><span style="height:28px;background:#2f7de1"></span><span style="height:16px;background:#e57fb7"></span><span style="height:44px;background:#8a5cf6"></span><span style="height:24px;background:#5fcfc2"></span></div><div class="legend"><span><i style="background:#f2c46b"></i>claude-sonnet-5-5-high</span><span><i style="background:#2f7de1"></i>gpt-5.6-terra-medium</span><span><i style="background:#e57fb7"></i>auto</span><span><i style="background:#8a5cf6"></i>composer-2.5</span><span><i style="background:#5fcfc2"></i>gemini-3.1-pro</span></div></div><div class="exp"><span class="btn">⤓ Export CSV</span></div></div><div class="pop"><div class="hd"><b>October 2026</b><span>‹ ›</span></div><div class="cal"><span class=x>S</span><span class=x>M</span><span class=x>T</span><span class=x>W</span><span class=x>T</span><span class=x>F</span><span class=x>S</span><span></span><span></span><span></span><span></span><span class="s">1</span><span class="d">2</span><span class="d">3</span><span class="d">4</span><span class="d">5</span><span class="d">6</span><span class="d">7</span><span class="d">8</span><span class="d">9</span><span class="d">10</span><span class="d">11</span><span class="d">12</span><span class="d">13</span><span class="d">14</span><span class="d">15</span><span class="d">16</span><span class="d">17</span><span class="d">18</span><span class="d">19</span><span class="d">20</span><span class="d">21</span><span class="d">22</span><span class="d">23</span><span class="d">24</span><span class="d">25</span><span class=x>26</span><span class=x>27</span><span class=x>28</span><span class=x>29</span><span class=x>30</span><span class=x>31</span></div><div class="act"><span class="btn">Cancel</span><span class="btn hl">Apply</span></div></div></main></div></body></html>

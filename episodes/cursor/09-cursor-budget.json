@@ -8,13 +8,13 @@
     10
   ],
   "pitch": {
-    "ask": "¿Cuánto llevo gastado en Cursor? Bajá el tope diario a 12",
+    "ask": "Cargá mi CSV de uso de Cursor y explicame mis settings",
     "does": "Estima el costo de cada turno, te avisa con una notificación cuando un chat, el día, el ciclo o un modelo pasan su límite, y frena el prompt antes de que llegue al modelo si ya llegaste al tope o el modelo está bloqueado."
   },
   "skill": {
     "repo": "cursor-budget",
-    "commit": "a28b6b2",
-    "date": "2026-10-24"
+    "commit": "a111d8b",
+    "date": "2026-10-25"
   },
   "workspace": {
     "repo": "mi-servicio",
@@ -138,32 +138,80 @@
     {
       "id": "caso-principal",
       "title": "Caso principal",
-      "subtitle": "Cargar lo gastado, preguntar y bajar un tope, desde el chat",
+      "subtitle": "Cargar lo gastado una sola vez, entender las settings y ajustarlas desde el chat",
       "screen": "cursor-full",
       "faq": [
+        {
+          "q": "¿Tengo que bajar el CSV todos los meses?",
+          "a": "No. Una sola vez, el día que lo instalás. Después los hooks cuentan cada turno solos, también en los meses que vienen."
+        },
+        {
+          "q": "¿Y si elijo más días de los del mes?",
+          "a": "No pasa nada: lo que es de antes del día 1 se ignora."
+        },
         {
           "q": "¿Es exacto?",
           "a": "Es una estimación con precios de lista: en lo medido dio ±5% contra la factura. El número que se paga es el de Cursor."
         },
         {
-          "q": "¿Y si no cargo lo gastado?",
-          "a": "Cuenta desde que lo instalaste, y los avisos lo dicen. Cuando quieras, le pasás el monto de la página de uso."
-        },
-        {
           "q": "¿Puede el agente subirse el presupuesto?",
           "a": "La skill tiene prohibido cambiar algo que no pediste. Igual, cada cambio te llega como notificación y queda anotado con quién lo hizo."
-        },
-        {
-          "q": "¿Tengo que exportar el CSV?",
-          "a": "No. El monto de la página alcanza. El CSV suma el detalle por modelo y por día."
         }
       ],
       "steps": [
         {
-          "type": "ask",
-          "text": "Cursor dice que llevo 84,30 de 200 este mes",
+          "type": "page",
+          "title": "cursor.com/dashboard/usage",
+          "src": "pages/cursor-budget-uso.html",
           "source": "inferido",
-          "notes": "Primero le contamos lo que ya gastamos: el hook cuenta desde que lo instalaste y no sabe lo de antes. El número sale de cursor.com/dashboard, en Usage, «Your monthly usage»."
+          "callouts": [
+            {
+              "kind": "note",
+              "text": "**Paso 1 de 3.** Abrí `cursor.com/dashboard/usage` en el navegador, con tu cuenta de Cursor."
+            }
+          ],
+          "notes": "Esto se hace una sola vez, el día que lo instalás. cursor-budget cuenta desde que lo instalaste y no sabe lo que gastaste antes este mes, así que se lo pasamos desde la página de uso de Cursor. Abrí cursor.com/dashboard/usage en el navegador, con la misma cuenta con la que usás Cursor. La pantalla es una maqueta con datos inventados."
+        },
+        {
+          "type": "page",
+          "title": "cursor.com/dashboard/usage",
+          "src": "pages/cursor-budget-uso-mes.html",
+          "source": "inferido",
+          "callouts": [
+            {
+              "kind": "note",
+              "text": "**Paso 2 de 3.** Tocá **MTD**, que es el mes en curso, del día 1 a hoy. Después, **Apply**."
+            }
+          ],
+          "notes": "La página arranca mostrando los últimos 7 días. Tocá MTD, que quiere decir «en lo que va del mes», y confirmá con Apply. Si por error elegís más días, no pasa nada: lo de antes del día 1 se ignora."
+        },
+        {
+          "type": "page",
+          "title": "cursor.com/dashboard/usage",
+          "src": "pages/cursor-budget-uso-exportar.html",
+          "source": "inferido",
+          "callouts": [
+            {
+              "kind": "note",
+              "text": "**Paso 3 de 3.** Tocá **Export CSV**. El archivo se baja a tu carpeta **Descargas**."
+            }
+          ],
+          "notes": "Export CSV baja un archivo con cada uso del mes. Queda en Descargas, con un nombre que empieza con team-usage-events. No hace falta abrirlo: se lo pasamos al agente en el primer prompt.",
+          "pause": true
+        },
+        {
+          "type": "term",
+          "cmd": "mkdir -p ~/Downloads && python3 - <<'EOF'\nimport csv, datetime, os\nnow = datetime.datetime.now(datetime.timezone.utc)\nstart = now.replace(day=1, hour=9, minute=0, second=0, microsecond=0)\nspan = max((now - start).total_seconds() - 3600, 60)\nrows = [(\"claude-sonnet-5-5-high\", c) for c in (9.10, 6.40, 7.20, 5.60, 4.80, 5.00)]\nrows += [(\"gpt-5.6-terra-medium\", c) for c in (6.30, 5.10, 4.90, 5.10)]\nrows += [(\"grok-4.7-high (Auto Balanced)\", c) for c in (4.20, 3.60, 3.90, 3.10)]\nrows += [(\"composer-2.5\", c) for c in (3.40, 2.80)]\nrows += [(\"gemini-3.1-pro\", c) for c in (2.10, 1.70)]\nhead = [\"Date\", \"User\", \"PR Author\", \"Repo\", \"PR Number\", \"Cloud Agent ID\", \"Automation ID\", \"Kind\", \"Model\",\n        \"Max Mode\", \"Input (w/ Cache Write)\", \"Input (w/o Cache Write)\", \"Cache Read\", \"Output Tokens\",\n        \"Total Tokens\", \"Cost\"]\nwith open(os.path.expanduser(\"~/Downloads/team-usage-events.csv\"), \"w\", newline=\"\") as fh:\n    w = csv.writer(fh)\n    w.writerow(head)\n    for i, (model, cost) in enumerate(rows):\n        t = start + datetime.timedelta(seconds=span * i / len(rows))\n        tokens = int(cost * 400000)\n        w.writerow([t.strftime(\"%Y-%m-%dT%H:%M:%S.000Z\"), \"demo@example.com\", \"\", \"\", \"\", \"\", \"\", \"Included\",\n                    model, \"No\", 0, tokens // 10, tokens - tokens // 10 - 2000, 2000, tokens, \"%.2f\" % cost])\nEOF",
+          "out": [],
+          "source": "real",
+          "cwd": "~",
+          "capture_only": true
+        },
+        {
+          "type": "ask",
+          "text": "Es la primera vez que uso cursor-budget. Cargá el CSV de uso que bajé de Cursor: ~/Downloads/team-usage-events.csv",
+          "source": "inferido",
+          "notes": "Este es el primer prompt y se hace una sola vez. Le pasás la ruta del archivo que bajaste. Si no la sabés, arrastrá el archivo desde Descargas al chat y Cursor la escribe por vos."
         },
         {
           "type": "tool",
@@ -172,43 +220,32 @@
         },
         {
           "type": "term",
-          "cmd": "python3 ~/.cursor/budget/app/cbudget.py seed --amount 84.30",
+          "cmd": "python3 ~/.cursor/budget/app/cbudget.py seed ~/Downloads/team-usage-events.csv",
           "out": [
-            "Ciclo desde 2026-10-01: $84.30 según la página de Cursor. Desde ahora suma lo que vean los hooks."
+            "Ciclo desde 2026-10-01: $84.30 cobrado según el CSV"
           ],
           "source": "real",
           "cwd": "~/mi-servicio",
+          "color": true,
+          "notes": "seed lee el CSV y guarda lo que Cursor cobró este mes, por modelo y por día. Desde ahí el total es eso más lo que estiman los hooks en cada turno.",
           "callouts": [
             {
               "kind": "underline",
-              "match": "Desde ahora suma lo que vean los hooks."
+              "match": "$84.30 cobrado según el CSV"
             }
-          ],
-          "notes": "seed guarda lo que dice Cursor como punto de partida del ciclo. Desde ahí, el total es eso más lo que estima el hook en cada turno.",
-          "color": true
-        },
-        {
-          "type": "term",
-          "cmd": "python3 ~/.cursor/budget/app/cbudget.py limits set cycle_limit 200",
-          "out": [
-            "cycle_limit = $200.00"
-          ],
-          "source": "real",
-          "cwd": "~/mi-servicio",
-          "callouts": [
-            {
-              "kind": "note",
-              "text": "**El tope del plan** lo dijiste vos («de 200»): por eso lo cambia."
-            }
-          ],
-          "notes": "El segundo número era el tope del plan. Viene en 225 por defecto; como el usuario lo dijo, la skill lo ajusta. La skill solo cambia lo que le pedís.",
-          "color": true
+          ]
         },
         {
           "type": "say",
-          "md": "Listo: el ciclo arranca en **$84.30 de $200**, desde el 1 de octubre. Desde ahora sumo lo que estimen los hooks en cada turno.",
           "source": "inferido",
-          "notes": "Cerrá la idea: Cursor cobra, el hook estima. Con el seed, los dos números arrancan iguales."
+          "md": "Listo: cargué lo que llevás gastado este mes, **$84.30**, con el detalle por modelo y por día.\n\n**Es la única vez.** Desde ahora cuento cada turno solo, y cuando empiece el mes que viene sigo contando sin que me pases nada.",
+          "callouts": [
+            {
+              "kind": "underline",
+              "match": "Es la única vez."
+            }
+          ],
+          "notes": "Remarcalo: el CSV se carga una vez. No hay que volver a bajarlo cada mes."
         },
         {
           "type": "term",
@@ -218,19 +255,17 @@
           ],
           "source": "real",
           "cwd": "~",
-          "capture_only": true,
-          "color": true
+          "capture_only": true
         },
         {
           "type": "term",
-          "cmd": "echo '{\"hook_event_name\":\"stop\",\"model\":\"claude-sonnet-5-5-high\",\"conversation_id\":\"a1\",\"input_tokens\":260000,\"cache_read_tokens\":240000,\"output_tokens\":9000}' | python3 ~/.cursor/budget/app/cbudget.py hook",
+          "cmd": "echo '{\"hook_event_name\":\"stop\",\"model\":\"claude-sonnet-5-5-high\",\"conversation_id\":\"a1\",\"input_tokens\":260000,\"cache_read_tokens\":230000,\"output_tokens\":8000}' | python3 ~/.cursor/budget/app/cbudget.py hook",
           "out": [
             "{}"
           ],
           "source": "real",
           "cwd": "~",
-          "capture_only": true,
-          "color": true
+          "capture_only": true
         },
         {
           "type": "term",
@@ -240,47 +275,40 @@
           ],
           "source": "real",
           "cwd": "~",
-          "capture_only": true,
-          "color": true
+          "capture_only": true
         },
         {
           "type": "ask",
-          "text": "¿cuánto llevo gastado en Cursor y cómo están mis límites?",
+          "text": "Mostrame mis settings y explicame cada una",
           "source": "inferido",
-          "notes": "La pregunta de todos los días. La skill corre el reporte y los límites y contesta con lo que importa."
-        },
-        {
-          "type": "tool",
-          "label": "Ran cbudget report --color never",
-          "source": "inferido"
+          "notes": "Ahora que cuenta, veamos qué controla y con qué valores viene."
         },
         {
           "type": "tool",
           "label": "Ran cbudget limits --color never",
-          "source": "inferido",
-          "notes": "Corre el reporte y los límites, y contesta con lo que importa. La pantalla entera la vemos en el capítulo que sigue."
+          "source": "inferido"
         },
         {
           "type": "say",
-          "md": "**Ciclo:** $84.85 / $200: te quedan **$115.15** y 8 días (se reinicia el 1 de nov). Hoy: $0.55.\n\n**Límites activos:** aviso chat $2 / bloqueo $5 · aviso día $8 / bloqueo $15 · Opus high, xhigh y max bloqueados. Chequeo: sin problemas.\n\nEl total mezcla lo que decía Cursor más lo estimado por los hooks desde entonces.",
+          "md": "Estas son tus settings, una por una:\n\n**Por chat**\n- `warn_conversation` **$2**: te aviso cuando un chat pasa los $2. Un chat largo encarece cada turno: es la señal para abrir uno nuevo.\n- `block_conversation` **$5**: con $5, ese chat se frena. Abrís uno nuevo y seguís.\n\n**Por día**\n- `warn_day` **$8**: te aviso cuando el día pasa los $8.\n- `block_day` **$15**: con $15 en el día, Cursor se frena hasta mañana.\n\n**Por mes**\n- `cycle_limit` **$150**: el tope de tu plan. Te aviso al 75%, al 90% y al 100%; no frena.\n- **Extras del plan, $75 y $75**: si pasás los $150 te pueden otorgar un extra y, excepcionalmente, otro. Cuando te lo den, decime «me otorgaron el extra» y lo sumo al tope.\n- `cycle_day` **1**: el día en que Cursor reinicia el mes.\n\n**Por modelo**\n- **Presupuesto por modelo:** ninguno todavía.\n- `model_warn` **80%**: cuando un modelo con presupuesto llega al 80%, te aviso.\n- **Modelos bloqueados:** Opus High, xhigh y max, los más caros. Un prompt con ellos no se manda.\n\n**Avisos**\n- `notify_each_turn` **sí**: después de cada turno, una notificación con lo que costó.\n\n**Si un bloqueo te frena y lo necesitás igual:** `cbudget allow --minutes 30` te deja usar Cursor sin los bloqueos del hook durante esos minutos: lo corrés vos, la skill nunca lo corre sola.",
           "source": "inferido",
           "callouts": [
             {
               "kind": "underline",
-              "match": "lo estimado por los hooks"
+              "match": "cbudget allow --minutes 30"
             }
           ],
-          "notes": "Contesta con números, no con la pantalla entera. Remarcá «estimado»: el número que se paga es el de Cursor; este sirve para enterarte a tiempo."
+          "notes": "Recorrelas de arriba abajo. Por chat: el chat largo es lo que más encarece, por eso el aviso a los 2 dólares. Por día: un freno diario. Por mes: el tope del plan, que solo avisa, y el extra que te pueden otorgar. Por modelo: los más caros vienen bloqueados. Y la salida de emergencia: allow --minutes te deja usar Cursor sin los bloqueos del hook un rato, siempre decidido por vos."
         },
         {
           "type": "ask",
-          "text": "bajá el tope diario a 12",
+          "text": "Subí el tope diario 2 dólares",
           "source": "inferido",
-          "notes": "Un cambio, dicho como lo dirías a una persona."
+          "notes": "Un cambio, dicho como se lo dirías a una persona."
         },
         {
           "type": "tool",
-          "label": "Ran Set block_day to 12 outside sandbox",
+          "label": "Ran Set block_day to 17 outside sandbox",
           "source": "inferido",
           "callouts": [
             {
@@ -292,13 +320,14 @@
         },
         {
           "type": "term",
-          "cmd": "python3 ~/.cursor/budget/app/cbudget.py limits set block_day 12",
+          "cmd": "python3 ~/.cursor/budget/app/cbudget.py limits set block_day 17",
           "out": [
-            "block_day = $12.00"
+            "block_day = $17.00"
           ],
           "source": "real",
           "cwd": "~/mi-servicio",
-          "color": true
+          "color": true,
+          "notes": "El tope diario era 15: más 2, 17. La skill calcula el valor nuevo y cambia solo ese."
         },
         {
           "type": "term",
@@ -308,20 +337,49 @@
           ],
           "source": "real",
           "cwd": "~/mi-servicio",
-          "notes": "Después de cada cambio revisa que los límites no se contradigan: por ejemplo, un aviso más alto que el bloqueo.",
-          "color": true
+          "color": true,
+          "notes": "Después de cada cambio revisa que los límites no se contradigan, por ejemplo un aviso más alto que el bloqueo."
         },
         {
           "type": "say",
-          "md": "Listo: `block_day` = **$12.00** (antes $15). Chequeo: ok.",
           "source": "inferido",
+          "md": "Listo: `block_day` = **$17.00** (antes $15). Chequeo: ok.",
           "callouts": [
             {
               "kind": "note",
               "text": "**Cada cambio te llega como notificación**, aunque lo haga el agente."
             }
           ],
-          "notes": "La regla de la skill: solo cambia lo que pediste y con tu valor. Nunca sube un límite ni levanta un bloqueo por su cuenta. Y cada cambio queda anotado con quién lo hizo.",
+          "notes": "La regla de la skill: solo cambia lo que pediste. Nunca sube un límite ni levanta un bloqueo por su cuenta, y cada cambio queda anotado con quién lo hizo."
+        },
+        {
+          "type": "ask",
+          "text": "Agregá Gemini a la lista de modelos que no hay que usar",
+          "source": "inferido",
+          "notes": "La lista de modelos bloqueados: los que no querés que se usen, por caros o por política del equipo."
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.cursor/budget/app/cbudget.py limits block 'gemini-*'",
+          "out": [
+            "gemini-* bloqueado"
+          ],
+          "source": "real",
+          "cwd": "~/mi-servicio",
+          "color": true,
+          "notes": "gemini-* quiere decir todos los modelos que empiezan con gemini."
+        },
+        {
+          "type": "say",
+          "source": "inferido",
+          "md": "Listo: **`gemini-*` quedó bloqueado**, junto a Opus High, xhigh y max. Si elegís Gemini en Cursor, el prompt no se manda y te aviso.\n\nSi un día lo necesitás: `cbudget allow --minutes 30` te deja usar Cursor sin los bloqueos del hook durante esos minutos: lo corrés vos, la skill nunca lo corre sola.",
+          "callouts": [
+            {
+              "kind": "underline",
+              "match": "quedó bloqueado"
+            }
+          ],
+          "notes": "Bloqueado no es borrado: con allow --minutes lo usás un rato, y con «desbloqueá Gemini» lo sacás de la lista.",
           "pause": true
         }
       ]
@@ -329,20 +387,20 @@
     {
       "id": "en-la-terminal",
       "title": "En la terminal",
-      "subtitle": "El reporte y los límites, enteros",
+      "subtitle": "Lo mismo que en el chat, sin gastar tokens",
       "screen": "terminal",
       "faq": [
         {
+          "q": "¿Por qué no gasta tokens?",
+          "a": "Porque son comandos determinísticos: leen tus archivos y hacen cuentas, sin un modelo de por medio. Desde el chat, lo que cuesta es el turno del agente, no el comando."
+        },
+        {
           "q": "¿Puedo cambiar los límites desde acá?",
-          "a": "Sí: cbudget limits edit pregunta uno por uno y guarda solo si confirmás."
+          "a": "Sí: cbudget limits set, limits block y limits model, o cbudget limits edit, que pregunta uno por uno."
         },
         {
-          "q": "¿Por qué Opus High viene bloqueado?",
-          "a": "Porque es el que más rápido se come el ciclo. Si lo necesitás, pedí «desbloqueá Opus High»."
-        },
-        {
-          "q": "¿Sin color?",
-          "a": "Con --color never o la variable NO_COLOR, para copiarlo o pegarlo en un ticket."
+          "q": "¿Y si un bloqueo me frena?",
+          "a": "cbudget allow --minutes 30 te deja usar Cursor sin los bloqueos del hook durante esos minutos."
         }
       ],
       "steps": [
@@ -354,46 +412,65 @@
             " \u001b[1;38;2;236;236;236mUso de Cursor\u001b[0m",
             "\u001b[38;2;58;58;58m╭────────────────────────────────────────────────────────────────────────────────────────────────────────────╮\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mUso del ciclo\u001b[0m                                                                                              \u001b[38;2;58;58;58m│\u001b[0m",
-            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[1;38;2;236;236;236m$84.85\u001b[0m\u001b[38;2;140;140;140m / $200.00\u001b[0m                                                                                           \u001b[38;2;58;58;58m│\u001b[0m",
-            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;122;162;204m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[38;2;48;48;48m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[1;38;2;236;236;236m$84.86\u001b[0m\u001b[38;2;140;140;140m / $150.00\u001b[0m                                                                                           \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;122;162;204m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[38;2;48;48;48m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mSe reinicia el 1 de nov de 2026  ·  Quedan 7 días\u001b[0m                                                          \u001b[38;2;58;58;58m│\u001b[0m",
-            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mLo que mostraba Cursor al cargarlo, más lo estimado desde entonces.\u001b[0m                                        \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mCobrado según el CSV, más lo estimado desde entonces.\u001b[0m                                                      \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m╰────────────────────────────────────────────────────────────────────────────────────────────────────────────╯\u001b[0m",
             "\u001b[38;2;58;58;58m╭─────────────────────────────────╮\u001b[0m  \u001b[38;2;58;58;58m╭─────────────────────────────────╮\u001b[0m  \u001b[38;2;58;58;58m╭──────────────────────────────────╮\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mTotal del ciclo\u001b[0m                 \u001b[38;2;58;58;58m│\u001b[0m  \u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mDisponible\u001b[0m                      \u001b[38;2;58;58;58m│\u001b[0m  \u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mHoy\u001b[0m                              \u001b[38;2;58;58;58m│\u001b[0m",
-            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[1;38;2;236;236;236m$84.85\u001b[0m                          \u001b[38;2;58;58;58m│\u001b[0m  \u001b[38;2;58;58;58m│\u001b[0m \u001b[1;38;2;22;160;92m$115.15\u001b[0m                         \u001b[38;2;58;58;58m│\u001b[0m  \u001b[38;2;58;58;58m│\u001b[0m \u001b[1;38;2;236;236;236m$0.55\u001b[0m                            \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[1;38;2;236;236;236m$84.86\u001b[0m                          \u001b[38;2;58;58;58m│\u001b[0m  \u001b[38;2;58;58;58m│\u001b[0m \u001b[1;38;2;22;160;92m$65.14\u001b[0m                          \u001b[38;2;58;58;58m│\u001b[0m  \u001b[38;2;58;58;58m│\u001b[0m \u001b[1;38;2;236;236;236m$0.56\u001b[0m                            \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m╰─────────────────────────────────╯\u001b[0m  \u001b[38;2;58;58;58m╰─────────────────────────────────╯\u001b[0m  \u001b[38;2;58;58;58m╰──────────────────────────────────╯\u001b[0m",
             "\u001b[38;2;58;58;58m╭────────────────────────────────────────────────────────────────────────────────────────────────────────────╮\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mUso por día\u001b[0m                                                                                                \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mTu uso por día en este ciclo\u001b[0m                                                                               \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m                                                                                                            \u001b[38;2;58;58;58m│\u001b[0m",
-            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m25 oct  \u001b[0m\u001b[38;2;62;152;255m████████████████████████████████████████████████████████████████\u001b[0m\u001b[38;2;246;196;120m███████████████████████\u001b[0m\u001b[38;2;236;236;236m      $0.55\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m01 oct  \u001b[0m\u001b[38;2;62;152;255m███████████████████████████████████████████████████████████████████████████████████████\u001b[0m\u001b[38;2;236;236;236m      $9.10\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m02 oct  \u001b[0m\u001b[38;2;62;152;255m█████████████████████████████████████████████████████████████\u001b[0m                          \u001b[38;2;236;236;236m      $6.40\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m03 oct  \u001b[0m\u001b[38;2;62;152;255m█████████████████████████████████████████████████████████████████████\u001b[0m                  \u001b[38;2;236;236;236m      $7.20\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m05 oct  \u001b[0m\u001b[38;2;62;152;255m██████████████████████████████████████████████████████\u001b[0m                                 \u001b[38;2;236;236;236m      $5.60\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m06 oct  \u001b[0m\u001b[38;2;62;152;255m██████████████████████████████████████████████\u001b[0m                                         \u001b[38;2;236;236;236m      $4.80\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m07 oct  \u001b[0m\u001b[38;2;62;152;255m████████████████████████████████████████████████\u001b[0m                                       \u001b[38;2;236;236;236m      $5.00\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m09 oct  \u001b[0m\u001b[38;2;110;224;208m████████████████████████████████████████████████████████████\u001b[0m                           \u001b[38;2;236;236;236m      $6.30\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m10 oct  \u001b[0m\u001b[38;2;110;224;208m█████████████████████████████████████████████████\u001b[0m                                      \u001b[38;2;236;236;236m      $5.10\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m12 oct  \u001b[0m\u001b[38;2;110;224;208m███████████████████████████████████████████████\u001b[0m                                        \u001b[38;2;236;236;236m      $4.90\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m13 oct  \u001b[0m\u001b[38;2;110;224;208m█████████████████████████████████████████████████\u001b[0m                                      \u001b[38;2;236;236;236m      $5.10\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m14 oct  \u001b[0m\u001b[38;2;246;196;120m████████████████████████████████████████\u001b[0m                                               \u001b[38;2;236;236;236m      $4.20\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m16 oct  \u001b[0m\u001b[38;2;246;196;120m██████████████████████████████████\u001b[0m                                                     \u001b[38;2;236;236;236m      $3.60\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m17 oct  \u001b[0m\u001b[38;2;246;196;120m█████████████████████████████████████\u001b[0m                                                  \u001b[38;2;236;236;236m      $3.90\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m18 oct  \u001b[0m\u001b[38;2;246;196;120m██████████████████████████████\u001b[0m                                                         \u001b[38;2;236;236;236m      $3.10\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m20 oct  \u001b[0m\u001b[38;2;160;124;245m█████████████████████████████████\u001b[0m                                                      \u001b[38;2;236;236;236m      $3.40\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m21 oct  \u001b[0m\u001b[38;2;160;124;245m███████████████████████████\u001b[0m                                                            \u001b[38;2;236;236;236m      $2.80\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m22 oct  \u001b[0m\u001b[38;2;236;120;180m████████████████████\u001b[0m                                                                   \u001b[38;2;236;236;236m      $2.10\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m24 oct  \u001b[0m\u001b[38;2;236;120;180m████████████████\u001b[0m                                                                       \u001b[38;2;236;236;236m      $1.70\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m25 oct  \u001b[0m\u001b[38;2;62;152;255m████\u001b[0m\u001b[38;2;246;196;120m█\u001b[0m                                                                                  \u001b[38;2;236;236;236m      $0.56\u001b[0m \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m                                                                                                            \u001b[38;2;58;58;58m│\u001b[0m",
-            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;62;152;255m● \u001b[0m\u001b[38;2;140;140;140mclaude-sonnet-5-5-high\u001b[0m   \u001b[38;2;246;196;120m● \u001b[0m\u001b[38;2;140;140;140mauto-smart\u001b[0m                                                                    \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;62;152;255m● \u001b[0m\u001b[38;2;140;140;140mclaude-sonnet-5-5-high\u001b[0m   \u001b[38;2;110;224;208m● \u001b[0m\u001b[38;2;140;140;140mgpt-5.6-terra-medium\u001b[0m   \u001b[38;2;246;196;120m● \u001b[0m\u001b[38;2;140;140;140mauto\u001b[0m   \u001b[38;2;160;124;245m● \u001b[0m\u001b[38;2;140;140;140mcomposer-2.5\u001b[0m   \u001b[38;2;236;120;180m● \u001b[0m\u001b[38;2;140;140;140mgemini-3.1-pro\u001b[0m             \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;246;196;120m● \u001b[0m\u001b[38;2;140;140;140mauto-smart\u001b[0m                                                                                               \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m╰────────────────────────────────────────────────────────────────────────────────────────────────────────────╯\u001b[0m",
             "\u001b[38;2;58;58;58m╭────────────────────────────────────────────────────────────────────────────────────────────────────────────╮\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mÚltimos turnos (último día)\u001b[0m                                                                                \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mFecha            Modelo                    Chat         Tokens     Costo\u001b[0m                                   \u001b[38;2;58;58;58m│\u001b[0m",
-            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236m25 oct, 00:07  \u001b[0m\u001b[38;2;62;152;255m● \u001b[0m\u001b[38;2;236;236;236mclaude-sonnet-5-5-high\u001b[0m    \u001b[38;2;140;140;140ma1        \u001b[0m\u001b[38;2;236;236;236m   186.0K\u001b[0m\u001b[38;2;236;236;236m     $0.18\u001b[0m                                   \u001b[38;2;58;58;58m│\u001b[0m",
-            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236m25 oct, 00:07  \u001b[0m\u001b[38;2;62;152;255m● \u001b[0m\u001b[38;2;236;236;236mclaude-sonnet-5-5-high\u001b[0m    \u001b[38;2;140;140;140ma1        \u001b[0m\u001b[38;2;236;236;236m   269.0K\u001b[0m\u001b[38;2;236;236;236m     $0.22\u001b[0m                                   \u001b[38;2;58;58;58m│\u001b[0m",
-            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236m25 oct, 00:07  \u001b[0m\u001b[38;2;246;196;120m● \u001b[0m\u001b[38;2;236;236;236mauto-smart\u001b[0m                \u001b[38;2;140;140;140mb2        \u001b[0m\u001b[38;2;236;236;236m   124.0K\u001b[0m\u001b[38;2;236;236;236m     $0.15\u001b[0m                                   \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236m25 oct, 11:39  \u001b[0m\u001b[38;2;246;196;120m● \u001b[0m\u001b[38;2;236;236;236mauto-smart\u001b[0m                \u001b[38;2;140;140;140mb2        \u001b[0m\u001b[38;2;236;236;236m   124.0K\u001b[0m\u001b[38;2;236;236;236m     $0.15\u001b[0m                                   \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236m25 oct, 11:39  \u001b[0m\u001b[38;2;62;152;255m● \u001b[0m\u001b[38;2;236;236;236mclaude-sonnet-5-5-high\u001b[0m    \u001b[38;2;140;140;140ma1        \u001b[0m\u001b[38;2;236;236;236m   186.0K\u001b[0m\u001b[38;2;236;236;236m     $0.18\u001b[0m                                   \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236m25 oct, 11:39  \u001b[0m\u001b[38;2;62;152;255m● \u001b[0m\u001b[38;2;236;236;236mclaude-sonnet-5-5-high\u001b[0m    \u001b[38;2;140;140;140ma1        \u001b[0m\u001b[38;2;236;236;236m   268.0K\u001b[0m\u001b[38;2;236;236;236m     $0.23\u001b[0m                                   \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m╰────────────────────────────────────────────────────────────────────────────────────────────────────────────╯\u001b[0m",
             ""
           ],
           "source": "real",
           "cwd": "~",
+          "color": true,
+          "notes": "Todo lo que hace la skill también se corre en la terminal, con el alias cbudget. Estos comandos no gastan tokens: son determinísticos, sin un modelo de por medio; leen tus archivos y hacen cuentas. El reporte: el mes y cuándo se reinicia, el total, lo disponible y hoy, el gasto por día apilado por modelo y los últimos turnos.",
           "callouts": [
             {
               "kind": "underline",
-              "match": "$115.15"
+              "match": "$65.14"
             },
             {
               "kind": "note",
-              "text": "**Lo que queda del ciclo**, subrayado. El mismo diseño y los mismos colores que la página de uso de Cursor."
+              "text": "**Sin tokens:** comandos determinísticos, sin un modelo de por medio."
             }
-          ],
-          "notes": "El reporte entero: el ciclo y cuándo se reinicia, total, disponible y hoy, el gasto por día apilado por modelo y los últimos turnos con su chat. Con el alias es cbudget report.",
-          "color": true
+          ]
         },
         {
           "type": "term",
@@ -407,8 +484,8 @@
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236mwarn_conversation\u001b[0m     \u001b[1;38;2;236;236;236m     $2.00\u001b[0m   \u001b[38;2;140;140;140mAvisa cuando un chat pasa este monto\u001b[0m                          \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236mblock_conversation\u001b[0m    \u001b[1;38;2;236;236;236m     $5.00\u001b[0m   \u001b[38;2;140;140;140mBloquea un chat que llegó a este monto\u001b[0m                        \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236mwarn_day\u001b[0m              \u001b[1;38;2;236;236;236m     $8.00\u001b[0m   \u001b[38;2;140;140;140mAvisa cuando el día pasa este monto\u001b[0m                           \u001b[38;2;58;58;58m│\u001b[0m",
-            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236mblock_day\u001b[0m             \u001b[1;38;2;236;236;236m    $12.00\u001b[0m\u001b[38;2;246;196;120m *\u001b[0m \u001b[38;2;140;140;140mBloquea el resto del día al llegar a este monto\u001b[0m               \u001b[38;2;58;58;58m│\u001b[0m",
-            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236mcycle_limit\u001b[0m           \u001b[1;38;2;236;236;236m   $200.00\u001b[0m\u001b[38;2;246;196;120m *\u001b[0m \u001b[38;2;140;140;140mTope del plan en el ciclo\u001b[0m                                     \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236mblock_day\u001b[0m             \u001b[1;38;2;236;236;236m    $17.00\u001b[0m\u001b[38;2;246;196;120m *\u001b[0m \u001b[38;2;140;140;140mBloquea el resto del día al llegar a este monto\u001b[0m               \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236mcycle_limit\u001b[0m           \u001b[1;38;2;236;236;236m   $150.00\u001b[0m   \u001b[38;2;140;140;140mTope del plan en el ciclo\u001b[0m                                     \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236mcycle_day\u001b[0m             \u001b[1;38;2;236;236;236m         1\u001b[0m   \u001b[38;2;140;140;140mDía del mes en que se reinicia el ciclo\u001b[0m                       \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236mmodel_warn\u001b[0m            \u001b[1;38;2;236;236;236m       80%\u001b[0m   \u001b[38;2;140;140;140mParte del presupuesto de un modelo que dispara el aviso\u001b[0m       \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236mnotify_each_turn\u001b[0m      \u001b[1;38;2;236;236;236m        sí\u001b[0m   \u001b[38;2;140;140;140mNotificación después de cada turno\u001b[0m                            \u001b[38;2;58;58;58m│\u001b[0m",
@@ -416,12 +493,19 @@
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140m* cambiado en ~/.cursor/budget/config.json; el resto es el valor por defecto\u001b[0m                     \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m╰──────────────────────────────────────────────────────────────────────────────────────────────────╯\u001b[0m",
             "\u001b[38;2;58;58;58m╭──────────────────────────────────────────────────────────────────────────────────────────────────╮\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mExtras del plan (ciclo)\u001b[0m                                                                          \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236mEl extra\u001b[0m              \u001b[1;38;2;236;236;236m    $75.00\u001b[0m   \u001b[38;2;140;140;140msin registrar: `cbudget extra`\u001b[0m                                \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236mEl extra excepcional\u001b[0m  \u001b[1;38;2;236;236;236m    $75.00\u001b[0m   \u001b[38;2;140;140;140msin registrar: `cbudget extra`\u001b[0m                                \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m                                                                                                  \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mTope del ciclo: $150.00. Se registran cuando te los otorgan y terminan con el ciclo.\u001b[0m             \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m╰──────────────────────────────────────────────────────────────────────────────────────────────────╯\u001b[0m",
+            "\u001b[38;2;58;58;58m╭──────────────────────────────────────────────────────────────────────────────────────────────────╮\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mPresupuesto por modelo (ciclo)\u001b[0m                                                                   \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mSin presupuestos por modelo. Agregá uno con `cbudget limits model <patrón> <usd>`.\u001b[0m               \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m╰──────────────────────────────────────────────────────────────────────────────────────────────────╯\u001b[0m",
             "\u001b[38;2;58;58;58m╭──────────────────────────────────────────────────────────────────────────────────────────────────╮\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mModelos bloqueados\u001b[0m                                                                               \u001b[38;2;58;58;58m│\u001b[0m",
-            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236mclaude-opus-*-high, *-xhigh, *-max\u001b[0m                                                               \u001b[38;2;58;58;58m│\u001b[0m",
+            "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;236;236;236mclaude-opus-*-high, *-xhigh, *-max, gemini-*\u001b[0m                                                     \u001b[38;2;58;58;58m│\u001b[0m",
             "\u001b[38;2;58;58;58m╰──────────────────────────────────────────────────────────────────────────────────────────────────╯\u001b[0m",
             "\u001b[38;2;58;58;58m╭──────────────────────────────────────────────────────────────────────────────────────────────────╮\u001b[0m",
             "\u001b[38;2;58;58;58m│\u001b[0m \u001b[38;2;140;140;140mChequeo\u001b[0m                                                                                          \u001b[38;2;58;58;58m│\u001b[0m",
@@ -431,25 +515,58 @@
           ],
           "source": "real",
           "cwd": "~",
+          "color": true,
+          "notes": "Las settings, enteras: las mismas que explicó el agente. Lo que cambiaste lleva un asterisco: el tope diario en 17. Abajo, los extras del plan, los presupuestos por modelo, los bloqueados, ahora con gemini, y el chequeo.",
           "callouts": [
             {
+              "kind": "box",
+              "match": "$17.00",
+              "text": "lo que cambiaste"
+            },
+            {
               "kind": "underline",
-              "match": "claude-opus-*-high, *-xhigh, *-max"
+              "match": "gemini-*"
             },
             {
               "kind": "note",
-              "text": "**Opus High, xhigh y max** vienen bloqueados de fábrica."
+              "text": "**Tus settings**, las mismas que explicó el agente."
             }
+          ]
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.cursor/budget/app/cbudget.py limits check",
+          "out": [
+            "ok"
           ],
-          "notes": "Los límites de fábrica: aviso a los 2 dólares por chat y bloqueo a los 5; aviso a los 8 por día y bloqueo a los 15, que acá ya bajamos a 12. Y los modelos más caros, bloqueados. El asterisco marca lo que cambiaste. Abajo, el chequeo: que los límites no se contradigan.",
-          "color": true
+          "source": "real",
+          "cwd": "~",
+          "color": true,
+          "notes": "Solo los problemas. Sale con 1 si hay un error, así que sirve también en un script."
+        },
+        {
+          "type": "term",
+          "cmd": "python3 ~/.cursor/budget/app/cbudget.py allow --minutes 30",
+          "out": [
+            "bloqueos levantados hasta las 12:09"
+          ],
+          "source": "real",
+          "cwd": "~",
+          "color": true,
+          "notes": "La salida de emergencia, también desde acá: cbudget allow --minutes 30 te deja usar Cursor sin los bloqueos del hook durante esos minutos: lo corrés vos, la skill nunca lo corre sola.",
+          "callouts": [
+            {
+              "kind": "note",
+              "text": "**Sin bloqueos del hook por 30 minutos.** Lo decidís vos."
+            }
+          ]
         }
       ]
     },
     {
       "id": "cuando-te-frena",
       "title": "Otro caso: cuando te frena",
-      "subtitle": "Un modelo bloqueado no llega a costar nada",
+      "subtitle": "Comprobaciones determinísticas avanzadas: un modelo bloqueado no llega a costar nada",
       "screen": "terminal",
       "faq": [
         {
@@ -468,6 +585,14 @@
       "steps": [
         {
           "type": "term",
+          "cmd": "rm -f ~/.cursor/budget/allow.json",
+          "out": [],
+          "source": "real",
+          "cwd": "~",
+          "capture_only": true
+        },
+        {
+          "type": "term",
           "cmd": "echo '{\"hook_event_name\":\"beforeSubmitPrompt\",\"model\":\"claude-opus-5-5-high\",\"conversation_id\":\"c1\"}' | python3 ~/.cursor/budget/app/cbudget.py hook",
           "out": [
             "{\"continue\": false, \"user_message\": \"cursor-budget: el modelo claude-opus-5-5-high est\\u00e1 bloqueado; eleg\\u00ed otro o corr\\u00e9 `cbudget allow`\"}"
@@ -481,14 +606,14 @@
               "text": "el prompt no se manda"
             }
           ],
-          "notes": "Esto es lo que pasa por dentro cuando mandás un prompt con Opus High. Cursor le pregunta al hook, y el hook contesta continue false. En el IDE se ve un aviso, «Submission blocked by hook», con este mensaje. El prompt no llega al modelo: costo cero.",
+          "notes": "Esto es una comprobación determinística avanzada de un caso de uso: le damos al hook el mismo evento que le manda Cursor y miramos qué contesta. No hay un modelo de por medio: el resultado es siempre el mismo y no gasta tokens. Esto es lo que pasa por dentro cuando mandás un prompt con Opus High. Cursor le pregunta al hook, y el hook contesta continue false. En el IDE se ve un aviso, «Submission blocked by hook», con este mensaje. El prompt no llega al modelo: costo cero.",
           "color": true
         },
         {
           "type": "term",
           "cmd": "tail -n 1 ~/.cursor/budget/blocks.jsonl",
           "out": [
-            "{\"t\": 1792897669, \"conversation_id\": \"c1\", \"model\": \"claude-opus-5-5-high\", \"reason\": \"el modelo claude-opus-5-5-high está bloqueado; elegí otro o corré `cbudget allow`\"}"
+            "{\"t\": 1792939161, \"conversation_id\": \"c1\", \"model\": \"claude-opus-5-5-high\", \"reason\": \"el modelo claude-opus-5-5-high está bloqueado; elegí otro o corré `cbudget allow`\"}"
           ],
           "source": "real",
           "cwd": "~",
@@ -498,7 +623,7 @@
           "type": "term",
           "cmd": "python3 ~/.cursor/budget/app/cbudget.py allow --minutes 30",
           "out": [
-            "bloqueos levantados hasta las 00:37"
+            "bloqueos levantados hasta las 12:09"
           ],
           "source": "real",
           "cwd": "~",
@@ -508,7 +633,7 @@
               "text": "**Lo levantás vos.** La skill nunca corre `allow` por su cuenta."
             }
           ],
-          "notes": "Si de verdad hace falta, levantás todos los bloqueos un rato. Desde el chat: «levantá el bloqueo media hora». Es tu decisión, no la del agente.",
+          "notes": "allow --minutes te deja usar Cursor sin los bloqueos del hook durante esos minutos: modelos bloqueados, tope del chat, tope del día y presupuestos por modelo. Los avisos siguen llegando. Desde el chat: «levantá el bloqueo media hora». Es tu decisión, no la del agente.",
           "color": true
         },
         {
@@ -527,7 +652,7 @@
     {
       "id": "presupuesto-por-modelo",
       "title": "Otro caso: presupuesto por modelo",
-      "subtitle": "Usar Opus a conciencia",
+      "subtitle": "Comprobaciones determinísticas avanzadas: usar Opus a conciencia",
       "screen": "cursor-agent",
       "faq": [
         {
@@ -548,7 +673,7 @@
           "type": "ask",
           "text": "Poné un presupuesto de 40 dólares para Opus en este ciclo",
           "source": "inferido",
-          "notes": "Un tope por modelo: avisa al 80% y, al agotarlo, bloquea ese modelo hasta el próximo ciclo."
+          "notes": "Un tope por modelo: avisa al 80% y, al agotarlo, bloquea ese modelo hasta el próximo ciclo. Es otra comprobación determinística avanzada: el tope por modelo se decide con cuentas sobre lo registrado, sin un modelo de por medio."
         },
         {
           "type": "term",
@@ -581,7 +706,7 @@
         },
         {
           "type": "say",
-          "md": "Listo: **Opus tiene $40 para el ciclo**. Te aviso al 80% y, si lo agota, lo bloqueo hasta el 1 de nov.\n\nEl chequeo da un aviso: todavía no usaste Opus este ciclo, así que `claude-opus-*` no coincide con nada. Si el nombre está bien, no hace falta hacer nada.",
+          "md": "Listo: **Opus tiene $40 para el ciclo**. Te aviso al 80% y, si lo agota, lo bloqueo hasta el 1 de nov.\n\nEl chequeo da un aviso: todavía no usaste Opus este ciclo, así que `claude-opus-*` no coincide con nada. Si el nombre está bien, no hace falta hacer nada.\n\nSi un día lo necesitás igual: `cbudget allow --minutes 30` te deja usar Cursor sin los bloqueos del hook durante esos minutos: lo corrés vos, la skill nunca lo corre sola.",
           "source": "inferido",
           "callouts": [
             {
@@ -656,8 +781,22 @@
               "text": "**Sin notificaciones no hay avisos.** Se habilitan una vez, para Script Editor."
             }
           ],
-          "notes": "Si no llega ninguna notificación, macOS las tiene bloqueadas. notify-test manda una y dice dónde habilitarlas. Es lo primero a revisar si «no avisa nada».",
+          "notes": "notify-test manda una notificación de prueba. Si no la ves, macOS tiene bloqueadas las de Script Editor, que es la app con la que se muestran los avisos.",
           "color": true
+        },
+        {
+          "type": "page",
+          "title": "Configuración del Sistema → Notificaciones",
+          "src": "pages/cursor-budget-notificaciones.html",
+          "source": "inferido",
+          "callouts": [
+            {
+              "kind": "note",
+              "text": "**Script Editor → Permitir notificaciones**, con **Escritorio** tildado."
+            }
+          ],
+          "notes": "Abrí Configuración del Sistema, Notificaciones, y buscá Script Editor. Activá Permitir notificaciones y dejá tildado Escritorio. Después probá otra vez con cbudget notify-test. Captura real de la pantalla de macOS.",
+          "pause": true
         }
       ]
     },
@@ -689,7 +828,7 @@
         },
         {
           "type": "say",
-          "md": "#### Lo que te llevás\n- **Te enterás mientras trabajás:** cada turno te dice cuánto costó, y los avisos llegan antes del tope.\n- **Frena antes de gastar:** un modelo bloqueado o un tope agotado no llegan al modelo.\n- **Lo manejás conversando:** la skill solo cambia lo que le pedís, y cada cambio te llega como notificación.\n- **Es una estimación:** el número que se paga es el de Cursor.\n\n#### Fin de la serie de Cursor\nViste nueve herramientas con las mismas reglas: el agente prepara, vos aprobás, y ahora sabés cuánto cuesta.\n\n#### Próxima serie: Claude Code, episodio 1: wayofwork\nSiete skills que te guían para llevar una iniciativa de punta a punta, ahora desde Claude Code.",
+          "md": "#### Lo que te llevás\n- **Te enterás mientras trabajás:** cada turno te dice cuánto costó, y los avisos llegan antes del tope.\n- **Frena antes de gastar:** un modelo bloqueado o un tope agotado no llegan al modelo.\n- **Se carga una vez:** el CSV del mes, al instalar. Después cuenta solo.\n- **Si necesitás pasar igual:** `cbudget allow --minutes 30` te deja usar Cursor sin los bloqueos del hook un rato; lo decidís vos.\n- **Lo manejás conversando:** la skill solo cambia lo que le pedís, y cada cambio te llega como notificación.\n- **Es una estimación:** el número que se paga es el de Cursor.\n\n#### Fin de la serie de Cursor\nViste nueve herramientas con las mismas reglas: el agente prepara, vos aprobás, y ahora sabés cuánto cuesta.\n\n#### Próxima serie: Claude Code, episodio 1: wayofwork\nSiete skills que te guían para llevar una iniciativa de punta a punta, ahora desde Claude Code.",
           "source": "inferido",
           "callouts": [
             {
