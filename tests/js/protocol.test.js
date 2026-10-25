@@ -167,7 +167,7 @@ test("while playing, done-animating asks the stage to wait, then advance shows t
 });
 
 test("autoplay stop (pause step) turns playing off", function () {
-  var r = feed(feed(live(), [key("ArrowRight"), key(" ")]).state,
+  var r = feed(feed(live(), [key("ArrowRight"), done(1), key(" ")]).state,
                [{kind: "message", msg: {type: "done-animating", index: 2}}]);
   assertEqual(r.state.index, 2);
   assertEqual(r.state.playing, false);
@@ -203,6 +203,16 @@ test("→ while the step still animates finishes it in place; the next → advan
   r = feed(r.state, [key("ArrowRight")]);
   assertEqual(r.state.index, 2);
   assertEqual(stageMsgs(r.outbox), [show(2, true)]);
+});
+
+test("space while the step still animates finishes it and starts playing from there", function () {
+  var ep = protoEpisodes()[0];
+  var r = feed(live(), [key("ArrowRight"), key(" ")]);
+  assertEqual(r.state.index, 1);
+  assertEqual(r.state.playing, true);
+  assertEqual(stageMsgs(r.outbox).pop(), show(1, false));
+  r = feed(r.state, [done(1)]);
+  assertEqual(stageMsgs(r.outbox), [{type: "wait", delay: Animate.autoplay(ep, 1, 1).delay, seq: r.state.seq}]);
 });
 
 test("after done-animating, → advances right away", function () {

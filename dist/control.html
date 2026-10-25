@@ -1511,7 +1511,8 @@ var Animate = (function () {
 //                                            live (opened, ready, not lost); pings go while
 //                                            it is opened, lost or not
 // Finishing first: → while the stage still animates the current step (no done-animating for it yet)
-// shows that same step finished instead of moving on; the next → advances. A resend shows the step
+// shows that same step finished instead of moving on; the next → advances. Space there finishes it
+// too and starts playing from it. A resend shows the step
 // finished too, so a stage that was down or reloaded never holds → back.
 // Playback: space toggles `playing`. While playing, each done-animating for the current
 // index asks Animate.autoplay; if it does not stop, the control sends the stage
@@ -1595,6 +1596,7 @@ var Control = (function () {
         var p = pause(s);
         return {state: p, outbox: toStage(p, {type: "wait-cancel"})};
       }
+      if (s.animating && isLive(s)) return go(s, s.index, false, {playing: true});
       return s.index >= last ? none(s) : go(s, s.index + 1, true, {playing: true});
     }
     if (k === "b") {
