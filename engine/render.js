@@ -42,7 +42,7 @@
 // `text`, a small tag after it). A `match` that is not found renders nothing.
 // The first chapter card also shows the episode pitch («Le decís al agente…» /
 // «Y la skill…») under its title; it is part of the card, not a separate index.
-// It also shows, at its foot, the two arrow keys that move between screens: whoever opens
+// It also shows, under the pitch and as wide as it, the two arrow keys that move between screens: whoever opens
 // the episode from its link learns how to move before the first step.
 var Render = (function () {
   var USER = "Persona del equipo";
@@ -386,9 +386,9 @@ var Render = (function () {
     add(inner, el("div", "ws-card-kicker", cardSkill(ep) + " · " + (ci + 1) + " de " + ep.chapters.length),
         el("h1", "ws-card-title", ch.title),
         ch.subtitle ? el("p", "ws-card-sub", ch.subtitle) : null,
-        ci === 0 ? pitch(ep) : null);
+        ci === 0 ? pitch(ep) : null,
+        ci === 0 ? arrowKeys() : null);
     root.appendChild(inner);
-    if (ci === 0) root.appendChild(arrowKeys());
     return root;
   }
   function arrowKeys() {
