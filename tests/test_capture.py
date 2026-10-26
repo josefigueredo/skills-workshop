@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -146,7 +147,7 @@ class RunTests(unittest.TestCase):
                                      "GIT_AUTHOR_NAME", "GIT_AUTHOR_EMAIL", "GIT_COMMITTER_NAME",
                                      "GIT_COMMITTER_EMAIL", "GIT_CONFIG_GLOBAL", "GIT_CONFIG_SYSTEM",
                                      "GIT_CONFIG_NOSYSTEM", "GIT_TERMINAL_PROMPT", "TZ", "PYTHONPATH",
-                                     "WS_CLOCK"})
+                                     "WS_CLOCK", "GIT_AUTHOR_DATE", "GIT_COMMITTER_DATE"})
 
     def test_python_steps_read_the_episode_clock(self):
         # skill.date at 10:00 in Buenos Aires: captures say the episode's date and time, not the day they ran.
@@ -167,6 +168,22 @@ class RunTests(unittest.TestCase):
     def test_the_clock_moves_so_waits_and_timeouts_still_work(self):
         out = self.out_of("python3 -c 'import time; a = time.time(); time.sleep(0.3); print(time.time() - a >= 0.3)'")
         self.assertEqual(out, ["True"])
+
+    def test_git_commits_take_the_episode_clock_so_their_shas_repeat(self):
+        cmd = "git init -q r && cd r && git commit -q --allow-empty -m x && git log -1 --format='%at %ct %H'"
+        first = self.out_of(cmd)
+        shutil.rmtree(self.home / "r")
+        self.assertEqual(first, self.out_of(cmd))
+        clock = str(capture.episode_clock(minimal_episode()))
+        self.assertEqual(first[0].split()[:2], [clock, clock])
+
+    def test_a_real_clock_step_reads_the_real_time_and_no_clock_variable(self):
+        # Test suites and sync planners compare now with file mtimes, which the episode clock cannot move.
+        cmd = "python3 -c 'import time; print(int(time.time()))'; echo \"[$WS_CLOCK|$PYTHONPATH|$GIT_COMMITTER_DATE|$TZ]\""
+        ep = capture.run(ep_with([real(cmd, real_clock=True)]), self.home)
+        now, env = ep["chapters"][0]["steps"][0]["out"]
+        self.assertLess(abs(int(now) - time.time()), 60)
+        self.assertEqual(env, "[|||%s]" % capture.CLOCK_TZ)
 
     def test_path_is_explicit_and_never_under_real_home(self):
         real_home = os.path.realpath(os.path.expanduser("~"))

@@ -29,8 +29,8 @@ PAGE_SRC_RE = re.compile(r"^pages/[a-z0-9][a-z0-9-]*\.html$")
 
 
 # Keys allowed besides the required ones, so a misspelt key fails instead of being ignored.
-# `in`, `capture_only` and `color` are accepted on any step so their own, clearer message reports a misplacement.
-STEP_COMMON = ("type", "source", "notes", "pause", "in", "capture_only", "callouts", "color")
+# `in`, `capture_only`, `real_clock` and `color` are accepted on any step so their own, clearer message reports a misplacement.
+STEP_COMMON = ("type", "source", "notes", "pause", "in", "capture_only", "real_clock", "callouts", "color")
 STEP_EXTRA = {"term": ("cwd",), "approve": ("lines", "src", "window", "width", "height"), "page": ("capture",)}
 TOP_KEYS = ("id", "series", "order", "title", "pitch", "skill", "workspace", "minutes", "chapters")
 CHAPTER_KEYS = ("id", "title", "subtitle", "screen", "faq", "steps")
@@ -139,6 +139,12 @@ def _validate_step(step, prefix, out, screen=None):
             out.append("%s: 'capture_only' must be true when present" % prefix)
         elif stype != "term" or source != "real":
             out.append("%s: 'capture_only' is only valid on a real term step" % prefix)
+    # `real_clock: true` real steps run on the real clock: what compares now with file times needs it.
+    if "real_clock" in step:
+        if step["real_clock"] is not True:
+            out.append("%s: 'real_clock' must be true when present" % prefix)
+        elif stype != "term" or source != "real":
+            out.append("%s: 'real_clock' is only valid on a real term step" % prefix)
     # `color: true` term steps are captured in a truecolor terminal and keep their SGR colour codes.
     if "color" in step:
         if not isinstance(step["color"], bool):
