@@ -752,7 +752,7 @@
     },
     {
       "id": "cuando-te-frena",
-      "title": "Otro caso: cuando te frena",
+      "title": "Cuando te frena",
       "subtitle": "Comprobaciones determinísticas avanzadas: un modelo bloqueado no llega a costar nada",
       "screen": "terminal",
       "faq": [
@@ -838,7 +838,7 @@
     },
     {
       "id": "presupuesto-por-modelo",
-      "title": "Otro caso: presupuesto por modelo",
+      "title": "Presupuesto por modelo",
       "subtitle": "Comprobaciones determinísticas avanzadas: usar Opus a conciencia",
       "screen": "cursor-agent",
       "faq": [
