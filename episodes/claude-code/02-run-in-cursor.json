@@ -95,12 +95,12 @@
             "  \"hooks\": {",
             "    \"stop\": [",
             "      {",
-            "        \"command\": \"/opt/homebrew/opt/python@3.13/bin/python3.13 ~/skills/run-in-cursor/ric.py hook\"",
+            "        \"command\": \"/opt/homebrew/bin/python3 ~/skills/run-in-cursor/ric.py hook\"",
             "      }",
             "    ],",
             "    \"sessionEnd\": [",
             "      {",
-            "        \"command\": \"/opt/homebrew/opt/python@3.13/bin/python3.13 ~/skills/run-in-cursor/ric.py hook\"",
+            "        \"command\": \"/opt/homebrew/bin/python3 ~/skills/run-in-cursor/ric.py hook\"",
             "      }",
             "    ]",
             "  }",
@@ -390,7 +390,7 @@
           "type": "term",
           "cmd": "cat ~/mi-servicio/.run-in-cursor/runs/ric-spec-kit-plan-20261020-101500.jsonl",
           "out": [
-            "{\"event\": \"stop\", \"status\": \"completed\", \"model\": \"demo-model\", \"input_tokens\": 48210, \"output_tokens\": 3150, \"reason\": null, \"t\": 1792506795}"
+            "{\"event\": \"stop\", \"status\": \"completed\", \"model\": \"demo-model\", \"input_tokens\": 48210, \"output_tokens\": 3150, \"reason\": null, \"t\": 1792155600}"
           ],
           "source": "real",
           "cwd": "~",

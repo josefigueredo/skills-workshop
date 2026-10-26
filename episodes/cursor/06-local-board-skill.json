@@ -103,13 +103,14 @@
           "type": "term",
           "cmd": "python3 -m unittest discover -s ~/.agents/skills/local-board-skill/tests -p 'test*.py' 2>&1 | grep -E '^(Ran |OK$|FAILED)'",
           "out": [
-            "Ran 39 tests in 0.143s",
+            "Ran 39 tests in 0.160s",
             "OK"
           ],
           "source": "real",
           "cwd": "~",
           "notes": "La comprobación que trae la skill: sus tests. Corren sin red y sin Jira, con Jira falso adentro. Tiene que terminar en OK. El número de tests puede cambiar entre versiones: lo que importa es el OK. Si ves FAILED, frená acá y no sigas: lo que venga después se apoya en esto. Las credenciales de Jira no se piden ahora: el archivo donde van lo crea la skill junto con el board, y lo vemos en el caso principal.",
-          "pause": true
+          "pause": true,
+          "real_clock": true
         }
       ]
     },

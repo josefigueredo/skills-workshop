@@ -224,7 +224,7 @@
           "type": "term",
           "cmd": "python3 ~/.cursor/skills/inherited-audit/ia.py fix check C-01 --run mi-servicio",
           "out": [
-            "suite on the merge of origin/main + d11bb3eb70: 8 of 8 pass (compared by counts: no junit names); output outputs/C-01-fix-suite.txt",
+            "suite on the merge of origin/main + 4997a12379: 8 of 8 pass (compared by counts: no junit names); output outputs/C-01-fix-suite.txt",
             "check C-01: passed"
           ],
           "source": "real",
@@ -264,7 +264,7 @@
           "type": "term",
           "cmd": "python3 ~/.cursor/skills/inherited-audit/ia.py fix done C-01 --run mi-servicio",
           "out": [
-            "C-01: done (sha_fix d11bb3eb70, suite 8 of 8 pass)",
+            "C-01: done (sha_fix 4997a12379, suite 8 of 8 pass)",
             "worktree removed: ~/auditorias/mi-servicio/fix/wt-fix-c-01-descuento-sin-tope"
           ],
           "source": "real",
@@ -399,7 +399,7 @@
           "type": "term",
           "cmd": "python3 ~/.cursor/skills/inherited-audit/ia.py fix done C-01 --run mi-servicio",
           "out": [
-            "error: C-01 cannot be recorded as done: no review of HEAD d11bb3eb70 (fix.review.sha); review claims not CONFIDENT: targeted, no_new_risk, minimal (one revision round, then fix.status=declined with fix.reason); fix.review.model is empty: record which agent reviewed"
+            "error: C-01 cannot be recorded as done: no review of HEAD 4997a12379 (fix.review.sha); review claims not CONFIDENT: targeted, no_new_risk, minimal (one revision round, then fix.status=declined with fix.reason); fix.review.model is empty: record which agent reviewed"
           ],
           "source": "inferido",
           "cwd": "~/auditorias",
