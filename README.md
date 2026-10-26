@@ -59,4 +59,4 @@ Serie Claude Code:
 | 1 | wayofwork (7 skills `wow-*`) | listo | `wow` |
 | 2 | run-in-cursor | listo | `run-in-cursor` |
 
-El «Cierre» de cada episodio nombra al siguiente; el último de Cursor nombra la serie de Claude Code y el último de Claude Code cierra el taller. Lo comprueba `CierreChainTests` en `tests/test_schema.py`.
+El «Cierre» de cada episodio nombra al siguiente; el último de cada serie la cierra sin nombrar otra, porque cada serie es un taller aparte (quien hace el de Cursor no usa Claude Code). Lo comprueba `CierreChainTests` en `tests/test_schema.py`.
