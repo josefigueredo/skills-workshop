@@ -255,7 +255,7 @@
             "AssertionError: -50.0 not greater than or equal to 0",
             "",
             "----------------------------------------------------------------------",
-            "Ran 1 test in 0.000s",
+            "Ran 1 test in 0.001s",
             "",
             "FAILED (failures=1)"
           ],

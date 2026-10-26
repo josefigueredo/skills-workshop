@@ -167,6 +167,24 @@ class SchemaTests(unittest.TestCase):
         self.assertEqual(len(msgs), 1, msgs)
         self.assertIn("only valid on a real term step", msgs[0])
 
+    def test_real_clock_only_on_real_term(self):
+        ep = minimal_episode()
+        step_of(ep, 0)["real_clock"] = True
+        self.assertEqual(schema.validate(ep, "x.json"), [])
+        cases = [
+            (lambda s: s.update(real_clock="yes"), 0, "'real_clock' must be true"),
+            (lambda s: s.update(real_clock=False), 0, "'real_clock' must be true"),
+            (lambda s: s.update(real_clock=True), 1, "'real_clock' is only valid on a real term step"),
+            (lambda s: s.update(source="inferido", real_clock=True), 0, "'real_clock' is only valid on a real term step"),
+        ]
+        for mutate, i, text in cases:
+            with self.subTest(text=text, step=i):
+                e = minimal_episode()
+                mutate(step_of(e, i))
+                msgs = schema.validate(e, "x.json")
+                self.assertEqual(len(msgs), 1, msgs)
+                self.assertIn("step %d: %s" % (i, text), msgs[0])
+
     def test_color_is_a_flag_of_term_steps(self):
         ep = minimal_episode()
         step_of(ep, 0)["color"] = True

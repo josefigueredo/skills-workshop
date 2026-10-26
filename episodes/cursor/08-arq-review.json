@@ -279,11 +279,11 @@
           "type": "term",
           "cmd": "~/.local/bin/arq timebox PRY-2026-0042",
           "out": [
-            "vence: 2026-11-04 (en plazo)"
+            "vence: 2026-10-26 (en plazo)"
           ],
           "source": "real",
           "cwd": "~/arq-reviews",
-          "notes": "Arranca el plazo: diez días hábiles. Si la fecha comprometida cayera antes, la skill avisa que la revisión está en el camino crítico. Salida real; la fecha depende del día de la captura."
+          "notes": "Arranca el plazo: diez días hábiles. Si la fecha comprometida cayera antes, la skill avisa que la revisión está en el camino crítico. Salida real, con el reloj del episodio (12 oct): diez días hábiles después da el 26."
         },
         {
           "type": "tool",
@@ -485,7 +485,7 @@
             "",
             "Por qué lo pedimos: sin estos datos no podemos evaluar el corte entre cuentas ni el tratamiento de la facturación de clientes.",
             "",
-            "Pueden responder en este mismo ticket. Mantenemos el pedido abierto hasta el 2026-11-04; si para esa fecha no tenemos la información, lo vamos a cerrar como incompleto y se podrá volver a cargar cuando esté lista.",
+            "Pueden responder en este mismo ticket. Mantenemos el pedido abierto hasta el 2026-10-26; si para esa fecha no tenemos la información, lo vamos a cerrar como incompleto y se podrá volver a cargar cuando esté lista.",
             "",
             "Equipo de Arquitectura",
             "",

@@ -296,8 +296,19 @@ def episode_clock(episode: dict) -> int:
 
 
 def clock_env(episode: dict) -> dict:
-    """A fixed time zone and, for Python tools, a clock that starts at episode_clock in every step (ws/clock/)."""
-    return {"TZ": CLOCK_TZ, "PYTHONPATH": str(CLOCK_DIR), "WS_CLOCK": str(episode_clock(episode))}
+    """A fixed time zone; for Python tools, a clock that starts at episode_clock in every step (ws/clock/); and
+    that same moment as the date of every git commit, so the shas a step prints repeat."""
+    clock = episode_clock(episode)
+    git_date = "@%d -0300" % clock
+    return {"TZ": CLOCK_TZ, "PYTHONPATH": str(CLOCK_DIR), "WS_CLOCK": str(clock),
+            "GIT_AUTHOR_DATE": git_date, "GIT_COMMITTER_DATE": git_date}
+
+
+def real_clock_env(env: dict) -> dict:
+    """The env of a `real_clock` step: the time zone stays, the episode clock goes. File times are real, so a
+    program that compares them with now (a test suite, a sync planner) needs the real now too."""
+    return {k: v for k, v in env.items()
+            if k not in ("PYTHONPATH", "WS_CLOCK", "GIT_AUTHOR_DATE", "GIT_COMMITTER_DATE")}
 
 
 def run(episode: dict, home: Path, timeout: float = STEP_TIMEOUT) -> dict:
@@ -312,7 +323,8 @@ def run(episode: dict, home: Path, timeout: float = STEP_TIMEOUT) -> dict:
                 continue
             cwd = _resolve_cwd(step["cwd"], home)
             color = step.get("color") is True
-            text, code = (_exec_tty if color else _exec)(step["cmd"], cwd, env, timeout)
+            step_env = real_clock_env(env) if step.get("real_clock") is True else env
+            text, code = (_exec_tty if color else _exec)(step["cmd"], cwd, step_env, timeout)
             lines = _lines(normalise(text, home, roots, keep_sgr=color))
             if code is None:
                 lines.append("# timeout")
