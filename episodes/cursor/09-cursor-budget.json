@@ -73,7 +73,7 @@
         },
         {
           "q": "¿Anda en Windows o Linux?",
-          "a": "Está hecho para macOS: los avisos son notificaciones de macOS. En Linux registra y frena, pero no avisa."
+          "a": "En macOS y en Linux: en Linux los avisos salen con notify-send (paquete libnotify). En Windows todavía no."
         }
       ],
       "steps": [
