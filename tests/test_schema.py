@@ -386,6 +386,32 @@ class TreeTests(unittest.TestCase):
         self.assertEqual(len(msgs), 1, msgs)
         self.assertIn("only 'note'", msgs[0])
 
+    def test_a_click_step_presses_a_button_of_the_cursor_screen(self):
+        ep = minimal_episode()
+        ep["chapters"].append({"id": "cursor", "title": "En Cursor", "screen": "cursor-full", "steps": [
+            {"type": "click", "target": "ide", "source": "inferido",
+             "callouts": [{"kind": "note", "text": "Tocá **IDE ↗**"}]}]})
+        self.assertEqual(schema.validate(ep, "x.json"), [])
+        ep["chapters"][-1]["screen"] = "cursor-agent"
+        self.assertEqual(schema.validate(ep, "x.json"), [])
+
+    def test_a_bad_click_step_is_reported(self):
+        cases = [
+            ("terminal", {"target": "ide"}, "cursor-full or cursor-agent"),
+            ("claude-code", {"target": "ide"}, "cursor-full or cursor-agent"),
+            ("cursor-full", {"target": "settings"}, "'target' must be one of ide"),
+            ("cursor-full", {}, "'target'"),
+            ("cursor-full", {"target": "ide", "callouts": [{"kind": "box", "match": "IDE"}]}, "only 'note'"),
+        ]
+        for screen, extra, needle in cases:
+            ep = minimal_episode()
+            st = {"type": "click", "source": "inferido"}
+            st.update(extra)
+            ep["chapters"].append({"id": "c", "title": "C", "screen": screen, "steps": [st]})
+            msgs = schema.validate(ep, "x.json")
+            self.assertEqual(len(msgs), 1, (screen, extra, msgs))
+            self.assertIn(needle, msgs[0], (screen, extra))
+
     def test_an_episode_may_declare_its_own_minutes(self):
         ep = minimal_episode()
         for ok in ([6, 12], [1, 4], [2, 2]):

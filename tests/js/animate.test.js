@@ -270,6 +270,21 @@ test("exact durations and call counts per screen", function () {
   });
 });
 
+test("a click keeps the button in place and marks it after 250 ms", function () {
+  var ep = animEpisode(), c = document.createElement("div"), clock = fakeClock();
+  ep.chapters[1].steps.splice(4, 0, {type: "click", target: "ide", source: "inferido"});   // index 9
+  Animate.run(c, ep, 9, clock.opts(1));
+  var btn = q(c, '[data-step="4"]');
+  assert(shown(btn), "the button must not vanish");
+  assert(!btn.classList.contains("ws-click-on"), "marked before the press");
+  clock.flush();
+  assertEqual(clock.total, 250);
+  assertEqual(clock.calls, 1);
+  assert(btn.classList.contains("ws-click-on"), "not marked after the press");
+  assertEqual(c.innerHTML, finalHTML(ep, 9));
+  assertEqual(Animate.stepDuration(ep, 9, 1), 250);
+});
+
 test("a step with no hooks schedules nothing, renders final and resolves", function () {
   var ep = animEpisode();
   [3, 11].forEach(function (i) {

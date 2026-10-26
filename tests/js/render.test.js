@@ -453,6 +453,36 @@ test("a callout whose match is missing renders nothing and does not throw", func
   assert(c.querySelector('[data-step="4"]').textContent.indexOf("a1b2c3d") >= 0, "say intact");
 });
 
+// ---- click: the person presses a button of the Cursor screen ----
+function clickEpisode() {
+  var ep = fixtureEpisode();
+  ep.chapters[1].steps.splice(5, 0, {type: "click", target: "ide", source: "inferido",
+                                     callouts: [{kind: "note", text: "Tocá **IDE ↗**"}]});   // index 9
+  return ep;
+}
+
+test("a click marks the IDE button and shows its note on the current step only", function () {
+  var ep = clickEpisode();
+  var c = render(9, ep);
+  var btn = c.querySelector('[data-step="5"]');
+  assert(btn, "no step root for the click");
+  assertEqual(btn.textContent, "IDE ↗");
+  assert(btn.classList.contains("ws-click-on"), "button not marked: " + btn.className);
+  assert(c.querySelector(".ws-top").contains(btn), "the mark is the top bar's button");
+  var note = c.querySelector(".ws-click-note");
+  assert(note && note.textContent.indexOf("Tocá IDE ↗") >= 0, "note: " + (note && note.textContent));
+  var later = render(10, ep);
+  assertEqual(later.querySelectorAll(".ws-click-on, .ws-click-note").length, 0);
+  assert(later.querySelector(".ws-top").textContent.indexOf("IDE ↗") >= 0, "the button stays in the top bar");
+  assertEqual(render(8, ep).querySelectorAll(".ws-click-on").length, 0);
+});
+
+test("the top bar's ··· is never part of the IDE button", function () {
+  var btn = render(9, clickEpisode()).querySelector(".ws-click-on");
+  assert(btn.textContent.indexOf("···") < 0, "··· inside the button");
+  assert(render(4).querySelector(".ws-top").textContent.indexOf("···") >= 0, "··· still in the bar");
+});
+
 test("worked shows minutes and hours once a step runs that long", function () {
   var ep = fixtureEpisode();
   var steps = ep.chapters[1].steps;

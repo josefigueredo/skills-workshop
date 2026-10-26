@@ -8,7 +8,8 @@
 //
 // Animation hooks (for animate.js, which renders the finished state, hides, reveals):
 //   data-step="<j>"      on the root node of every applied step (j = index of the step
-//                        inside its chapter). Nothing else carries data-step. Steps may
+//                        inside its chapter). Nothing else carries data-step, except the
+//                        button a current click step presses (see below). Steps may
 //                        live in different areas (a cursor-full term with `in: "zsh"`
 //                        sits in the zsh panel, approve is an overlay at the end of the
 //                        screen root), so document order is not step order: select by value.
@@ -18,6 +19,9 @@
 //                        one at a time.
 //   data-anim="node"     tool, worked and approve nodes (and the "▸ Ran · cmd" chip and
 //                        the "⏺ Bash(cmd)" line); revealed whole.
+//   data-anim="click"    the button a current click step presses (on cursor-full and
+//                        cursor-agent, the top bar's "IDE ↗"). It stays in place; the
+//                        press is its .ws-click-on mark.
 //   hidden               an approve step that is not the current index keeps its node
 //                        (so the step count holds) but is hidden: the window closed.
 //   data-anim="idle"     the wrapper of the waiting prompt (prompt line + "❯ █") at the
@@ -40,6 +44,9 @@
 // leave with the next step. "note" adds a bubble (inline markdown) at the end of the step;
 // "box" and "underline" wrap the first text node holding `match` inside the step (with
 // `text`, a small tag after it). A `match` that is not found renders nothing.
+// Click: a click step is the person pressing a button of the Cursor screen chrome, which no
+// step owns. While it is the current index, the button carries data-step and .ws-click-on
+// and its note callouts sit under the top bar (.ws-click-note); afterwards nothing remains.
 // The first chapter card also shows the episode pitch («Le decís al agente…» /
 // «Y la skill…») under its title; it is part of the card, not a separate index.
 // It also shows, under the pitch and as wide as it, the two arrow keys that move between screens: whoever opens
@@ -438,13 +445,15 @@ var Render = (function () {
   }
   function cursorMain(ep, ch) {
     var main = el("div", "ws-main");
-    var top = add(el("div", "ws-top"), el("span", null, ch.title), el("span", "ws-top-r", "IDE ↗  ···"));
+    var ide = el("span", "ws-top-ide", "IDE ↗");
+    var top = add(el("div", "ws-top"), el("span", null, ch.title),
+                  add(el("span", "ws-top-r"), ide, document.createTextNode("  ···")));
     var conv = scroller("ws-conv");
     var fu = add(el("div", "ws-followup"), el("span", null, "＋  Send follow-up"),
                  el("span", "ws-followup-m", modelOf(ep) + " ⌄"));
     var foot = add(el("div", "ws-foot"), el("span", null, "⑂ " + BRANCH + " ⌄"), el("span", null, "▭ This Mac ⌄"));
     add(main, top, conv.outer, fu, foot);
-    return {main: main, flow: conv.flow};
+    return {main: main, flow: conv.flow, buttons: {ide: ide}};
   }
   function cursorRight(ep) {
     var ws = ep.workspace || {};
@@ -510,12 +519,26 @@ var Render = (function () {
         overlays.push(n = approveOverlay(st, j, last));
       } else if (st.type === "page") {
         overlays.push(n = pageOverlay(st, j, last));
+      } else if (st.type === "click") {
+        if (j === last) press(m, st, j);
+        return;
       }
       applyCallouts(n, st, j, last);
     });
     if (full) idlePrompt(right.flow, cwd, repo);
     overlays.forEach(function (o) { root.appendChild(o); });
     return root;
+  }
+
+  function press(m, st, j) {
+    var btn = m.buttons[st.target];
+    if (!btn) return;
+    btn.setAttribute("data-step", String(j));
+    btn.setAttribute("data-anim", "click");
+    btn.classList.add("ws-click-on");
+    (st.callouts || []).forEach(function (co) {
+      if (co.kind === "note") m.main.appendChild(inline(el("div", "ws-co-note ws-click-note"), co.text));
+    });
   }
 
   // ---- personal terminal ----

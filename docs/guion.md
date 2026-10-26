@@ -42,6 +42,7 @@ Todo paso lleva `type` y `source` (obligatorios).
 | `approve` | `title`, `button`, y `lines` (lista) o `src` | La ventana de aprobación. Con `src` (`pages/<nombre>.html`) es la ventana real de la herramienta: la página que dibuja su código, con `window` (el título de la barra), `width` y `height` (los puntos que le da la herramienta) y los botones Cancelar y `button` abajo. Sin `src`, una caja genérica con `lines` |
 | `worked` | `seconds` | «Worked for Ns» |
 | `page` | `title`, `src` | Una página HTML real en una ventana de navegador sobre la pantalla, por ejemplo la vista previa de `jtk create --html`. `src` es `pages/<nombre>.html` dentro de `episodes/`; el `build` la mete en el bundle y el escenario la muestra en un iframe con `sandbox` (corre su propio JS, nunca toca el escenario). `title` va en la barra de direcciones. Con `capture` (`~/<ruta>`, solo en un paso `real`), `build.py capture` copia a `src` el archivo que escribieron los pasos reales en el HOME de prueba, por ejemplo los reportes de `ia.py render`: pasa por la misma normalización y el mismo control de privacidad que la salida de los comandos |
+| `click` | `target` | La persona toca un botón de la pantalla de Cursor: mientras es el paso actual, el botón queda marcado y su nota sale debajo de la barra de arriba. Hoy el único `target` es `ide`, el botón **IDE ↗** de arriba de la conversación, que abre el editor. **Solo vale en `cursor-full` y `cursor-agent`**, y solo acepta callouts `note` |
 
 Las páginas sin `capture` (la vista previa de jtk y las ventanas de aprobación de jtk, ctk y pbmcp) las genera `python3 tools/real_pages.py` con el código de cada herramienta en el commit que fija su episodio, en `workshop/episodes/pages/` del repo de cada skill, y escribe el ancho y el alto de cada ventana; después `build.py sync` las trae a la copia. Si cambia el episodio o el commit, se vuelve a correr.
 
@@ -54,7 +55,7 @@ Campos opcionales de cualquier paso:
   - `{"kind": "box", "match": "…", "text": "…"}`: un recuadro sobre el texto exacto `match`; con `text`, una etiqueta al lado.
   - `{"kind": "underline", "match": "…"}`: un subrayado sobre `match` (también acepta `text`).
 
-  `match` tiene que caer dentro de un solo tramo de texto del paso: el comando, una línea de salida o un tramo del markdown de `say` (la negrita y el `código` lo parten en tramos). Si no está, `validate` lo rechaza. En los pasos `page` y `approve` solo vale `note`, porque su contenido es una ventana aparte.
+  `match` tiene que caer dentro de un solo tramo de texto del paso: el comando, una línea de salida o un tramo del markdown de `say` (la negrita y el `código` lo parten en tramos). Si no está, `validate` lo rechaza. En los pasos `page` y `approve` solo vale `note`, porque su contenido es una ventana aparte; en `click`, también, porque marca un botón y no un texto.
 
 Opcionales solo de `term`:
 

@@ -169,6 +169,8 @@
   --ws-co-note-shadow: 0 6px 18px rgba(0, 0, 0, .18);
   --ws-co-box-w: 3px;
   --ws-co-under-w: 3px;
+  --ws-click-bg: #1f6fc5;   /* the pressed button (click step) */
+  --ws-click-fg: #ffffff;
 
   /* chapter card */
   --ws-k-grad: linear-gradient(135deg, #2d6cdf, #7a4fe0);

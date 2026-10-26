@@ -99,6 +99,9 @@ var Animate = (function () {
           n.style.opacity = "0";
           plan.push({ms: FADE_MS / speed, fn: function () { n.style.opacity = ""; }});
         }
+      } else if (kind === "click") {
+        n.classList.remove("ws-click-on");
+        plan.push({ms: NODE_MS / speed, fn: function () { n.classList.add("ws-click-on"); }});
       } else if (kind === "node") {
         hide(n);
         plan.push({ms: NODE_MS / speed, fn: function () { show(n); }});
