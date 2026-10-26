@@ -480,11 +480,14 @@ class CierreChainTests(unittest.TestCase):
                     if other["id"] not in (nxt["id"],) and other is not ep:
                         self.assertNotIn("Próximo episodio: " + other["id"], md)
 
-    def test_last_cursor_episode_names_the_claude_code_series(self):
+    def test_last_cursor_episode_names_no_next_series(self):
+        # Each series is a workshop on its own: the Cursor one is for people who do not use Claude Code.
         last = self.by_series()["cursor"][-1]
-        self.assertIn("Claude Code", self.closing_say(last))
-        first_cc = self.by_series()["claude-code"][0]
-        self.assertIn(first_cc["id"], self.closing_say(last))
+        md = self.closing_say(last)
+        self.assertNotIn("Próxima serie", md)
+        self.assertNotIn("Próximo episodio", md)
+        for ep in self.by_series()["claude-code"]:
+            self.assertNotIn(ep["id"], md)
 
     def test_last_claude_code_episode_names_no_next_episode(self):
         series = self.by_series()

@@ -1015,7 +1015,7 @@
         },
         {
           "type": "say",
-          "md": "#### Lo que te llevás\n- **Te enterás mientras trabajás:** cada turno te dice cuánto costó, y los avisos llegan antes del tope.\n- **Frena antes de gastar:** un modelo bloqueado o un tope agotado no llegan al modelo.\n- **Se carga una vez:** el CSV del mes, al instalar. Después cuenta solo.\n- **Si necesitás pasar igual:** `cbudget allow --minutes 30` te deja usar Cursor sin los bloqueos del hook un rato; lo decidís vos.\n- **Lo manejás conversando:** la skill solo cambia lo que le pedís, y cada cambio te llega como notificación.\n- **Es una estimación:** el número que se paga es el de Cursor.\n\n#### Fin de la serie de Cursor\nViste nueve herramientas con las mismas reglas: el agente prepara, vos aprobás, y ahora sabés cuánto cuesta.\n\n#### Próxima serie: Claude Code, episodio 1: wayofwork\nSiete skills que te guían para llevar una iniciativa de punta a punta, ahora desde Claude Code.",
+          "md": "#### Lo que te llevás\n- **Te enterás mientras trabajás:** cada turno te dice cuánto costó, y los avisos llegan antes del tope.\n- **Frena antes de gastar:** un modelo bloqueado o un tope agotado no llegan al modelo.\n- **Se carga una vez:** el CSV del mes, al instalar. Después cuenta solo.\n- **Si necesitás pasar igual:** `cbudget allow --minutes 30` te deja usar Cursor sin los bloqueos del hook un rato; lo decidís vos.\n- **Lo manejás conversando:** la skill solo cambia lo que le pedís, y cada cambio te llega como notificación.\n- **Es una estimación:** el número que se paga es el de Cursor.\n\n#### Fin de la serie de Cursor\nViste nueve herramientas con las mismas reglas: el agente prepara, vos aprobás, y ahora sabés cuánto cuesta.",
           "source": "inferido",
           "callouts": [
             {
@@ -1023,7 +1023,7 @@
               "match": "Frena antes de gastar"
             }
           ],
-          "notes": "Las cuatro ideas, sin repetir el episodio. La que más importa: lo que encarece no suele ser el modelo, sino el chat largo. Y el cierre de la serie: la regla se repite en todas, el agente prepara y la persona aprueba. Anticipá la serie nueva: lo mismo desde Claude Code, empezando por WayOfWork.",
+          "notes": "Las cuatro ideas, sin repetir el episodio. La que más importa: lo que encarece no suele ser el modelo, sino el chat largo. Y el cierre de la serie: la regla se repite en todas, el agente prepara y la persona aprueba.",
           "pause": true
         }
       ]
