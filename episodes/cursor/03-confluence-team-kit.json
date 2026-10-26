@@ -308,7 +308,7 @@
     },
     {
       "id": "otro-caso",
-      "title": "Otro caso",
+      "title": "Cuando editan la página",
       "subtitle": "Alguien editó la página en Confluence: el drift",
       "screen": "cursor-agent",
       "faq": [

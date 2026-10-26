@@ -26,7 +26,8 @@ Un episodio es un archivo JSON en `episodes/<serie>/NN-nombre.json`. El motor lo
 - `minutes`: cuánto tiene que durar el episodio, `[mínimo, máximo]` en minutos enteros. Lo pregunta `new` al crearlo; cada episodio tiene el suyo, porque una presentación de diapositivas y una demo de punta a punta no duran lo mismo. Sin `minutes`, el rango es de 6 a 12 (ver «Cuánto dura»).
 - `workspace.repo` es el nombre del repo que se ve en Cursor; `workspace` también acepta `files` (lista de nombres) y `chats` (`[{"title": "…", "age": "2d"}]`) y `model`, el modelo que muestra el chat (por defecto, Sonnet 5.5): tiene que ser el que escribe en el episodio.
 - `skill.commit` y `skill.date` dicen contra qué versión de la skill se escribió el episodio.
-- Cada capítulo se muestra **primero como una placa** (sale sola, no se declara en `steps`) y después sus pasos. `screen` elige la pantalla: `terminal`, `cursor-full`, `cursor-agent` o `claude-code`.
+- Cada capítulo se muestra **primero como una placa** (sale sola, no se declara en `steps`) y después sus pasos. El `title` de la placa nombra el caso («El sweep», «Cuando te frena»): `validate` rechaza uno que empiece con «Otro caso», que en la placa y en un índice no dice nada.
+- Si el episodio tiene una página de índice (`pages/<x>-indice.html`, un paso `page`), cada capítulo que viene después figura ahí con su título en un elemento de clase `t`, igual que en su placa y en el mismo orden; `validate` compara los dos. `screen` elige la pantalla: `terminal`, `cursor-full`, `cursor-agent` o `claude-code`.
 - En el episodio de ejemplo más corto, [episodes/cursor/00-antes-de-empezar.json](../episodes/cursor/00-antes-de-empezar.json), se ve todo junto. El piloto completo es [01-inherited-audit.json](../episodes/cursor/01-inherited-audit.json).
 
 ## Tipos de paso

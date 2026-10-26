@@ -70,7 +70,7 @@ def skeleton(repo: str, series: str, order: int, commit: str, date: str, id: Opt
             _chapter("caso-principal", "Caso principal", "cursor-full",
                      [_step("ask", "lo que la persona le pide al agente"),
                       _step("say", "la respuesta del agente, de punta a punta, hasta el resultado")]),
-            _chapter("otro-caso", "Otro caso", "cursor-agent",
+            _chapter("segundo-caso", "%s: el nombre del caso" % MARK, "cursor-agent",
                      [_step("ask", "otro pedido típico"), _step("say", "la respuesta del agente")]),
             _chapter("si-algo-falla", "Si algo falla", "terminal",
                      [_step("term", "comando que falla o lo diagnostica (sección «Si algo falla» de instalacion.md)")]),

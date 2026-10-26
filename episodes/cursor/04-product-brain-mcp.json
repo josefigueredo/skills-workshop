@@ -334,7 +334,7 @@
     },
     {
       "id": "otro-caso",
-      "title": "Otro caso",
+      "title": "Exportar una épica a Jira",
       "subtitle": "Exportar una épica a Jira, con el chequeo previo y la ventana",
       "screen": "cursor-agent",
       "faq": [
