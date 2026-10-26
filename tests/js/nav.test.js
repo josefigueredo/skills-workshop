@@ -75,6 +75,8 @@ test("keyAction maps presenter keys, PageDown/PageUp like a clicker", function (
   assertEqual(Nav.keyAction("PageDown"), "right");
   assertEqual(Nav.keyAction("ArrowLeft"), "left");
   assertEqual(Nav.keyAction("PageUp"), "left");
+  assertEqual(Nav.keyAction("ArrowUp"), "up");
+  assertEqual(Nav.keyAction("ArrowDown"), "down");
   assertEqual(Nav.keyAction(" "), "space");
   assertEqual(Nav.keyAction("Spacebar"), "space");
   assertEqual(Nav.keyAction("b"), "b");

@@ -2,7 +2,7 @@
 //
 // Control.init(episodes) -> state
 // Control.reduce(state, input) -> {state, outbox}   (never mutates `state`)
-//   inputs: {kind:"key", key, shift}         key = KeyboardEvent.key (←/PageUp, →/PageDown, space, b)
+//   inputs: {kind:"key", key, shift}         key = KeyboardEvent.key (←/PageUp, →/PageDown, ↑, ↓, space, b)
 //           {kind:"message", msg, now}       a message from the stage window; `now` is the
 //                                            arrival time (Date.now()), not the last tick
 //           {kind:"tick", now}               clock (ms); drives pings, lost and timers
@@ -82,11 +82,11 @@ var Control = (function () {
     var ep = episodeOf(s);
     if (!ep) return none(s);
     var k = normalizeKey(key), last = lastIndex(ep), target;
-    if (k === "right" && shift) {
+    if ((k === "right" && shift) || k === "down") {
       target = Nav.nextChapter(ep, s.index);
       return target === s.index ? none(s) : go(s, target, false, {playing: false});
     }
-    if (k === "left" && shift) {
+    if ((k === "left" && shift) || k === "up") {
       target = Nav.prevChapter(ep, s.index);
       return target === s.index ? none(s) : go(s, target, false, {playing: false});
     }

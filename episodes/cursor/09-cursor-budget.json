@@ -61,7 +61,7 @@
       "faq": [
         {
           "q": "¿Necesito gh?",
-          "a": "Sí, o acceso por SSH a GitHub: el repo es interno. brew install gh y gh auth login, una vez."
+          "a": "Sí: el repo es interno. Instalalo desde https://cli.github.com/ e iniciá sesión con gh auth login, una vez. Sin gh, sirve el acceso por SSH a GitHub."
         },
         {
           "q": "¿Toca mis otros hooks?",
@@ -101,6 +101,10 @@
           "source": "inferido",
           "callouts": [
             {
+              "kind": "note",
+              "text": "**Antes:** hace falta el comando `gh` en la máquina, con la sesión iniciada (`gh auth login`), porque el repo es interno. Se instala desde https://cli.github.com/"
+            },
+            {
               "kind": "box",
               "match": "stop y beforeSubmitPrompt sumados",
               "text": "dos hooks globales de Cursor"
@@ -121,7 +125,7 @@
               "text": "¿la viste?"
             }
           ],
-          "notes": "Una sola línea; gh pone tu sesión porque el repo es interno. Copia el programa, suma dos hooks a Cursor sin tocar los tuyos, agrega el alias y la skill, e instala la barra del editor y el pie de cursor-agent: nada aparte. Preguntá si vieron la notificación de prueba. Paso inferido: necesita red; la salida es la del instalador real."
+          "notes": "Una sola línea. Antes, el requisito: el comando gh instalado (https://cli.github.com/) y con la sesión iniciada, porque el repo es interno. Copia el programa, suma dos hooks a Cursor sin tocar los tuyos, agrega el alias y la skill, e instala la barra del editor y el pie de cursor-agent: nada aparte. Preguntá si vieron la notificación de prueba. Paso inferido: necesita red; la salida es la del instalador real."
         },
         {
           "type": "term",

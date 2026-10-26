@@ -127,6 +127,29 @@ test("⇧→ and ⇧← jump with Nav (static)", function () {
   assertEqual(stageMsgs(r.outbox).pop(), show(4, false));
 });
 
+test("↑ goes to the start of the chapter, or the previous one from its card (like ⇧←)", function () {
+  var ep = protoEpisodes()[0];
+  var r = feed(live(), [key("ArrowRight"), done(1), key("ArrowRight"), key("ArrowUp")]);
+  assertEqual(r.state.index, 0);
+  assertEqual(stageMsgs(r.outbox).pop(), show(0, false));
+  r = feed(r.state, [key("ArrowRight", true), key("ArrowRight"), key("ArrowUp")]);
+  assertEqual(r.state.index, 4);
+  r = feed(r.state, [key("ArrowUp")]);
+  assertEqual(r.state.index, Nav.prevChapter(ep, 4));
+});
+
+test("↓ goes to the next chapter's card (like ⇧→); in the last chapter, to its end, then nothing", function () {
+  var ep = protoEpisodes()[0];
+  var r = feed(live(), [key("ArrowRight"), key("ArrowDown")]);
+  assertEqual(r.state.index, Nav.nextChapter(ep, 1));
+  assertEqual(stageMsgs(r.outbox).pop(), show(4, false));
+  r = feed(r.state, [key("ArrowDown")]);
+  assertEqual(r.state.index, 6);
+  r = feed(r.state, [key("ArrowDown")]);
+  assertEqual(r.state.index, 6);
+  assertEqual(r.outbox, []);
+});
+
 test("B toggles blackout", function () {
   var r = feed(live(), [key("b")]);
   assertEqual(r.state.blackout, true);
@@ -678,6 +701,18 @@ test("stage alone: → or space while the step animates finishes it; ← and ⇧
   assertEqual(Stage.localMove(ep, 2, "ArrowLeft", false, true), {index: 1, animate: false});
   assertEqual(Stage.localMove(ep, 1, "ArrowRight", true, true), {index: 4, animate: false});
   assertEqual(Stage.localMove(ep, 1, "ArrowRight", false, false), {index: 2, animate: true});
+});
+
+test("stage: ↑ and ↓ are forwarded, and alone they jump like ⇧← and ⇧→", function () {
+  var ep = protoEpisodes()[0];
+  assertEqual(Stage.keyMessage({key: "ArrowUp"}), {type: "key", key: "ArrowUp", shift: false});
+  assertEqual(Stage.localMove(ep, 6, "ArrowUp", false), {index: 4, animate: false});
+  assertEqual(Stage.localMove(ep, 2, "ArrowUp", false, true), {index: 0, animate: false});
+  assertEqual(Stage.localMove(ep, 0, "ArrowUp", false), null);
+  assertEqual(Stage.keyMessage({key: "ArrowDown"}), {type: "key", key: "ArrowDown", shift: false});
+  assertEqual(Stage.localMove(ep, 1, "ArrowDown", false), {index: 4, animate: false});
+  assertEqual(Stage.localMove(ep, 1, "ArrowDown", false, true), {index: 4, animate: false});
+  assertEqual(Stage.localMove(ep, 6, "ArrowDown", false), null);
 });
 
 test("stage: animating() is true only while an animation runs", function () {

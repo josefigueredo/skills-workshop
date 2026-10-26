@@ -44,6 +44,8 @@ var Nav = (function () {
   function keyAction(key) {
     if (key === "ArrowRight" || key === "PageDown") return "right";
     if (key === "ArrowLeft" || key === "PageUp") return "left";
+    if (key === "ArrowUp") return "up";
+    if (key === "ArrowDown") return "down";
     if (key === " " || key === "Spacebar") return "space";
     if (key === "b" || key === "B") return "b";
     return null;
