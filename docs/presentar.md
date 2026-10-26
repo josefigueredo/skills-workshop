@@ -31,8 +31,8 @@ Funcionan en el control **y también cuando estás haciendo clic o escribiendo e
 | `→` o `AvPág` | Adelante un paso (se anima: tipeo, respuesta que va saliendo). Si el paso todavía se está animando, lo termina ahí (salida completa y sus notas) y el próximo `→` avanza |
 | `←` o `RePág` | Atrás un paso (muestra el paso anterior ya terminado, sin animar; frena el play) |
 | `espacio` | Play / pausa: avanza solo; frena en los pasos marcados con pausa |
-| `⇧ →` | Salta al principio del capítulo siguiente |
-| `⇧ ←` | Salta al principio del capítulo (o al anterior si ya estás ahí) |
+| `↓` o `⇧ →` | Salta al principio del capítulo siguiente |
+| `↑` o `⇧ ←` | Salta al principio del capítulo (o al anterior si ya estás ahí) |
 | `B` | Pantalla en negro; otra vez `B` la devuelve. Usala durante las preguntas |
 
 También podés usar los botones del control: es lo mismo. `AvPág` y `RePág` están porque los presentadores inalámbricos (los clickers) mandan esas teclas.
@@ -47,7 +47,7 @@ Si abrís la serie desde la portada (o con un link como `serie-cursor.html#antes
 - **Reloj:** arranca con tu primer movimiento (`→`, espacio, un salto o elegir un capítulo) y sigue corriendo aunque pauses: la narración también cuenta. Al lado de cada capítulo ves el estimado y lo que llevás gastado. Arriba figura el estimado total a la velocidad elegida.
 - **Notas y preguntas frecuentes:** están en el control. Las **notas** son de cada paso (cambian al avanzar); las **preguntas frecuentes** son de cada capítulo. **No se muestran nunca en el escenario**, ni en grabación ni en pantalla compartida. Las notas dicen qué remarcar y por qué; las preguntas son las que suelen hacer.
 - **Preguntas del público:** `B` para negro, respondés tranquilo, `B` de nuevo para volver al mismo paso.
-- **Cambiar de capítulo:** el selector de capítulo del control (o `⇧ →` / `⇧ ←`). El escenario sigue abierto.
+- **Cambiar de capítulo:** el selector de capítulo del control (o `↓` / `↑`). El escenario sigue abierto.
 - **Cambiar de episodio:** el selector de episodio. Si el nuevo es de la **otra serie**, el control te pide abrir su escenario: otro clic en «Abrir escenario» (es otra página). El reloj vuelve a cero.
 
 ## Si aparece «El escenario se cerró»

@@ -22,7 +22,7 @@
 //   a step or disturbs a running animation. The page calls it every second.
 // Stage.localMove(ep, index, key, shift, animating) -> {index, animate} | null: where the
 //   presenter keys go when no control drives the page (opened from its link). → / PageDown /
-//   space step forward animated, ← / PageUp step back finished, shift jumps chapters; null at
+//   space step forward animated, ← / PageUp step back finished, shift jumps chapters (↑ is ⇧←, ↓ is ⇧→); null at
 //   the ends or for any other key. While the current step still animates, → / space show it
 //   finished instead (the same index), so a long output is never skipped. Stage.hashFor(id, index) is the "#id/N" parseHash reads.
 // The DOM bootstrap at the end runs only on the page with #ws-stage-root. The page is
@@ -133,8 +133,8 @@ var Stage = (function () {
   function localMove(ep, index, key, shift, animating) {
     var k = Nav.keyAction(key), last = Nav.flatten(ep).length - 1, target;
     if ((k === "right" || k === "space") && !shift && animating) return {index: index, animate: false};
-    if ((k === "right" || k === "left") && shift) {
-      target = k === "right" ? Nav.nextChapter(ep, index) : Nav.prevChapter(ep, index);
+    if (k === "up" || k === "down" || ((k === "right" || k === "left") && shift)) {
+      target = k === "right" || k === "down" ? Nav.nextChapter(ep, index) : Nav.prevChapter(ep, index);
       return target === index ? null : {index: target, animate: false};
     }
     if (k === "right" || k === "space") return index >= last ? null : {index: index + 1, animate: true};
