@@ -246,7 +246,7 @@
     },
     {
       "id": "frena-con-gaps",
-      "title": "Otro caso: evaluar sin tocar nada",
+      "title": "Evaluar sin tocar nada",
       "subtitle": "Una evaluación termina en un reporte, y si hay gaps lo dice",
       "screen": "cursor-agent",
       "faq": [
@@ -281,7 +281,7 @@
     },
     {
       "id": "actualizar",
-      "title": "Otro caso: mantenerla al día",
+      "title": "Mantenerla al día",
       "subtitle": "Volver a correr el instalador, con sus advertencias",
       "screen": "cursor-agent",
       "faq": [

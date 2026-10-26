@@ -55,7 +55,7 @@ class Skeleton(unittest.TestCase):
     def test_fixed_structure(self):
         got = [(c["id"], c["screen"]) for c in self.ep["chapters"]]
         self.assertEqual(got, [("instalar", "terminal"), ("caso-principal", "cursor-full"),
-                               ("otro-caso", "cursor-agent"), ("si-algo-falla", "terminal"),
+                               ("segundo-caso", "cursor-agent"), ("si-algo-falla", "terminal"),
                                ("cierre", "cursor-agent")])
 
     def test_header_fields(self):

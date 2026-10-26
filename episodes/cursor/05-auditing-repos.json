@@ -304,7 +304,7 @@
     },
     {
       "id": "el-sweep",
-      "title": "Otro caso: el sweep",
+      "title": "El sweep",
       "subtitle": "Antes de pushear, chequeos que cuestan menos que descubrirlos en CI",
       "screen": "cursor-agent",
       "faq": [
@@ -398,7 +398,7 @@
     },
     {
       "id": "jira-y-review",
-      "title": "Otro caso: Jira y la review",
+      "title": "Jira y la review",
       "subtitle": "Vincular los PRs a un ticket y contestar al revisor automático",
       "screen": "cursor-agent",
       "faq": [

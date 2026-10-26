@@ -301,7 +301,7 @@
     },
     {
       "id": "board-de-trabajo",
-      "title": "Otro caso: el board de trabajo",
+      "title": "El board de trabajo",
       "subtitle": "Dos boards, y la épica como kanban del equipo con jira-team-kit",
       "screen": "cursor-agent",
       "faq": [
@@ -354,7 +354,7 @@
     },
     {
       "id": "gap-check",
-      "title": "Otro caso: el gap check",
+      "title": "El gap check",
       "subtitle": "Qué falta del pedido, y cómo se lo pedimos al requirente",
       "screen": "cursor-agent",
       "faq": [
@@ -506,7 +506,7 @@
     },
     {
       "id": "analisis",
-      "title": "Otro caso: el análisis",
+      "title": "El análisis",
       "subtitle": "Con el input completo: opciones, señales y veredicto propuesto",
       "screen": "cursor-agent",
       "faq": [

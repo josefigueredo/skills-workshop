@@ -290,6 +290,26 @@ class TreeTests(unittest.TestCase):
             (t.root / "episodes" / "pages" / "w.html").write_text("<p>w</p>", encoding="utf-8")
             self.assertEqual(schema.check_tree(t.root), [])
 
+    def test_an_index_page_names_the_chapters_as_their_cards_do(self):
+        # pages/<x>-indice.html lists the chapters after the one that shows it, each title in an element of class "t".
+        with TempTree() as t:
+            ep = minimal_episode()
+            ep["chapters"][0]["steps"].append({"type": "page", "title": "Índice", "src": "pages/x-indice.html",
+                                               "source": "inferido"})
+            ep["chapters"].append({"id": "caso", "title": "Cuando te frena", "screen": "terminal",
+                                   "steps": [{"type": "say", "md": "x", "source": "inferido"}]})
+            t.write("cursor", "a.json", ep)
+            pages = t.root / "episodes" / "pages"
+            pages.mkdir()
+            index = pages / "x-indice.html"
+            index.write_text('<li><div class="t">Cuando te frena</div></li>', encoding="utf-8")
+            self.assertEqual(schema.check_tree(t.root), [])
+            index.write_text('<li><div class="t">Otro título</div></li>', encoding="utf-8")
+            msgs = schema.check_tree(t.root)
+            self.assertEqual(len(msgs), 1, msgs)
+            self.assertIn("x-indice.html", msgs[0])
+            self.assertIn("Cuando te frena", msgs[0])
+
     def test_a_real_page_step_can_name_the_file_capture_copies_from_the_fake_home(self):
         def with_capture(value, source="real", stype="page"):
             ep = minimal_episode()
@@ -411,6 +431,16 @@ class TreeTests(unittest.TestCase):
             msgs = schema.validate(ep, "x.json")
             self.assertEqual(len(msgs), 1, (screen, extra, msgs))
             self.assertIn(needle, msgs[0], (screen, extra))
+
+    def test_a_chapter_title_names_its_case(self):
+        ep = minimal_episode()
+        for bad in ("Otro caso", "Otro caso: el sweep", "otro caso: x"):
+            ep["chapters"][0]["title"] = bad
+            msgs = schema.validate(ep, "x.json")
+            self.assertEqual(len(msgs), 1, (bad, msgs))
+            self.assertIn("Otro caso", msgs[0])
+        ep["chapters"][0]["title"] = "El sweep"
+        self.assertEqual(schema.validate(ep, "x.json"), [])
 
     def test_an_episode_may_declare_its_own_minutes(self):
         ep = minimal_episode()

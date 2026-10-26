@@ -368,7 +368,7 @@
     },
     {
       "id": "desde-el-ultimo-sync",
-      "title": "Otro caso: desde el último sync",
+      "title": "Desde el último sync",
       "subtitle": "El corte sale del estado guardado, nunca se adivina",
       "screen": "cursor-agent",
       "faq": [
@@ -419,7 +419,7 @@
     },
     {
       "id": "limpiar-links",
-      "title": "Otro caso: limpiar links",
+      "title": "Limpiar links",
       "subtitle": "Primero se lista lo que se borraría; borrar es otro pedido",
       "screen": "cursor-agent",
       "faq": [

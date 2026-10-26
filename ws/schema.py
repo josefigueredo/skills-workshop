@@ -1,6 +1,7 @@
 """Episode script schema: plain-dict validation, no third-party validator."""
 from __future__ import annotations
 
+import html
 import json
 import re
 from pathlib import Path
@@ -267,6 +268,10 @@ def _validate_chapter(chapter, i, out, where, seen_ids):
         seen_ids.add(chapter["id"])
     if isinstance(chapter.get("screen"), str) and chapter["screen"] not in SCREENS:
         out.append("%s: unknown screen %r" % (prefix, chapter["screen"]))
+    # A card names its case: "Otro caso" says nothing on the card nor in an index.
+    if isinstance(chapter.get("title"), str) and chapter["title"].strip().lower().startswith("otro caso"):
+        out.append("%s: title %r starts with 'Otro caso': name the case (the subtitle usually says it)"
+                   % (prefix, chapter["title"]))
     if "subtitle" in chapter and not isinstance(chapter["subtitle"], str):
         out.append("%s: 'subtitle' must be a string" % prefix)
     for k, item in enumerate(chapter.get("faq", []) if isinstance(chapter.get("faq", []), list) else []):
@@ -343,6 +348,29 @@ def _missing_pages(episode, root: Path, where: str, capturing: bool = False) -> 
             if not (capturing and "capture" in st) and not (root / "episodes" / st["src"]).is_file()]
 
 
+INDEX_SRC_RE = re.compile(r"^pages/[a-z0-9-]+-indice\.html$")
+_INDEX_TITLE_RE = re.compile(r'class="t">([^<]*)<')
+
+
+def _index_mismatches(episode, root: Path, where: str) -> list:
+    """An index page (pages/<x>-indice.html) lists the chapters after the one that shows it, each title in an
+    element of class "t", as their cards say them."""
+    out = []
+    chapters = [c for c in episode.get("chapters") or [] if isinstance(c, dict)] if isinstance(episode, dict) else []
+    for i, chapter in enumerate(chapters):
+        for st in chapter.get("steps") or []:
+            src = str(st.get("src", "")) if isinstance(st, dict) else ""
+            page = root / "episodes" / src
+            if st.get("type") != "page" or not INDEX_SRC_RE.match(src) or not page.is_file():
+                continue
+            listed = [html.unescape(t).strip() for t in _INDEX_TITLE_RE.findall(page.read_text(encoding="utf-8"))]
+            cards = [str(c.get("title", "")) for c in chapters[i + 1:]]
+            if listed != cards:
+                out.append("%s: episodes/%s lists %s, but the cards after it say %s"
+                           % (where, src, listed, cards))
+    return out
+
+
 def check_tree(root, capturing: bool = False) -> list:
     """Validate every episode under root/episodes plus cross-file rules.
 
@@ -361,6 +389,7 @@ def check_tree(root, capturing: bool = False) -> list:
 
         out.extend(scaffold.pending(ep, where))
         out.extend(_missing_pages(ep, Path(root), where, capturing))
+        out.extend(_index_mismatches(ep, Path(root), where))
         if not isinstance(ep, dict):
             continue
         if ep.get("series") != path.parent.name:

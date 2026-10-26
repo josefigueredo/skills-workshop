@@ -290,7 +290,7 @@
     },
     {
       "id": "otro-caso",
-      "title": "Otro caso",
+      "title": "Varios tickets a la vez",
       "subtitle": "Cambiar varios tickets a la vez con jira-em-ops",
       "screen": "cursor-agent",
       "faq": [
