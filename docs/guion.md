@@ -96,6 +96,8 @@ Regla: si corre sin red y sin efectos externos, es `real`. Los pasos de red (`gi
 
 `build.py capture` arma un HOME falso con la demo en `~/mi-servicio` (la construye `demo/setup.sh`) y la skill del episodio clonada en `~/skills/<skill.repo>` en `skill.commit`. La skill se lee de `$WS_SKILLS_ROOT/<skill.repo>`; `WS_SKILLS_ROOT` puede tener varias carpetas separadas por `:` y se usa la primera que tenga el repo. Si no definís la variable, de la carpeta de al lado del repo del taller. Si ninguna tiene `<skill.repo>`, prueba el mismo nombre sin el prefijo `` (`cursor-budget` para `cursor-budget`), que es como se clonan varias skills.
 
+Cada paso `real` corre con la hora de Buenos Aires (`TZ`) y, si es Python, con un reloj que arranca en `skill.date` a las 10:00 y avanza con el tiempo real (`ws/clock/`): `time.time`, `localtime`/`strftime` sin argumento y `datetime.now`/`today` dicen la fecha del episodio, no el día en que capturaste. Como cada paso arranca en el mismo instante, volver a capturar sin cambiar nada no cambia la salida; si cambia, cambió el comando o la skill. Las herramientas en otros lenguajes ven el reloj real.
+
 Si tu episodio necesita estado extra (una rama, un reporte), ponelo en `demo/prep/<id-del-episodio>.sh`: capture lo corre después de armar el HOME y recibe la ruta del HOME como único argumento. Mirá `demo/prep/inherited-audit.sh`.
 
 Dos cuidados:

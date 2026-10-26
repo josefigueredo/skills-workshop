@@ -145,7 +145,28 @@ class RunTests(unittest.TestCase):
                                      "PYTHONDONTWRITEBYTECODE", "PWD", "SHLVL", "_", "OLDPWD",
                                      "GIT_AUTHOR_NAME", "GIT_AUTHOR_EMAIL", "GIT_COMMITTER_NAME",
                                      "GIT_COMMITTER_EMAIL", "GIT_CONFIG_GLOBAL", "GIT_CONFIG_SYSTEM",
-                                     "GIT_CONFIG_NOSYSTEM", "GIT_TERMINAL_PROMPT"})
+                                     "GIT_CONFIG_NOSYSTEM", "GIT_TERMINAL_PROMPT", "TZ", "PYTHONPATH",
+                                     "WS_CLOCK"})
+
+    def test_python_steps_read_the_episode_clock(self):
+        # skill.date at 10:00 in Buenos Aires: captures say the episode's date and time, not the day they ran.
+        out = self.out_of("python3 -c \"import time; print(time.strftime('%Y-%m-%d %H:%M %z', time.localtime()))\"")
+        self.assertEqual(out, ["2026-10-19 10:00 -0300"])
+
+    def test_datetime_reads_the_episode_clock_too(self):
+        out = self.out_of("python3 -c 'import datetime; print(datetime.datetime.now().strftime(\"%Y-%m-%d %H\"), "
+                          "datetime.date.today(), datetime.datetime.now(datetime.timezone.utc).hour)'")
+        self.assertEqual(out, ["2026-10-19 10 2026-10-19 13"])
+
+    def test_the_clock_starts_over_in_each_step_so_reruns_match(self):
+        cmd = "python3 -c 'import time; print(int(time.time()))'"
+        first = self.out_of(cmd)
+        self.assertEqual(first, self.out_of(cmd))
+        self.assertEqual(first, [str(capture.episode_clock(minimal_episode()))])
+
+    def test_the_clock_moves_so_waits_and_timeouts_still_work(self):
+        out = self.out_of("python3 -c 'import time; a = time.time(); time.sleep(0.3); print(time.time() - a >= 0.3)'")
+        self.assertEqual(out, ["True"])
 
     def test_path_is_explicit_and_never_under_real_home(self):
         real_home = os.path.realpath(os.path.expanduser("~"))

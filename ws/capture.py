@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import datetime
 import fcntl
 import getpass
 import json
@@ -282,11 +283,28 @@ def _lines(text: str) -> List[str]:
     return text.split("\n") if text else []
 
 
+CLOCK_TZ = "America/Argentina/Buenos_Aires"
+CLOCK_HOUR = 10
+CLOCK_DIR = Path(__file__).resolve().parent / "clock"
+
+
+def episode_clock(episode: dict) -> int:
+    """The moment every real step starts at: the episode's skill.date at 10:00 in Buenos Aires (UTC-3, no DST)."""
+    day = datetime.date.fromisoformat(str((episode.get("skill") or {}).get("date")))
+    moment = datetime.datetime(day.year, day.month, day.day, CLOCK_HOUR, tzinfo=datetime.timezone(datetime.timedelta(hours=-3)))
+    return int(moment.timestamp())
+
+
+def clock_env(episode: dict) -> dict:
+    """A fixed time zone and, for Python tools, a clock that starts at episode_clock in every step (ws/clock/)."""
+    return {"TZ": CLOCK_TZ, "PYTHONPATH": str(CLOCK_DIR), "WS_CLOCK": str(episode_clock(episode))}
+
+
 def run(episode: dict, home: Path, timeout: float = STEP_TIMEOUT) -> dict:
     """Re-run every `real` term step in the fake HOME; return a copy with fresh `out`."""
     home = Path(home)
     new = copy.deepcopy(episode)
-    env = scratch_env(home)
+    env = dict(scratch_env(home), **clock_env(episode))
     roots = [home.parent]
     for chapter in new["chapters"]:
         for step in chapter["steps"]:
