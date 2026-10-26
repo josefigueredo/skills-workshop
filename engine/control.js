@@ -202,6 +202,7 @@ var Control = (function () {
   }
 
   // ---- panels (pure) ----
+  var CLICK_LABELS = {ide: "IDE ↗"};  // the buttons a click step presses (render.js draws them)
   function trim(text, max) {
     text = String(text || "").replace(/\s+/g, " ").trim();
     return text.length > max ? text.slice(0, max - 1) + "…" : text;
@@ -214,6 +215,7 @@ var Control = (function () {
     if (st.type === "approve") return trim(st.title, 80);
     if (st.type === "page") return "Página · " + trim(st.title, 70);
     if (st.type === "worked") return "Trabajó " + st.seconds + " s";
+    if (st.type === "click") return "Clic · " + (CLICK_LABELS[st.target] || st.target);
     if (st.type === "say") {
       var line = String(st.md || "").split("\n").filter(function (l) { return l.trim(); })[0] || "";
       return trim(line.replace(/^#### |^- /, "").replace(/\*\*|`/g, ""), 80) || "(texto vacío)";

@@ -420,6 +420,7 @@ test("Lo que viene: next card title or next step label", function () {
   assertEqual(Control.upNext(ep, 6), "Fin del episodio");
   assertEqual(Control.stepLabel({type: "say", md: "#### Hecho\nUno"}), "Hecho");
   assertEqual(Control.stepLabel({type: "worked", seconds: 42}), "Trabajó 42 s");
+  assertEqual(Control.stepLabel({type: "click", target: "ide"}), "Clic · IDE ↗");
 });
 
 // ---------------- stage ----------------

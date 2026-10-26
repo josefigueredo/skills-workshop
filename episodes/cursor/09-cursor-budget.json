@@ -33,6 +33,27 @@
   },
   "chapters": [
     {
+      "id": "portada",
+      "title": "cursor-budget",
+      "subtitle": "Tu gasto de Cursor a la vista, con avisos y un freno",
+      "screen": "terminal",
+      "steps": [
+        {
+          "type": "page",
+          "title": "cursor-budget — índice",
+          "src": "pages/cursor-budget-indice.html",
+          "source": "inferido",
+          "callouts": [
+            {
+              "kind": "note",
+              "text": "**Siete partes.** Empezamos por instalarlo."
+            }
+          ],
+          "notes": "El recorrido: instalarlo, cargar lo que ya gastaste, verlo en el editor y en la terminal, cuándo frena, el presupuesto por modelo y qué hacer si algo falla."
+        }
+      ]
+    },
+    {
       "id": "instalar",
       "title": "Instalar",
       "subtitle": "Una línea, una vez por máquina",
@@ -321,17 +342,16 @@
           "capture_only": true
         },
         {
-          "type": "page",
-          "title": "Cursor — ventana de Agentes",
-          "src": "pages/cursor-budget-agentes.html",
+          "type": "click",
+          "target": "ide",
           "source": "inferido",
           "callouts": [
             {
               "kind": "note",
-              "text": "**Paso 1.** La ventana de Agentes no tiene barra de estado. Tocá **IDE ↗**, arriba a la derecha."
+              "text": "**Paso 1.** Esta es la ventana de Agentes, y no tiene barra de estado. Tocá **IDE ↗**, arriba de la conversación, para abrir el editor."
             }
           ],
-          "notes": "Cursor 3 abre la ventana de Agentes, que no tiene barra de estado. El gasto a la vista está en el editor: el botón IDE, arriba a la derecha, lo abre. Maqueta con los datos del ejemplo."
+          "notes": "Cursor 3 abre la ventana de Agentes, que no tiene barra de estado. El gasto a la vista está en el editor: el botón IDE, arriba de la conversación, lo abre."
         },
         {
           "type": "page",

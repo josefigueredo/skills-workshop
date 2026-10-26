@@ -18,7 +18,11 @@ STEP_FIELDS = {
     "approve": {"title": str, "button": str},  # plus `lines`, or `src` with the tool's real window page
     "worked": {"seconds": (int, float)},
     "page": {"title": str, "src": str},
+    "click": {"target": str},
 }
+# A click step is the person pressing a button of the Cursor screen; `target` names the button (render.js draws it).
+CLICK_TARGETS = ("ide",)
+CLICK_SCREENS = ("cursor-full", "cursor-agent")
 # A page step shows a real HTML page (episodes/pages/<name>.html) in a browser window; the bundle inlines it.
 PAGE_SRC_RE = re.compile(r"^pages/[a-z0-9][a-z0-9-]*\.html$")
 
@@ -142,6 +146,11 @@ def _validate_step(step, prefix, out, screen=None):
             out.append("%s: 'color' is only valid on a term step" % prefix)
     if stype == "approve":
         _validate_approve(step, prefix, out)
+    if stype == "click":
+        if screen not in CLICK_SCREENS:
+            out.append("%s: a click step is only valid in a cursor-full or cursor-agent chapter" % prefix)
+        elif isinstance(step.get("target"), str) and step["target"] not in CLICK_TARGETS:
+            out.append("%s: 'target' must be one of %s" % (prefix, ", ".join(CLICK_TARGETS)))
     if "callouts" in step:
         _validate_callouts(step, prefix, out)
     if stype in ("page", "approve") and isinstance(step.get("src"), str) and not PAGE_SRC_RE.match(step["src"]):
@@ -201,7 +210,7 @@ def _validate_callouts(step, prefix, out):
     if not isinstance(cos, list):
         out.append("%s: 'callouts' must be a list" % prefix)
         return
-    overlay = step.get("type") in ("page", "approve")
+    overlay = step.get("type") in ("page", "approve", "click")
     for i, co in enumerate(cos):
         where = "%s callout %d" % (prefix, i)
         if not isinstance(co, dict):
@@ -214,7 +223,8 @@ def _validate_callouts(step, prefix, out):
         elif kind not in CALLOUT_KINDS:
             out.append("%s: kind must be one of %s" % (where, ", ".join(CALLOUT_KINDS)))
         elif overlay and kind != "note":
-            out.append("%s: a %s step takes only 'note' callouts (its content is a frame)" % (where, step["type"]))
+            out.append("%s: a %s step takes only 'note' callouts (its content is a frame or a button)"
+                       % (where, step["type"]))
         elif kind == "note" and not (isinstance(co.get("text"), str) and co["text"].strip()):
             out.append("%s: a note needs 'text'" % where)
         elif kind != "note" and not (isinstance(co.get("match"), str) and co["match"]):
